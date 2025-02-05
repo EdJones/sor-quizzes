@@ -3,6 +3,7 @@ import { requireAuth } from './guards';
 import LoginForm from '../components/auth/LoginForm.vue';
 import Home from '../components/Home.vue';
 import NewItem from '../components/NewItem.vue';
+import GitHubIssues from '../components/GitHubIssues.vue';
 
 const routes = [
   {
@@ -24,6 +25,11 @@ const routes = [
     path: '/quiz/:id',
     name: 'Quiz',
     component: () => import('../components/Quiz.vue')
+  },
+  {
+    path: '/issues',
+    name: 'issues',
+    component: GitHubIssues
   },
   // Catch all route for 404
   {

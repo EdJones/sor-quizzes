@@ -73,7 +73,12 @@ export const quizStore = defineStore('quiz', {
             type: '',
             show: false
         },
-        incorrectQuestions: []
+        incorrectQuestions: [],
+        githubIssues: [],
+        allGithubIssues: [],
+        githubIssuesLoading: false,
+        githubIssuesError: null,
+        currentFilter: 'all'
     }),
     actions: {
         // =============================================
@@ -641,5 +646,93 @@ export const quizStore = defineStore('quiz', {
                 show: false
             };
         },
+
+        async fetchGitHubIssues(state = 'all') {
+            this.githubIssuesLoading = true;
+            this.githubIssuesError = null;
+
+            try {
+                const token = import.meta.env.VITE_GITHUB_TOKEN;
+                const repo = import.meta.env.VITE_GITHUB_REPO;
+
+                const response = await fetch(
+                    `https://api.github.com/repos/${repo}/issues?state=${state}`,
+                    {
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`GitHub API error: ${response.status}`);
+                }
+
+                const issues = await response.json();
+                console.log('Fetched issues:', issues.length, 'Latest:', issues[0]?.number);
+
+                // Update state in a single operation
+                if (state === 'all') {
+                    this.allGithubIssues = [...issues];
+                }
+                this.githubIssues = [...issues];
+
+                return issues;
+            } catch (error) {
+                console.error('Error fetching GitHub issues:', error);
+                this.githubIssuesError = error.message;
+                throw error;
+            } finally {
+                this.githubIssuesLoading = false;
+            }
+        },
+
+        async createGitHubIssue(issueData) {
+            this.githubIssuesLoading = true;
+            this.githubIssuesError = null;
+
+            try {
+                const token = import.meta.env.VITE_GITHUB_TOKEN;
+                const repo = import.meta.env.VITE_GITHUB_REPO;
+
+                console.log('Creating issue with data:', issueData);
+                const response = await fetch(
+                    `https://api.github.com/repos/${repo}/issues`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Accept': 'application/vnd.github.v3+json',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(issueData)
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`GitHub API error: ${response.status}`);
+                }
+
+                const issue = await response.json();
+                console.log('Issue created:', issue.number);
+
+                // Clear existing issues to force a fresh state
+                this.githubIssues = [];
+                this.allGithubIssues = [];
+
+                // Fetch fresh data
+                const freshIssues = await this.fetchGitHubIssues('all');
+                console.log('Fresh issues fetched:', freshIssues.length);
+
+                return issue;
+            } catch (error) {
+                console.error('Error creating GitHub issue:', error);
+                this.githubIssuesError = error.message;
+                throw error;
+            } finally {
+                this.githubIssuesLoading = false;
+            }
+        }
     },
 });
