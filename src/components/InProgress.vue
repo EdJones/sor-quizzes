@@ -50,10 +50,10 @@
 
 <script>
 import { quizSets } from '../data/quizSets';
-import { saveUserProgress } from '../firebase';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faTools } from '@fortawesome/free-solid-svg-icons';
 import PodcastReference from './PodcastReference.vue';
+import { useProgressStore } from '../stores/progressStore';
 
 // Add the tools icon to the library
 library.add(faTools);
@@ -99,12 +99,15 @@ export default {
 
         console.log('Final podcastEpisodes:', this.podcastEpisodes);
         console.log('Is Array?:', Array.isArray(this.podcastEpisodes));
+
+        const progressStore = useProgressStore();
     },
     methods: {
         async submitFeedback() {
             if (this.feedback.trim()) {
                 try {
-                    await saveUserProgress(this.selectedQuiz, {
+                    const progressStore = useProgressStore();
+                    await progressStore.saveQuizProgress(this.selectedQuiz, {
                         inProgressFeedback: this.feedback,
                         timestamp: new Date()
                     });

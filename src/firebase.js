@@ -19,30 +19,13 @@ const auth = getAuth(app);
 
 const githubProvider = new GithubAuthProvider();
 
-export const saveUserProgress = async (quizId, progress) => {
-    try {
-        const userId = auth.currentUser?.uid;
-        if (!userId) {
-            console.log('No user found, progress will not be saved');
-            return;
-        }
-
-        const progressRef = doc(db, 'userProgress', `${userId}_${quizId}`);
-        await setDoc(progressRef, {
-            userId,
-            quizId,
-            isAnonymous: auth.currentUser.isAnonymous,
-            ...progress,
-            lastUpdated: serverTimestamp()
-        }, { merge: true });
-        console.log('Progress saved:', progressRef.id);
-    } catch (error) {
-        console.error('Error saving progress:', error);
-        // Don't throw error for anonymous users to avoid disrupting the quiz experience
-        if (!auth.currentUser?.isAnonymous) {
-            throw error;
-        }
-    }
+export const saveQuizAttempt = async (quizId, userAnswers) => {
+    // Return the data that needs to be saved, let the component handle the store update
+    return {
+        quizId,
+        userAnswers,
+        timestamp: serverTimestamp()
+    };
 };
 
 export { db, auth, githubProvider };

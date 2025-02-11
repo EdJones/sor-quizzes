@@ -21,6 +21,7 @@ export const quizSets = [{
 {
     setName: "test-expert",
     basicMode: false,
+    inProgress: true,
     items: [2, 1, 5]
 },
 {

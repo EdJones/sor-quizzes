@@ -1,7 +1,7 @@
 <template>
     <div class="user-status flex items-center gap-2 p-1 text-sm">
         <template v-if="authStore.user">
-            <div class="flex flex-col gap-0.5 bg-gray-100 rounded-lg px-3 py-1.5">
+            <div class="flex flex-col gap-0.5 bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-1.5">
                 <!-- User Status with Provider Icon -->
                 <div class="flex items-center gap-2">
                     <!-- Google Icon -->
@@ -31,6 +31,29 @@
                     </span>
                 </div>
 
+                <!-- Progress Indicator with Info Icon -->
+                <div @click="showProgressDetails = true"
+                    class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 rounded px-2 py-1 transition-colors group">
+                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                    <div class="flex items-center gap-2">
+                        <span>{{ progressText }}</span>
+                        <div class="w-24 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                            <div class="h-full bg-green-500 rounded-full"
+                                :style="{ width: `${progressStore.progressPercentage}%` }">
+                            </div>
+                        </div>
+                        <!-- Info Icon (bigger) -->
+                        <svg class="h-4 w-4 ml-1 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300 transition-colors"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+
                 <!-- Login/Sign Out Buttons -->
                 <router-link v-if="authStore.user.isAnonymous" to="/login"
                     class="text-blue-500 hover:text-blue-600 text-xs transition-colors">
@@ -54,33 +77,75 @@
                 Sign In
             </router-link>
         </template>
+
+        <!-- Progress Details Popup -->
+        <ProgressDetailsPopup :show="showProgressDetails" @close="showProgressDetails = false" />
     </div>
 </template>
 
-<script setup>
-import { computed } from 'vue';
+<script>
 import { useAuthStore } from '../stores/authStore';
+import { useProgressStore } from '../stores/progressStore';
+import { onMounted, computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import ProgressDetailsPopup from './ProgressDetailsPopup.vue';
 
-const authStore = useAuthStore();
-const router = useRouter();
+export default {
+    name: 'UserStatus',
+    components: {
+        ProgressDetailsPopup
+    },
+    setup() {
+        const authStore = useAuthStore();
+        const progressStore = useProgressStore();
+        const showProgressDetails = ref(false);
+        const router = useRouter();
 
-const displayName = computed(() => {
-    if (authStore.user.isAnonymous) return 'Anonymous User';
-    if (!authStore.user.email) return 'Signed In';
-    return authStore.user.email.split('@')[0];
-});
+        onMounted(async () => {
+            console.log('UserStatus mounted');
+            if (!progressStore.initialized) {
+                await progressStore.initialize();
+                await progressStore.fetchProgress();
+            }
+        });
 
-const provider = computed(() => {
-    return authStore.user?.providerData?.[0]?.providerId || 'anonymous';
-});
+        // Watch for changes in progress, but don't re-fetch if already initialized
+        watch(() => progressStore.lastUpdated, () => {
+            console.log('Progress updated in store');
+        }, { deep: true });
 
-const handleSignOut = async () => {
-    try {
-        await authStore.signOut();
-        router.push('/login');
-    } catch (error) {
-        console.error('Sign out error:', error);
+        const displayName = computed(() => {
+            if (authStore.user.isAnonymous) return 'Anonymous User';
+            if (!authStore.user.email) return 'Signed In';
+            return authStore.user.email.split('@')[0];
+        });
+
+        const provider = computed(() => {
+            return authStore.user?.providerData?.[0]?.providerId || 'anonymous';
+        });
+
+        const progressText = computed(() => {
+            return `${progressStore.quizCompletionCount}/${progressStore.totalQuizzes} quizzes`;
+        });
+
+        const handleSignOut = async () => {
+            try {
+                await authStore.signOut();
+                router.push('/login');
+            } catch (error) {
+                console.error('Sign out error:', error);
+            }
+        };
+
+        return {
+            authStore,
+            progressStore,
+            showProgressDetails,
+            displayName,
+            provider,
+            progressText,
+            handleSignOut
+        };
     }
 };
 </script>

@@ -73,7 +73,8 @@ export default {
             quiz: quizStore(),
             quizSets: quizSets, // Add quizSets to data if needed
             debug: false,
-            showInProgress: false  // Add this if not already present
+            showInProgress: false,  // Add this if not already present
+            showEnd: false  // Add this if not already present
         }
     },
     methods: {
@@ -89,10 +90,14 @@ export default {
                 this.quiz.recordQuizAttempt(startTime);
             }
         },
-        handleChangeView() {  // Move this inside methods
-            console.log("Home: handleChangeView called");
-            this.showQuizzes = true;
-            this.showInProgress = false;
+        handleChangeView(view) {
+            this.showQuizzes = view.showQuizzes;
+            this.showInProgress = view.showInProgress;
+            this.showEnd = view.showEnd;
+
+            if (view.showQuizzes) {
+                this.selectedQuiz = null;
+            }
         }
     }
 }

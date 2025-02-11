@@ -12,6 +12,7 @@ import {
     getDocs
 } from 'firebase/firestore';
 import { useAuthStore } from './authStore';
+import { useProgressStore } from './progressStore';
 
 export const quizStore = defineStore('quiz', {
     state: () => ({
@@ -105,18 +106,27 @@ export const quizStore = defineStore('quiz', {
 
             if (Array.isArray(selectedAnswer)) {
                 console.log('Sortable list answer - skipping correctness check');
-
                 this.userAnswers[index] = {
                     selected: selectedAnswer,
                     questionId: questionId || '',
                     questionTitle: questionTitle || '',
                     timestamp: new Date().toISOString()
                 };
-
                 return;
             }
 
-            const isCorrect = selectedAnswer === correctAnswer;
+            // For multiple choice, ensure consistent string comparison
+            const isCorrect = String(selectedAnswer) === String(correctAnswer);
+
+            console.log('Answer comparison:', {
+                selectedAnswer: String(selectedAnswer),
+                correctAnswer: String(correctAnswer),
+                isCorrect,
+                types: {
+                    selected: typeof selectedAnswer,
+                    correct: typeof correctAnswer
+                }
+            });
 
             this.userAnswers[index] = {
                 selected: selectedAnswer,
@@ -165,22 +175,50 @@ export const quizStore = defineStore('quiz', {
             }
         },
 
-        async recordQuizAttempt(quizStarted) {
+        async recordQuizAttempt({ quizStarted, score, totalQuestions }) {
+            if (!auth.currentUser) {
+                console.log('No authenticated user, skipping quiz attempt recording');
+                return;
+            }
+
             try {
-                const user = auth.currentUser;
-                if (!user) return;
+                // Ensure we have valid values for all fields
+                const validatedScore = Number(score) || 0;
+                const validatedTotal = Number(totalQuestions) || 0;
 
-                const attemptData = {
-                    userId: user.uid,
-                    isAnonymous: user.isAnonymous,
+                console.log('Recording quiz attempt:', {
+                    score: validatedScore,
+                    totalQuestions: validatedTotal,
+                    userAnswers: this.userAnswers
+                });
+
+                // Add quiz attempt to Firestore
+                const quizAttemptRef = await addDoc(collection(db, 'quizAttempts'), {
+                    userId: auth.currentUser.uid,
                     quizId: this.currentQuizId,
-                    timestamp: serverTimestamp(),
-                    quizStarted
-                };
+                    quizStarted: serverTimestamp(),
+                    completedAt: serverTimestamp(),
+                    score: validatedScore,
+                    totalQuestions: validatedTotal,
+                    userAnswers: this.userAnswers,
+                    isAnonymous: auth.currentUser.isAnonymous
+                });
 
-                await addDoc(collection(db, 'quizAttempts'), attemptData);
+                console.log('Quiz attempt recorded:', quizAttemptRef.id);
+
+                // Save final progress using the original system
+                const progressStore = useProgressStore();
+                await progressStore.saveQuizProgress(this.currentQuizId, {
+                    complete: true,
+                    userAnswers: this.userAnswers,
+                    totalCorrect: validatedScore,
+                    totalQuestions: validatedTotal,
+                    timestamp: new Date()
+                });
+
             } catch (error) {
                 console.error('Error recording quiz attempt:', error);
+                throw error;
             }
         },
 

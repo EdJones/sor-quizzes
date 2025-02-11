@@ -110,6 +110,9 @@
     <a href="https://www.flaticon.com/free-icons/collaboration" title="collaboration icons"
       class="text-gray-500">Collaboration icons created by small.smiles - Flaticon</a>
   </div>
+
+  <!-- Add the progress popup component -->
+  <ProgressDetailsPopup ref="progressPopup" />
 </template>
 <script>
 import QuizItem from './QuizItem.vue';
@@ -117,13 +120,15 @@ import { quizEntries } from '../data/quiz-items.js'
 import { quizSets } from '../data/quizSets.js'
 import { quizStore } from '../stores/quizStore'; // Import the store
 import { ref, onMounted, watch } from 'vue'
-import { saveUserProgress } from '../firebase';
+import { useProgressStore } from '../stores/progressStore';
+import ProgressDetailsPopup from './ProgressDetailsPopup.vue';
 
 export default {
   name: 'Quiz',
   emits: ['change-view'],
   components: {
-    QuizItem
+    QuizItem,
+    ProgressDetailsPopup
   },
   props: {
     selectedQuiz: {
@@ -137,13 +142,24 @@ export default {
   },
   setup(props) {
     const store = quizStore();
+    const progressStore = useProgressStore();
+    const progressPopup = ref(null);
 
     onMounted(() => {
       store.setCurrentQuiz(props.selectedQuiz);
     });
 
+    // Add method to show progress
+    const showProgress = () => {
+      console.log('Showing progress popup for quiz:', props.selectedQuiz);
+      progressPopup.value?.togglePopup(props.selectedQuiz);
+    };
+
     return {
-      store
+      store,
+      progressStore,
+      progressPopup,
+      showProgress
     }
   },
   data() {
@@ -164,8 +180,8 @@ export default {
       reviewMode: reviewMode,
       showEnd: false,
       selectError: false,
-      debug: this.debug,
-      userFeedback: ''
+      userFeedback: '',
+      quizStarted: new Date().getTime() // Use milliseconds timestamp
     }
   },
   computed: {
@@ -216,15 +232,33 @@ export default {
     numCorrect() {
       let correct = 0;
       console.log("Length ", this.quizItems.length);
+
+      if (!Array.isArray(this.quizItems) || !Array.isArray(this.userAnswers)) {
+        console.error('Invalid quizItems or userAnswers');
+        return 0;
+      }
+
       for (let i = 0; i < this.quizItems.length; i++) {
+        if (!this.quizItems[i] || !this.quizItems[i].correctAnswer) {
+          console.warn(`Missing quiz item or correct answer at index ${i}`);
+          continue;
+        }
+
+        const userAnswer = this.userAnswers[i];
+        // Convert both to numbers for comparison
+        const correctAnswer = Number(this.quizItems[i].correctAnswer);
+
         console.log("Question", i + 1, ":");
-        console.log("User answer:", this.userAnswers[i]);
-        console.log("Correct answer:", this.quizItems[i].correctAnswer);
-        if (this.userAnswers[i] === this.quizItems[i].correctAnswer) {
+        console.log("User answer:", userAnswer);
+        console.log("Correct answer:", correctAnswer);
+
+        // Compare the numeric values
+        if (!isNaN(correctAnswer) && userAnswer === correctAnswer) {
           correct++;
           console.log("✓ Correct!");
         } else {
           console.log("✗ Incorrect");
+          console.log("Types - User answer:", typeof userAnswer, "Correct answer:", typeof correctAnswer);
         }
       }
       console.log("Total correct:", correct);
@@ -284,7 +318,7 @@ export default {
         );
 
         // Save progress
-        await saveUserProgress(this.selectedQuiz, {
+        await this.progressStore.saveQuizProgress(this.selectedQuiz, {
           lastQuestionAnswered: this.itemNum,
           userAnswers: this.store.userAnswers,
           incorrectQuestions: this.store.incorrectQuestions,
@@ -362,7 +396,7 @@ export default {
           questionData.quizEntry
         );
 
-        await saveUserProgress(this.selectedQuiz, {
+        await this.progressStore.saveQuizProgress(this.selectedQuiz, {
           lastQuestionAnswered: this.itemNum,
           userAnswers: this.store.userAnswers,
           incorrectQuestions: this.store.incorrectQuestions,
@@ -389,11 +423,23 @@ export default {
         console.error("Error in checkIt method:", error);
       }
     },
-    answerSelected(option) {
+    async answerSelected(option) {
       console.log("In answerSelected with answer:", option);
       this.selectError = false;
       this.chosen = true;
       this.userAnswers[this.itemNum] = option;
+
+      // Check if answer is correct
+      const isCorrect = option === this.currentQuizItem.correctAnswer;
+      if (isCorrect) {
+        // Pass both quizId and questionId
+        await this.progressStore.markQuizItemCorrect(
+          this.selectedQuiz,
+          this.currentQuizItem.id,
+          isCorrect
+        );
+      }
+
       // Update store immediately when answer is selected
       this.store.setUserAnswer(
         this.itemNum,
@@ -440,26 +486,54 @@ export default {
       console.log("In selectionError");
       this.selectError = true;
     },
-    quizDone() {
-      console.log("Before quizDone:", {
-        currentState: this.quizState,
-        complete: this.complete,
-        reviewMode: this.reviewMode
-      });
+    async quizDone() {
+      try {
+        const score = this.numCorrect();
+        const total = this.quizItems.length;
 
-      // Force exit from review mode
-      this.reviewMode = false;
-      // Clear any intermediate states
-      this.chosen = false;
-      // Set final states
-      this.complete = true;
-      this.quizState = 'end';
+        // Validate the values before sending
+        if (typeof score !== 'number' || typeof total !== 'number') {
+          console.error('Invalid score or total:', { score, total });
+          throw new Error('Invalid score or total questions');
+        }
 
-      console.log("After quizDone:", {
-        currentState: this.quizState,
-        complete: this.complete,
-        reviewMode: this.reviewMode
-      });
+        // Record the quiz attempt with validated data
+        await this.store.recordQuizAttempt({
+          quizStarted: new Date(this.quizStarted),
+          score: score,
+          totalQuestions: total
+        });
+        console.log('Quiz attempt recorded successfully');
+
+        // Update the quiz state
+        this.quizState = 'end';
+        this.complete = true;
+        this.reviewMode = false;
+
+        console.log('After quizDone:', {
+          currentState: this.quizState,
+          complete: this.complete,
+          reviewMode: this.reviewMode,
+          score: score,
+          total: total
+        });
+
+        // Force a re-render of the component
+        this.$nextTick(() => {
+          if (this.quizState === 'end') {
+            this.$emit('change-view', {
+              showQuizzes: false,
+              showEnd: true
+            });
+          }
+        });
+
+        // Show the progress popup
+        this.showProgress();
+
+      } catch (error) {
+        console.error('Error in quizDone:', error);
+      }
     },
     async showOriginalView() {
       console.log("showOriginalView clicked");
@@ -469,7 +543,7 @@ export default {
       if (this.userFeedback.trim()) {
         try {
           console.log("Attempting to save feedback");
-          await saveUserProgress(this.selectedQuiz, {
+          await this.progressStore.saveQuizProgress(this.selectedQuiz, {
             feedback: this.userFeedback,
             timestamp: new Date()
           });
@@ -482,6 +556,10 @@ export default {
       console.log("Emitting change-view event");
       this.$emit('change-view', { showQuizzes: true }); // Emit an event with the new state
       console.log("Event emitted");
+    },
+    showProgress() {
+      console.log('Showing progress popup for quiz:', this.selectedQuiz);
+      this.progressPopup.value?.togglePopup(this.selectedQuiz);
     }
   },
   created() {

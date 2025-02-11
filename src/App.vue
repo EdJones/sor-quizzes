@@ -55,11 +55,31 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import UserStatus from './components/UserStatus.vue';
 import logo from './assets/sor-quizzes-logo.png';
+import { useAuthStore } from './stores/authStore';
+import { useProgressStore } from './stores/progressStore';
 
 const showHelp = ref(false);
+const authStore = useAuthStore();
+const progressStore = useProgressStore();
+
+// Watch for auth changes
+watch(() => authStore.user, async (newUser) => {
+  if (newUser && !newUser.isAnonymous) {
+    await progressStore.fetchProgress();
+  } else {
+    progressStore.reset();
+  }
+});
+
+// Initial fetch if user is already logged in
+onMounted(async () => {
+  if (authStore.user && !authStore.user.isAnonymous) {
+    await progressStore.fetchProgress();
+  }
+});
 </script>
 
 <style>
