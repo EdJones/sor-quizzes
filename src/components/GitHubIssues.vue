@@ -94,7 +94,7 @@
                         <div :class="{ 'line-clamp-3': !expandedIssues[issue.number] }">
                             <div class="whitespace-pre-wrap">{{ issue.body }}</div>
                         </div>
-                        <button v-if="issue.body.split('\n').length > 3" @click.stop="toggleIssue(issue.number)"
+                        <button v-if="issue.body.split('\n').length > 3" @click.stop.prevent="toggleIssue(issue.number)"
                             class="text-gray-500 hover:text-gray-400 text-xs mt-1">
                             {{ expandedIssues[issue.number] ? 'Show less' : 'Show more' }}
                         </button>
