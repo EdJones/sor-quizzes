@@ -25,18 +25,24 @@ let ctx = null;
 const styles = {
     rootNode: {
         color: '#4B5563', // gray-600
-        radius: 40,
+        height: 50,
+        padding: 20,
+        borderRadius: 12,
         font: '14px Inter'
     },
     publishedNode: {
         color: '#3B82F6', // blue-500
-        radius: 30,
+        height: 40,
+        padding: 16,
+        borderRadius: 10,
         font: '12px Inter',
         borderStyle: 'solid'
     },
     proposedNode: {
         color: '#F59E0B', // amber-500
-        radius: 30,
+        height: 40,
+        padding: 16,
+        borderRadius: 10,
         font: '12px Inter',
         borderStyle: 'dashed'
     },
@@ -46,15 +52,42 @@ const styles = {
     }
 };
 
+// Helper function to draw a rounded rectangle
+const drawRoundedRect = (x, y, width, height, radius, style) => {
+    if (!ctx) return;
+
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+};
+
 // Draw a node with text
 const drawNode = (x, y, text, style) => {
     if (!ctx) return;
 
-    // Draw circle
-    ctx.beginPath();
+    // Calculate text dimensions
+    ctx.font = style.font;
+    const textMetrics = ctx.measureText(text);
+    const textWidth = textMetrics.width;
+    const nodeWidth = textWidth + (style.padding * 2);
+    const nodeHeight = style.height;
+
+    // Calculate node position (centered on x)
+    const nodeX = x - (nodeWidth / 2);
+    const nodeY = y - (nodeHeight / 2);
+
+    // Draw background
     ctx.fillStyle = style.color;
     ctx.globalAlpha = 0.2;
-    ctx.arc(x, y, style.radius, 0, Math.PI * 2);
+    drawRoundedRect(nodeX, nodeY, nodeWidth, nodeHeight, style.borderRadius, style);
     ctx.fill();
 
     // Draw border
@@ -62,10 +95,11 @@ const drawNode = (x, y, text, style) => {
     ctx.strokeStyle = style.color;
     ctx.lineWidth = 2;
     if (style.borderStyle === 'dashed') {
-        ctx.setLineDash([5, 3]); // Create dashed line pattern
+        ctx.setLineDash([5, 3]);
     } else {
-        ctx.setLineDash([]); // Reset to solid line
+        ctx.setLineDash([]);
     }
+    drawRoundedRect(nodeX, nodeY, nodeWidth, nodeHeight, style.borderRadius, style);
     ctx.stroke();
     ctx.setLineDash([]); // Reset dash pattern
 
@@ -74,28 +108,7 @@ const drawNode = (x, y, text, style) => {
     ctx.font = style.font;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-
-    // Wrap text if needed
-    const words = text.split(' ');
-    let line = '';
-    let lines = [];
-    for (let word of words) {
-        const testLine = line + word + ' ';
-        if (ctx.measureText(testLine).width > style.radius * 1.8) {
-            lines.push(line);
-            line = word + ' ';
-        } else {
-            line = testLine;
-        }
-    }
-    lines.push(line);
-
-    // Draw each line of text
-    lines.forEach((line, i) => {
-        const lineHeight = 14;
-        const offset = (lines.length - 1) * lineHeight / 2;
-        ctx.fillText(line.trim(), x, y + i * lineHeight - offset);
-    });
+    ctx.fillText(text, x, y);
 };
 
 // Draw a line between two points
@@ -142,14 +155,16 @@ const drawTree = () => {
     // Draw published quiz sets
     props.publishedQuizSets.forEach((set, i) => {
         drawNode(currentX, level2Y, set.setName, styles.publishedNode);
-        drawLine(rootX, rootY + styles.rootNode.radius, currentX, level2Y - styles.publishedNode.radius);
+        drawLine(rootX, rootY + (styles.rootNode.height / 2),
+            currentX, level2Y - (styles.publishedNode.height / 2));
         currentX += spacing;
     });
 
     // Draw proposed quiz sets
     props.proposedQuizSets.forEach((set, i) => {
         drawNode(currentX, level2Y, set.setName, styles.proposedNode);
-        drawLine(rootX, rootY + styles.rootNode.radius, currentX, level2Y - styles.proposedNode.radius, true);
+        drawLine(rootX, rootY + (styles.rootNode.height / 2),
+            currentX, level2Y - (styles.proposedNode.height / 2), true);
         currentX += spacing;
     });
 };
