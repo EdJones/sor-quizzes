@@ -1,39 +1,46 @@
 export const quizSets = [{
     setName: "expert",
     basicMode: false,
-    items: [2, 1, 5, 4, 6, 15, 16, 17, 18, 19]
+    items: [2, 1, 5, 4, 6, 15, 16, 17, 18, 19],
+    displayLevel: 1
 },
 {
     setName: "general",
     basicMode: true,
-    items: [10, 22, 11, 14, 21, 4, 6, 12, 13, 3]
+    items: [10, 22, 11, 14, 21, 4, 6, 12, 13, 3],
+    displayLevel: 1
 },
 {
     setName: "kinder-first",
     basicMode: true,
-    items: [23, 42, 41, 24, 26, 25, 11]
+    items: [23, 42, 41, 24, 26, 25, 11],
+    displayLevel: 2
 },
 {
     setName: "admin",
     basicMode: true,
-    items: [14, 30, 28, 18, 29, 32, 16, 27, 31]
+    items: [14, 30, 28, 18, 29, 32, 16, 27, 31],
+    displayLevel: 2
 },
 {
     setName: "test-expert",
     basicMode: false,
     inProgress: true,
-    items: [2, 1, 5]
+    items: [2, 1, 5],
+    displayLevel: 3
 },
 {
     setName: "Why Care?",
     basicMode: true,
-    items: [34, 35, 37, 36, 38]
+    items: [34, 35, 37, 36, 38],
+    displayLevel: 0
 },
 {
     setName: "Learning Science",
     basicMode: true,
     items: [42],
     inProgress: true,
+    displayLevel: 2,
     podcastEpisodes: [{
         title: "Why the science of reading needs the science of learning",
         EpisodeUrl: "https://lnns.co/njyfzcC9hg0",
@@ -54,6 +61,7 @@ export const quizSets = [{
     basicMode: true,
     items: [40],
     inProgress: true,
+    displayLevel: 2,
     resource: {
         title: "Science of Reading (SoR) Legislation and Implementation State Scan ",
         url: "https://learning.ccsso.org/science-of-reading-legislation-and-implementation-state-scan",
@@ -74,6 +82,7 @@ export const quizSets = [{
     basicMode: true,
     items: [41],
     inProgress: true,
+    displayLevel: 2,
     podcastEpisodes: [{
         title: "",
         EpisodeUrl: "",
@@ -87,6 +96,7 @@ export const quizSets = [{
     basicMode: true,
     items: [41],
     inProgress: true,
+    displayLevel: 3,
     inProgressText: "We put this here to show the deeper areas the quizzes should go in to. Do you know what content belongs here?",
     resource: {
         title: "",

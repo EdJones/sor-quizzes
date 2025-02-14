@@ -28,7 +28,7 @@
               :class="['return-button smaller-button', { active: returnButton.active }]">
               Return to Quizzes
             </button>
-            <button type="button" @click="$router.push('/quiz-set')"
+            <button type="button" @click="$router.push('/quizSetView')"
               class="return-button smaller-button bg-indigo-600 hover:bg-indigo-700 text-white">
               View Quiz Sets
             </button>

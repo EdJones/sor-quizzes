@@ -1,6 +1,6 @@
 <template>
     <div class="p-4">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-center mb-4">
             <h1 class="text-2xl">Quiz Set View</h1>
             <button @click="showCreateModal = true"
                 class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center">
@@ -10,6 +10,11 @@
                 </svg>
                 Create New Quiz Set
             </button>
+        </div>
+
+        <!-- Quiz Sets Overview Visualization -->
+        <div class="mb-2">
+            <QuizSetTree :publishedQuizSets="publishedQuizSets" :proposedQuizSets="proposedQuizSets" />
         </div>
 
         <!-- Tab Navigation -->
@@ -370,6 +375,7 @@ import { quizEntries } from '../data/quiz-items';
 import { useRouter } from 'vue-router';
 import { db } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import QuizSetTree from '../components/QuizSetTree.vue';
 
 const router = useRouter();
 const currentTab = ref('current');
