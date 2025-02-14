@@ -12,6 +12,11 @@
             </button>
         </div>
 
+        <!-- Quiz Sets Overview Visualization -->
+        <div class="mb-8">
+            <QuizSetTree :publishedQuizSets="publishedQuizSets" :proposedQuizSets="proposedQuizSets" />
+        </div>
+
         <!-- Tab Navigation -->
         <div class="border-b border-gray-200">
             <nav class="-mb-px flex">
@@ -370,6 +375,7 @@ import { quizEntries } from '../data/quiz-items';
 import { useRouter } from 'vue-router';
 import { db } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import QuizSetTree from '../components/QuizSetTree.vue';
 
 const router = useRouter();
 const currentTab = ref('current');
