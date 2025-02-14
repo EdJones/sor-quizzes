@@ -10,9 +10,17 @@
                     <button @click="selectedSet = null" class="close-button">×</button>
                 </div>
                 <div class="modal-body">
-                    <div v-for="itemId in selectedSet.items" :key="itemId" class="mb-6">
+                    <div v-for="itemId in selectedSet.items" :key="itemId" class="mb-6 quiz-item-container">
                         <QuizItem :currentQuizItem="getQuizItem(itemId)" :itemNum="0" :reviewMode="false"
                             :basicMode="selectedSet.basicMode" :debug="false" :userAnswer="null" />
+                        <div class="edit-button-container">
+                            <button @click="handleEditClick(itemId)" :class="[
+                                'edit-button',
+                                isUserOwnedDraft(itemId) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
+                            ]">
+                                {{ getEditButtonLabel(itemId) }}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -78,6 +86,27 @@ export default {
     padding: 0.5rem;
 }
 
+.quiz-item-container {
+    position: relative;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid rgba(156, 163, 175, 0.2);
+}
+
+.edit-button-container {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+}
+
+.edit-button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
     .quiz-tree-container {
@@ -88,6 +117,10 @@ export default {
         background: #1F2937;
         color: white;
     }
+
+    .quiz-item-container {
+        border-bottom-color: rgba(156, 163, 175, 0.1);
+    }
 }
 </style>
 
@@ -95,6 +128,13 @@ export default {
 import { ref, onMounted, watch } from 'vue';
 import QuizItem from './QuizItem.vue';
 import { quizEntries } from '../data/quiz-items';
+import { useRouter } from 'vue-router';
+import { db } from '../firebase';
+import { collection, addDoc } from 'firebase/firestore';
+import { useAuth } from '../composables/useAuth';
+
+const router = useRouter();
+const auth = useAuth();
 
 const props = defineProps({
     publishedQuizSets: {
@@ -330,4 +370,49 @@ onMounted(() => {
 watch([() => props.publishedQuizSets, () => props.proposedQuizSets], () => {
     drawTree();
 }, { deep: true });
+
+// Function to check if an item is a draft owned by the current user
+const isUserOwnedDraft = (itemId) => {
+    const item = getQuizItem(itemId);
+    return item?.isDraft && item?.createdBy === auth.user?.uid;
+};
+
+// Function to get the appropriate button label
+const getEditButtonLabel = (itemId) => {
+    if (isUserOwnedDraft(itemId)) {
+        return 'Edit';
+    }
+    return 'Propose Changes';
+};
+
+// Handle edit button click
+const handleEditClick = async (itemId) => {
+    const item = getQuizItem(itemId);
+
+    if (isUserOwnedDraft(itemId)) {
+        // Navigate to edit page for user's own draft
+        router.push(`/edit-item/${itemId}`);
+    } else {
+        try {
+            // Create a copy of the item for proposing changes
+            const itemCopy = {
+                ...item,
+                originalId: itemId,
+                isDraft: true,
+                createdBy: auth.user?.uid || 'anonymous',
+                createdAt: new Date().toISOString(),
+                status: 'proposed'
+            };
+
+            // Save to Firebase
+            const docRef = await addDoc(collection(db, 'proposedQuizItems'), itemCopy);
+
+            // Navigate to edit the new copy
+            router.push(`/edit-item/${docRef.id}`);
+        } catch (error) {
+            console.error('Error creating proposal:', error);
+            alert('Failed to create proposal. Please try again.');
+        }
+    }
+};
 </script>

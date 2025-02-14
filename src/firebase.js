@@ -17,6 +17,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// Initialize Github provider
 const githubProvider = new GithubAuthProvider();
 
 export const saveQuizAttempt = async (quizId, userAnswers) => {
