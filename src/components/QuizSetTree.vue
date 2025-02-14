@@ -31,12 +31,14 @@ const styles = {
     publishedNode: {
         color: '#3B82F6', // blue-500
         radius: 30,
-        font: '12px Inter'
+        font: '12px Inter',
+        borderStyle: 'solid'
     },
     proposedNode: {
         color: '#F59E0B', // amber-500
         radius: 30,
-        font: '12px Inter'
+        font: '12px Inter',
+        borderStyle: 'dashed'
     },
     line: {
         color: '#9CA3AF', // gray-400
@@ -59,7 +61,13 @@ const drawNode = (x, y, text, style) => {
     ctx.globalAlpha = 1;
     ctx.strokeStyle = style.color;
     ctx.lineWidth = 2;
+    if (style.borderStyle === 'dashed') {
+        ctx.setLineDash([5, 3]); // Create dashed line pattern
+    } else {
+        ctx.setLineDash([]); // Reset to solid line
+    }
     ctx.stroke();
+    ctx.setLineDash([]); // Reset dash pattern
 
     // Draw text
     ctx.fillStyle = style.color;
@@ -91,15 +99,21 @@ const drawNode = (x, y, text, style) => {
 };
 
 // Draw a line between two points
-const drawLine = (x1, y1, x2, y2) => {
+const drawLine = (x1, y1, x2, y2, isDashed = false) => {
     if (!ctx) return;
 
     ctx.beginPath();
     ctx.strokeStyle = styles.line.color;
     ctx.lineWidth = styles.line.width;
+    if (isDashed) {
+        ctx.setLineDash([5, 3]);
+    } else {
+        ctx.setLineDash([]);
+    }
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
+    ctx.setLineDash([]); // Reset dash pattern
 };
 
 // Main drawing function
@@ -120,37 +134,23 @@ const drawTree = () => {
     // Draw root node
     drawNode(rootX, rootY, 'Quiz Sets', styles.rootNode);
 
-    // Calculate positions for second level (Published vs Proposed)
+    // Calculate positions for quiz set nodes
     const level2Y = rootY + 120;
-    const level2Spacing = width / 3;
+    const spacing = width / (props.publishedQuizSets.length + props.proposedQuizSets.length + 1);
+    let currentX = spacing;
 
-    // Published sets node
-    const publishedX = rootX - level2Spacing / 2;
-    drawNode(publishedX, level2Y, 'Current', styles.publishedNode);
-    drawLine(rootX, rootY + styles.rootNode.radius, publishedX, level2Y - styles.publishedNode.radius);
-
-    // Proposed sets node
-    const proposedX = rootX + level2Spacing / 2;
-    drawNode(proposedX, level2Y, 'Proposed', styles.proposedNode);
-    drawLine(rootX, rootY + styles.rootNode.radius, proposedX, level2Y - styles.proposedNode.radius);
-
-    // Draw quiz set nodes
-    const level3Y = level2Y + 100;
-
-    // Published quiz sets
-    const publishedSpacing = level2Spacing / (props.publishedQuizSets.length + 1);
+    // Draw published quiz sets
     props.publishedQuizSets.forEach((set, i) => {
-        const x = publishedX - level2Spacing / 4 + (i + 1) * publishedSpacing;
-        drawNode(x, level3Y, set.setName, styles.publishedNode);
-        drawLine(publishedX, level2Y + styles.publishedNode.radius, x, level3Y - styles.publishedNode.radius);
+        drawNode(currentX, level2Y, set.setName, styles.publishedNode);
+        drawLine(rootX, rootY + styles.rootNode.radius, currentX, level2Y - styles.publishedNode.radius);
+        currentX += spacing;
     });
 
-    // Proposed quiz sets
-    const proposedSpacing = level2Spacing / (props.proposedQuizSets.length + 1);
+    // Draw proposed quiz sets
     props.proposedQuizSets.forEach((set, i) => {
-        const x = proposedX - level2Spacing / 4 + (i + 1) * proposedSpacing;
-        drawNode(x, level3Y, set.setName, styles.proposedNode);
-        drawLine(proposedX, level2Y + styles.proposedNode.radius, x, level3Y - styles.proposedNode.radius);
+        drawNode(currentX, level2Y, set.setName, styles.proposedNode);
+        drawLine(rootX, rootY + styles.rootNode.radius, currentX, level2Y - styles.proposedNode.radius, true);
+        currentX += spacing;
     });
 };
 
