@@ -4,6 +4,34 @@
     </div>
 </template>
 
+<script>
+export default {
+    // No changes to component options
+};
+</script>
+
+<style scoped>
+.quiz-tree-container {
+    width: 100%;
+    height: 400px;
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.quiz-tree-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .quiz-tree-container {
+        background: #1F2937;
+    }
+}
+</style>
+
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 
@@ -47,8 +75,8 @@ const styles = {
         borderStyle: 'dashed'
     },
     line: {
-        color: '#9CA3AF', // gray-400
-        width: 2
+        color: '#E5E7EB', // gray-200
+        width: 1.5
     }
 };
 
@@ -147,56 +175,39 @@ const drawTree = () => {
     // Draw root node
     drawNode(rootX, rootY, 'Quiz Sets', styles.rootNode);
 
-    // Define the order based on Home.vue buttons
-    const homeOrder = [
-        "Why Care?",
-        "expert",
-        "general",
-        "kinder-first",
-        "admin",
-        "test-expert",
-        "Learning Science"
-    ];
+    // Group sets by display level
+    const levelSets = [...props.publishedQuizSets, ...props.proposedQuizSets].reduce((acc, set) => {
+        const level = set.displayLevel;
+        if (!acc[level]) acc[level] = [];
+        acc[level].push(set);
+        return acc;
+    }, {});
 
-    // Sort quiz sets based on the Home.vue order
-    const orderedPublished = [...props.publishedQuizSets].sort((a, b) => {
-        const indexA = homeOrder.indexOf(a.setName);
-        const indexB = homeOrder.indexOf(b.setName);
-        // If not found in homeOrder, put at the end
-        if (indexA === -1) return 1;
-        if (indexB === -1) return -1;
-        return indexA - indexB;
-    });
+    // Calculate vertical spacing
+    const maxLevel = Math.max(...Object.keys(levelSets).map(Number));
+    const verticalSpacing = (height - rootY - styles.rootNode.height) / (maxLevel + 2);
 
-    const orderedProposed = [...props.proposedQuizSets].sort((a, b) => {
-        const indexA = homeOrder.indexOf(a.setName);
-        const indexB = homeOrder.indexOf(b.setName);
-        // If not found in homeOrder, put at the end
-        if (indexA === -1) return 1;
-        if (indexB === -1) return -1;
-        return indexA - indexB;
-    });
+    // Draw each level
+    Object.entries(levelSets).forEach(([level, sets]) => {
+        const y = rootY + ((Number(level) + 1) * verticalSpacing);
+        const horizontalSpacing = width / (sets.length + 1);
 
-    // Calculate positions for quiz set nodes
-    const level2Y = rootY + 120;
-    const totalSets = orderedPublished.length + orderedProposed.length;
-    const spacing = width / (totalSets + 1);
-    let currentX = spacing;
+        sets.forEach((set, index) => {
+            const x = horizontalSpacing * (index + 1);
+            const isProposed = props.proposedQuizSets.includes(set);
 
-    // Draw published quiz sets
-    orderedPublished.forEach((set, i) => {
-        drawNode(currentX, level2Y, set.setName, styles.publishedNode);
-        drawLine(rootX, rootY + (styles.rootNode.height / 2),
-            currentX, level2Y - (styles.publishedNode.height / 2));
-        currentX += spacing;
-    });
+            // Draw node
+            drawNode(x, y, set.setName, isProposed ? styles.proposedNode : styles.publishedNode);
 
-    // Draw proposed quiz sets
-    orderedProposed.forEach((set, i) => {
-        drawNode(currentX, level2Y, set.setName, styles.proposedNode);
-        drawLine(rootX, rootY + (styles.rootNode.height / 2),
-            currentX, level2Y - (styles.proposedNode.height / 2), true);
-        currentX += spacing;
+            // Draw connecting line to root
+            drawLine(
+                rootX,
+                rootY + (styles.rootNode.height / 2),
+                x,
+                y - (styles.publishedNode.height / 2),
+                isProposed
+            );
+        });
     });
 };
 
@@ -224,25 +235,3 @@ watch([() => props.publishedQuizSets, () => props.proposedQuizSets], () => {
     drawTree();
 }, { deep: true });
 </script>
-
-<style scoped>
-.quiz-tree-container {
-    width: 100%;
-    height: 400px;
-    background: white;
-    border-radius: 8px;
-    padding: 16px;
-}
-
-.quiz-tree-canvas {
-    width: 100%;
-    height: 100%;
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .quiz-tree-container {
-        background: #1F2937;
-    }
-}
-</style>

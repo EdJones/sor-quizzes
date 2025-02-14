@@ -1,6 +1,6 @@
 <template>
     <div class="p-4">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-center mb-4">
             <h1 class="text-2xl">Quiz Set View</h1>
             <button @click="showCreateModal = true"
                 class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center">
@@ -13,7 +13,7 @@
         </div>
 
         <!-- Quiz Sets Overview Visualization -->
-        <div class="mb-8">
+        <div class="mb-2">
             <QuizSetTree :publishedQuizSets="publishedQuizSets" :proposedQuizSets="proposedQuizSets" />
         </div>
 
