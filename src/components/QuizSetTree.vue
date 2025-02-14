@@ -390,8 +390,14 @@ const handleEditClick = async (itemId) => {
     const item = getQuizItem(itemId);
 
     if (isUserOwnedDraft(itemId)) {
-        // Navigate to edit page for user's own draft
-        router.push(`/edit-item/${itemId}`);
+        // Navigate to NewItem with the draft item ID
+        router.push({
+            path: '/new-item',
+            query: {
+                edit: itemId,
+                type: 'draft'
+            }
+        });
     } else {
         try {
             // Create a copy of the item for proposing changes
@@ -407,8 +413,15 @@ const handleEditClick = async (itemId) => {
             // Save to Firebase
             const docRef = await addDoc(collection(db, 'proposedQuizItems'), itemCopy);
 
-            // Navigate to edit the new copy
-            router.push(`/edit-item/${docRef.id}`);
+            // Navigate to NewItem with the new proposal ID
+            router.push({
+                path: '/new-item',
+                query: {
+                    edit: docRef.id,
+                    type: 'proposal',
+                    originalId: itemId
+                }
+            });
         } catch (error) {
             console.error('Error creating proposal:', error);
             alert('Failed to create proposal. Please try again.');
