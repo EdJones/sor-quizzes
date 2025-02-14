@@ -23,10 +23,16 @@
       <span class="preview-controls-text">Help build these quizzes.</span>
       <div class="preview-controls">
         <div class="button-group">
-          <button type="button" @click="returnToQuizzes"
-            :class="['return-button smaller-button', { active: returnButton.active }]">
-            Return to Quizzes
-          </button>
+          <div class="flex flex-col gap-1">
+            <button type="button" @click="returnToQuizzes"
+              :class="['return-button smaller-button', { active: returnButton.active }]">
+              Return to Quizzes
+            </button>
+            <button type="button" @click="$router.push('/quiz-set')"
+              class="return-button smaller-button bg-indigo-600 hover:bg-indigo-700 text-white">
+              View Quiz Sets
+            </button>
+          </div>
           <button type="button" @click="togglePreviewMode" :class="['preview-toggle', { active: previewMode }]">
             {{ previewMode ? 'Edit Mode' : 'Preview Mode' }}
           </button>
@@ -42,7 +48,9 @@
     </div>
 
     <div v-if="!auth.user" class="alert alert-info mb-4">
-      <p>You are currently using the quiz builder anonymously. Your quiz entry will be saved as a draft.</p>
+      <p><span class="text-yellow-500">You are currently using the quiz builder anonymously.</span> Your quiz
+        entry
+        will be saved as a draft.</p>
       <p>To submit your quiz for review, please <router-link to="/login" class="text-blue-600 hover:text-blue-800">sign
           in</router-link>.</p>
     </div>
@@ -887,8 +895,19 @@ export default {
         return;
       }
 
-      // Check if it's a draft item
-      const draftItem = [...this.userDraftQuizItems, ...this.otherDraftQuizItems]
+      // First check if it's a permanent quiz item
+      const permanentItem = this.permanentQuizItems.find(item => item.id === this.selectedTemplate);
+      if (permanentItem) {
+        // Create a copy of the permanent item
+        const copyItem = { ...permanentItem };
+        copyItem.originalId = copyItem.id;  // Save the original ID
+        copyItem.id = null;  // Reset ID for new draft
+        this.store.updateDraftQuizEntry(copyItem);
+        return;
+      }
+
+      // If not permanent, check drafts
+      const draftItem = [...this.userDraftQuizItems, ...this.otherDraftQuizItems, ...this.pendingQuizItems]
         .find(item => item.id === this.selectedTemplate);
 
       if (draftItem) {
@@ -1308,11 +1327,12 @@ details[open] .form-section {
 }
 
 .github-button {
-  background: linear-gradient(135deg, #2ea043, #2c974b);
+  background-color: #2ea043;
+  color: white;
 }
 
 .github-button:hover {
-  background: linear-gradient(135deg, #2c974b, #246c3a);
+  background-color: #2c974b;
   transform: translateY(-1px);
 }
 
@@ -1327,7 +1347,12 @@ details[open] .form-section {
 
 .button-group {
   display: flex;
+  align-items: flex-start;
   gap: 1rem;
+}
+
+.button-group>div {
+  margin-right: 1rem;
 }
 
 .preview-toggle,
@@ -1358,7 +1383,8 @@ details[open] .form-section {
 .smaller-button {
   max-height: 35px;
   font-size: 12px;
-  line-height: 1;
+  line-height: 1.1;
+  padding: 0.2rem 1rem;
 }
 
 .return-button.active {
@@ -1371,15 +1397,22 @@ details[open] .form-section {
 
 .preview-section {
   background: linear-gradient(145deg, #ffffff, #f0f4ff);
-
   border-radius: 12px;
   padding: 24px;
   margin: 20px 0;
   box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+  @apply bg-white dark:bg-gray-800;
+}
+
+.preview-section :deep(.quiz-item) {
+  background: transparent;
+  @apply text-gray-900 dark:text-white;
 }
 
 @media (prefers-color-scheme: dark) {
-  .preview-section {}
+  .preview-section {
+    background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
+  }
 }
 
 .form-group-section {
@@ -1860,5 +1893,9 @@ option {
 
 .github-button:hover {
   background-color: #2c974b;
+}
+
+.yellow-text {
+  color: #ffd700;
 }
 </style>

@@ -4,6 +4,7 @@ import LoginForm from '../components/auth/LoginForm.vue';
 import Home from '../components/Home.vue';
 import NewItem from '../components/NewItem.vue';
 import GitHubIssues from '../components/GitHubIssues.vue';
+import QuizSetView from '../views/QuizSetView.vue';
 
 const routes = [
   {
@@ -30,6 +31,11 @@ const routes = [
     path: '/issues',
     name: 'issues',
     component: GitHubIssues
+  },
+  {
+    path: '/quizSetView',
+    name: 'QuizSetView',
+    component: QuizSetView
   },
   // Catch all route for 404
   {
