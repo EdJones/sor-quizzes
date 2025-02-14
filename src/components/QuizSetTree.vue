@@ -147,13 +147,44 @@ const drawTree = () => {
     // Draw root node
     drawNode(rootX, rootY, 'Quiz Sets', styles.rootNode);
 
+    // Define the order based on Home.vue buttons
+    const homeOrder = [
+        "Why Care?",
+        "expert",
+        "general",
+        "kinder-first",
+        "admin",
+        "test-expert",
+        "Learning Science"
+    ];
+
+    // Sort quiz sets based on the Home.vue order
+    const orderedPublished = [...props.publishedQuizSets].sort((a, b) => {
+        const indexA = homeOrder.indexOf(a.setName);
+        const indexB = homeOrder.indexOf(b.setName);
+        // If not found in homeOrder, put at the end
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+    });
+
+    const orderedProposed = [...props.proposedQuizSets].sort((a, b) => {
+        const indexA = homeOrder.indexOf(a.setName);
+        const indexB = homeOrder.indexOf(b.setName);
+        // If not found in homeOrder, put at the end
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+    });
+
     // Calculate positions for quiz set nodes
     const level2Y = rootY + 120;
-    const spacing = width / (props.publishedQuizSets.length + props.proposedQuizSets.length + 1);
+    const totalSets = orderedPublished.length + orderedProposed.length;
+    const spacing = width / (totalSets + 1);
     let currentX = spacing;
 
     // Draw published quiz sets
-    props.publishedQuizSets.forEach((set, i) => {
+    orderedPublished.forEach((set, i) => {
         drawNode(currentX, level2Y, set.setName, styles.publishedNode);
         drawLine(rootX, rootY + (styles.rootNode.height / 2),
             currentX, level2Y - (styles.publishedNode.height / 2));
@@ -161,7 +192,7 @@ const drawTree = () => {
     });
 
     // Draw proposed quiz sets
-    props.proposedQuizSets.forEach((set, i) => {
+    orderedProposed.forEach((set, i) => {
         drawNode(currentX, level2Y, set.setName, styles.proposedNode);
         drawLine(rootX, rootY + (styles.rootNode.height / 2),
             currentX, level2Y - (styles.proposedNode.height / 2), true);
