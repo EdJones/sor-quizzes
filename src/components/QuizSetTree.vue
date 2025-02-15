@@ -10,16 +10,19 @@
                     <button @click="selectedSet = null" class="close-button">×</button>
                 </div>
                 <div class="modal-body">
-                    <div v-for="itemId in selectedSet.items" :key="itemId" class="mb-6 quiz-item-container">
-                        <QuizItem :currentQuizItem="getQuizItem(itemId)" :itemNum="0" :reviewMode="false"
-                            :basicMode="selectedSet.basicMode" :debug="false" :userAnswer="null" />
-                        <div class="edit-button-container">
-                            <button @click="handleEditClick(itemId)" :class="[
-                                'edit-button',
-                                isUserOwnedDraft(itemId) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
-                            ]">
-                                {{ getEditButtonLabel(itemId) }}
-                            </button>
+                    <InProgress v-if="selectedSet.inProgress" :quizSet="selectedSet" @close="selectedSet = null" />
+                    <div v-else>
+                        <div v-for="itemId in selectedSet.items" :key="itemId" class="mb-6 quiz-item-container">
+                            <QuizItem :currentQuizItem="getQuizItem(itemId)" :itemNum="0" :reviewMode="false"
+                                :basicMode="selectedSet.basicMode" :debug="false" :userAnswer="null" />
+                            <div class="edit-button-container">
+                                <button @click="handleEditClick(itemId)" :class="[
+                                    'edit-button',
+                                    isUserOwnedDraft(itemId) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
+                                ]">
+                                    {{ getEditButtonLabel(itemId) }}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -127,6 +130,7 @@ export default {
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import QuizItem from './QuizItem.vue';
+import InProgress from './InProgress.vue';
 import { quizEntries } from '../data/quiz-items';
 import { useRouter } from 'vue-router';
 import { db } from '../firebase';

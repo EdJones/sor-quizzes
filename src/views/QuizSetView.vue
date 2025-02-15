@@ -12,9 +12,13 @@
             </button>
         </div>
 
-        <!-- Quiz Sets Overview Visualization -->
-        <div class="mb-2">
-            <QuizSetTree :publishedQuizSets="publishedQuizSets" :proposedQuizSets="proposedQuizSets" />
+        <!-- Quiz Sets Overview Visualization with Tree -->
+        <QuizSetTree :publishedQuizSets="publishedQuizSets" :proposedQuizSets="proposedQuizSets"
+            @select-quiz-set="handleSelectQuizSet" />
+
+        <!-- Preview InProgress Component if a proposed quizset is selected -->
+        <div v-if="selectedQuizSet && selectedQuizSet.inProgress" class="my-4">
+            <InProgress :quizSet="selectedQuizSet" @close="selectedQuizSet = null" />
         </div>
 
         <!-- Tab Navigation -->
@@ -376,6 +380,7 @@ import { useRouter } from 'vue-router';
 import { db } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import QuizSetTree from '../components/QuizSetTree.vue';
+import InProgress from '../components/InProgress.vue'; // Import the InProgress component
 
 const router = useRouter();
 const currentTab = ref('current');
@@ -392,14 +397,23 @@ const newQuizSet = reactive({
     items: []
 });
 
-// Filter quiz sets based on inProgress flag
+// Filtered quiz sets
 const publishedQuizSets = quizSets.filter(set => !set.inProgress);
 const proposedQuizSets = quizSets.filter(set => set.inProgress);
+
+// Use a ref to track the selected quiz set (for previewing the InProgress component)
+const selectedQuizSet = ref(null);
+
+// Event handler for when a quiz set is selected from the QuizSetTree (via click)
+const handleSelectQuizSet = (quizSet) => {
+    selectedQuizSet.value = quizSet;
+    // Optionally, switch to the 'proposed' tab if the quiz set is in progress
+    currentTab.value = quizSet.inProgress ? 'proposed' : 'current';
+};
 
 // Create new quiz set
 const createQuizSet = async () => {
     try {
-        // Create a new quiz set document in Firestore
         const quizSetRef = doc(db, 'quizSets', newQuizSet.setName.toLowerCase().replace(/\s+/g, '-'));
         await setDoc(quizSetRef, {
             setName: newQuizSet.setName,
@@ -410,7 +424,6 @@ const createQuizSet = async () => {
             createdAt: new Date().toISOString()
         });
 
-        // Add the new quiz set to the local array
         quizSets.push({
             setName: newQuizSet.setName,
             basicMode: newQuizSet.basicMode,
@@ -419,7 +432,6 @@ const createQuizSet = async () => {
             items: []
         });
 
-        // Reset form and close modal
         Object.assign(newQuizSet, {
             setName: '',
             basicMode: true,
@@ -428,8 +440,6 @@ const createQuizSet = async () => {
             items: []
         });
         showCreateModal.value = false;
-
-        // Switch to appropriate tab
         currentTab.value = newQuizSet.inProgress ? 'proposed' : 'current';
     } catch (error) {
         console.error('Error creating quiz set:', error);
@@ -462,7 +472,6 @@ const toggleQuestions = (setName) => {
 
 // Function to start a quiz
 const startQuiz = (quizSet) => {
-    // Find the index of the quiz set in the original quizSets array
     const quizIndex = quizSets.findIndex(set => set.setName === quizSet.setName);
     if (quizIndex !== -1) {
         router.push(`/quiz/${quizIndex}`);
@@ -471,13 +480,13 @@ const startQuiz = (quizSet) => {
 
 // Function to show quiz details
 const showQuizDetails = (id) => {
-    console.log('Showing quiz details for id:', id); // Debug log
+    console.log('Showing quiz details for id:', id);
     hoveredQuizId.value = id;
 };
 
 // Function to hide quiz details
 const hideQuizDetails = () => {
-    console.log('Hiding quiz details, current id:', hoveredQuizId.value); // Debug log
+    console.log('Hiding quiz details, current id:', hoveredQuizId.value);
     hoveredQuizId.value = null;
 };
 
@@ -485,7 +494,6 @@ const hideQuizDetails = () => {
 const getQuizItemOptions = (id) => {
     const quizItem = quizEntries.find(item => item.id === id);
     if (!quizItem) return [];
-
     return [
         quizItem.option1,
         quizItem.option2,
@@ -493,7 +501,7 @@ const getQuizItemOptions = (id) => {
         quizItem.option4,
         quizItem.option5,
         quizItem.option6
-    ].filter(option => option); // Filter out empty options
+    ].filter(option => option);
 };
 
 // Function to check if an option is the correct answer
