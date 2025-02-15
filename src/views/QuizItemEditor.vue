@@ -579,12 +579,12 @@
 <script>
 import { quizStore } from '../stores/quizStore';
 import { useAuthStore } from '../stores/authStore';
-import QuizItem from './QuizItem.vue';
+import QuizItem from '../components/QuizItem.vue';
 import VueJsonPretty from 'vue-json-pretty'
 import 'vue-json-pretty/lib/styles.css'
 import { quizEntries } from '../data/quiz-items';
 import { ref, watch, onMounted, computed } from 'vue';
-import ProgressSteps from './ProgressSteps.vue';
+import ProgressSteps from '../components/ProgressSteps.vue';
 
 export default {
   components: {
