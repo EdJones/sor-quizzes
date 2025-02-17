@@ -20,7 +20,8 @@
     </div>
 
     <div class="flex items-center gap-4">
-      <span class="preview-controls-text">Help build these quizzes.</span>
+      <span class="preview-controls-text">{{ store.draftQuizEntry.originalId ? `Editing Quiz Item
+        #${store.draftQuizEntry.originalId}` : 'Create New Quiz Item' }}</span>
       <div class="preview-controls">
         <div class="button-group">
           <div class="flex flex-col gap-1">
@@ -585,6 +586,7 @@ import 'vue-json-pretty/lib/styles.css'
 import { quizEntries } from '../data/quiz-items';
 import { ref, watch, onMounted, computed } from 'vue';
 import ProgressSteps from '../components/ProgressSteps.vue';
+import { useRoute, useRouter } from 'vue-router';
 
 export default {
   components: {
@@ -595,6 +597,8 @@ export default {
   setup() {
     const store = quizStore();
     const auth = useAuthStore();
+    const route = useRoute();
+    const router = useRouter();
 
     const userDraftQuizItems = computed(() => {
       return store.draftQuizItems
@@ -616,6 +620,33 @@ export default {
 
     onMounted(async () => {
       await store.fetchDraftQuizItems();
+
+      // Get the ID from the route
+      const itemId = route.params.id;
+
+      if (itemId) {
+        // First check if it's a draft item
+        const draftItem = [...userDraftQuizItems.value, ...otherDraftQuizItems.value, ...pendingQuizItems.value]
+          .find(item => item.id === itemId);
+
+        if (draftItem) {
+          // Load draft item
+          store.updateDraftQuizEntry(draftItem);
+        } else {
+          // Check if it's a permanent quiz item
+          const permanentItem = quizEntries.find(item => item.id.toString() === itemId);
+          if (permanentItem) {
+            // Create a copy of the permanent item for editing
+            const copyItem = { ...permanentItem };
+            copyItem.originalId = copyItem.id;  // Save the original ID
+            copyItem.id = null;  // Reset ID for new draft
+            store.updateDraftQuizEntry(copyItem);
+          } else {
+            // Item not found, redirect to home
+            router.push('/');
+          }
+        }
+      }
     });
 
     return { store, auth, userDraftQuizItems, otherDraftQuizItems, pendingQuizItems };
