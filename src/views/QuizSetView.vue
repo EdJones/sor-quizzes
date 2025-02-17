@@ -168,15 +168,17 @@
 
                         <!-- Edit Button -->
                         <div class="flex justify-end mt-4">
-                            <button @click="handleEditClick(quizSet)" :class="[
+                            <button @click="handleQuizSetClick(quizSet)" :class="[
                                 'px-3 py-1 text-sm rounded transition-colors duration-200 flex items-center text-white',
                                 isUserOwnedDraft(quizSet) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
                             ]">
-                                <span>{{ getEditButtonLabel(quizSet) }}</span>
+                                <span>View Details</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
                             </button>
                         </div>
@@ -306,15 +308,17 @@
 
                         <!-- Edit Button -->
                         <div class="flex justify-end mt-4">
-                            <button @click="handleEditClick(quizSet)" :class="[
+                            <button @click="handleQuizSetClick(quizSet)" :class="[
                                 'px-3 py-1 text-sm rounded transition-colors duration-200 flex items-center text-white',
                                 isUserOwnedDraft(quizSet) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
                             ]">
-                                <span>{{ getEditButtonLabel(quizSet) }}</span>
+                                <span>View Details</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
                             </button>
                         </div>
@@ -381,6 +385,43 @@
             </div>
         </div>
     </div>
+
+    <!-- Preview Modal -->
+    <div v-if="selectedQuizSet"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 z-50 overflow-y-auto"
+        @click="selectedQuizSet = null">
+        <div class="relative my-8 bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl w-full mx-auto" @click.stop>
+            <div
+                class="modal-header flex justify-between items-center mb-4 sticky top-0 bg-white dark:bg-gray-800 z-10">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedQuizSet.setName }}</h3>
+                <button @click="selectedQuizSet = null" class="text-gray-500 hover:text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body overflow-y-auto">
+                <InProgress v-if="selectedQuizSet && selectedQuizSet.inProgress" :quizSet="selectedQuizSet"
+                    @close="selectedQuizSet = null" />
+                <div v-else class="space-y-6">
+                    <div v-for="itemId in selectedQuizSet.items" :key="itemId" class="quiz-item-container">
+                        <QuizItem :currentQuizItem="getQuizItem(itemId)" :itemNum="0" :reviewMode="false"
+                            :basicMode="selectedQuizSet.basicMode" :debug="false" :userAnswer="null" />
+                        <div class="edit-button-container">
+                            <button @click="handleEditClick(selectedQuizSet)" :class="[
+                                'edit-button px-3 py-1 text-sm rounded transition-colors duration-200 flex items-center text-white',
+                                isUserOwnedDraft(selectedQuizSet) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
+                            ]">
+                                {{ getEditButtonLabel(selectedQuizSet) }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup>
@@ -393,6 +434,7 @@ import { doc, setDoc, collection, addDoc } from 'firebase/firestore';
 import QuizSetTree from '../components/QuizSetTree.vue';
 import InProgress from '../components/InProgress.vue'; // Import the InProgress component
 import { useAuth } from '../composables/useAuth';
+import QuizItem from '../components/QuizItem.vue';
 
 const router = useRouter();
 const currentTab = ref('current');
@@ -563,6 +605,16 @@ const isCorrectAnswer = (id, optionNumber) => {
     const quizItem = quizEntries.find(item => item.id === id);
     return quizItem?.correctAnswer === optionNumber;
 };
+
+// Update the click handler for quiz sets to show modal instead of direct edit
+const handleQuizSetClick = (quizSet) => {
+    selectedQuizSet.value = quizSet;
+};
+
+// Add getQuizItem function
+const getQuizItem = (id) => {
+    return quizEntries.find(item => item.id === id);
+};
 </script>
 
 <style scoped>
@@ -582,5 +634,44 @@ const isCorrectAnswer = (id, optionNumber) => {
 
 [class*="z-9999"] {
     z-index: 9999 !important;
+}
+
+.modal-body {
+    max-height: calc(90vh - 100px);
+    /* Subtract header height and padding */
+    overflow-y: auto;
+}
+
+.quiz-item-container {
+    position: relative;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid rgba(156, 163, 175, 0.2);
+    background-color: white;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+.quiz-item-container:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.edit-button-container {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+}
+
+.edit-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+    .quiz-item-container {
+        background-color: rgb(31, 41, 55);
+    }
 }
 </style>
