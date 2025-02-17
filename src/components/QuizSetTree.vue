@@ -10,7 +10,8 @@
                     <button @click="selectedSet = null" class="close-button">×</button>
                 </div>
                 <div class="modal-body">
-                    <InProgress v-if="selectedSet.inProgress" :quizSet="selectedSet" @close="selectedSet = null" />
+                    <InProgress v-if="selectedSet && selectedSet.inProgress" :quizSet="selectedSet"
+                        @close="selectedSet = null" />
                     <div v-else>
                         <div v-for="itemId in selectedSet.items" :key="itemId" class="mb-6 quiz-item-container">
                             <QuizItem :currentQuizItem="getQuizItem(itemId)" :itemNum="0" :reviewMode="false"
@@ -128,7 +129,7 @@ export default {
 </style>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import QuizItem from './QuizItem.vue';
 import InProgress from './InProgress.vue';
 import { quizEntries } from '../data/quiz-items';
@@ -219,7 +220,14 @@ const handleCanvasClick = (event) => {
     for (const node of nodePositions) {
         if (x >= node.x && x <= node.x + node.width &&
             y >= node.y && y <= node.y + node.height) {
-            selectedSet.value = node.set;
+            if (node.set.inProgress) {
+                selectedSet.value = {
+                    ...node.set,
+                    items: node.set.items ? node.set.items.map(id => getQuizItem(id)).filter(item => item) : []
+                };
+            } else {
+                selectedSet.value = node.set;
+            }
             break;
         }
     }
