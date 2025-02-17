@@ -3,7 +3,7 @@
         <div class="flex justify-end gap-4 mb-4">
             <span class="text-sm text-orange-300 dark:text-orange-300">Quiz Set editor is in fluid developent. Caveat
                 emptor.</span>
-            <button @click="showCreateModal = true"
+            <button @click="handleNewQuizItem"
                 class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
@@ -530,6 +530,11 @@ const toggleQuestions = (setName) => {
     }
     expandedSets.value = newExpandedSets;
 };
+
+//handle new quiz item
+const handleNewQuizItem = () => {
+    router.push('/edit-item/new');
+}
 
 // Update handleEditClick function
 const handleEditClick = async (quizSetOrItemId) => {
