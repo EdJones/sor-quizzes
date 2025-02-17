@@ -166,15 +166,17 @@
                             </div>
                         </div>
 
-                        <!-- Start Quiz Button -->
+                        <!-- Edit Button -->
                         <div class="flex justify-end mt-4">
-                            <button @click="startQuiz(quizSet)"
-                                class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200 flex items-center">
-                                <span>Start Quiz</span>
+                            <button @click="handleEditClick(quizSet)" :class="[
+                                'px-3 py-1 text-sm rounded transition-colors duration-200 flex items-center text-white',
+                                isUserOwnedDraft(quizSet) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
+                            ]">
+                                <span>{{ getEditButtonLabel(quizSet) }}</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5l7 7-7 7" />
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                             </button>
                         </div>
@@ -302,15 +304,17 @@
                             </div>
                         </div>
 
-                        <!-- Start Quiz Button -->
+                        <!-- Edit Button -->
                         <div class="flex justify-end mt-4">
-                            <button @click="startQuiz(quizSet)"
-                                class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200 flex items-center">
-                                <span>Start Quiz</span>
+                            <button @click="handleEditClick(quizSet)" :class="[
+                                'px-3 py-1 text-sm rounded transition-colors duration-200 flex items-center text-white',
+                                isUserOwnedDraft(quizSet) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
+                            ]">
+                                <span>{{ getEditButtonLabel(quizSet) }}</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5l7 7-7 7" />
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                             </button>
                         </div>
@@ -385,9 +389,10 @@ import { quizSets } from '../data/quizSets';
 import { quizEntries } from '../data/quiz-items';
 import { useRouter } from 'vue-router';
 import { db } from '../firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, addDoc } from 'firebase/firestore';
 import QuizSetTree from '../components/QuizSetTree.vue';
 import InProgress from '../components/InProgress.vue'; // Import the InProgress component
+import { useAuth } from '../composables/useAuth';
 
 const router = useRouter();
 const currentTab = ref('current');
@@ -410,6 +415,9 @@ const proposedQuizSets = quizSets.filter(set => set.inProgress);
 
 // Use a ref to track the selected quiz set (for previewing the InProgress component)
 const selectedQuizSet = ref(null);
+
+// Add auth setup in script setup section after other const declarations
+const auth = useAuth();
 
 // Event handler for when a quiz set is selected from the QuizSetTree (via click)
 const handleSelectQuizSet = (quizSet) => {
@@ -477,12 +485,51 @@ const toggleQuestions = (setName) => {
     expandedSets.value = newExpandedSets;
 };
 
-// Function to start a quiz
-const startQuiz = (quizSet) => {
-    const quizIndex = quizSets.findIndex(set => set.setName === quizSet.setName);
-    if (quizIndex !== -1) {
-        router.push(`/quiz/${quizIndex}`);
+// Update handleEditClick function
+const handleEditClick = async (quizSet) => {
+    if (isUserOwnedDraft(quizSet)) {
+        // Navigate directly to edit the draft
+        router.push(`/edit-item/${quizSet.id}`);
+    } else {
+        try {
+            // Create a copy of the quiz set for proposing changes
+            const quizSetCopy = {
+                setName: quizSet.setName,
+                basicMode: quizSet.basicMode,
+                items: [...quizSet.items],
+                podcastEpisodes: quizSet.podcastEpisodes || [],
+                resource: quizSet.resource || null,
+                originalId: quizSet.id || quizSet.setName,
+                isDraft: true,
+                inProgress: true,
+                createdBy: auth.user?.uid || 'anonymous',
+                createdAt: new Date().toISOString(),
+                status: 'proposed'
+            };
+
+            // Save to Firebase
+            const docRef = await addDoc(collection(db, 'quizSets'), quizSetCopy);
+
+            // Navigate to edit the new copy
+            router.push(`/edit-item/${docRef.id}`);
+        } catch (error) {
+            console.error('Error creating proposal:', error);
+            alert('Failed to create proposal. Please try again.');
+        }
     }
+};
+
+// Function to check if a quiz set is user-owned and in draft status
+const isUserOwnedDraft = (quizSet) => {
+    return quizSet.isDraft && quizSet.createdBy === auth.user?.uid;
+};
+
+// Function to get edit button label
+const getEditButtonLabel = (quizSet) => {
+    if (isUserOwnedDraft(quizSet)) {
+        return 'Edit';
+    }
+    return 'Propose Changes';
 };
 
 // Function to show quiz details
