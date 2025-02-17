@@ -102,8 +102,9 @@
                             <ul class="text-sm text-gray-600 dark:text-gray-400 list-disc pl-5 text-left">
                                 <li v-for="itemId in quizSet.items" :key="itemId" class="mb-2">
                                     <div class="truncate relative">
-                                        <span class="cursor-help hover:text-blue-500"
-                                            @mouseenter="showQuizDetails(itemId)" @mouseleave="hideQuizDetails">
+                                        <span class="cursor-pointer hover:text-blue-500"
+                                            @click="handleEditClick(itemId)" @mouseenter="showQuizDetails(itemId)"
+                                            @mouseleave="hideQuizDetails">
                                             {{ getQuizItemTitle(itemId) || 'Untitled Question' }}
                                         </span>
                                         <!-- Quiz Details Hover Modal -->
@@ -242,8 +243,9 @@
                             <ul class="text-sm text-gray-600 dark:text-gray-400 list-disc pl-5 text-left">
                                 <li v-for="itemId in quizSet.items" :key="itemId" class="mb-2">
                                     <div class="truncate relative">
-                                        <span class="cursor-help hover:text-blue-500"
-                                            @mouseenter="showQuizDetails(itemId)" @mouseleave="hideQuizDetails">
+                                        <span class="cursor-pointer hover:text-blue-500"
+                                            @click="handleEditClick(itemId)" @mouseenter="showQuizDetails(itemId)"
+                                            @mouseleave="hideQuizDetails">
                                             {{ getQuizItemTitle(itemId) || 'Untitled Question' }}
                                         </span>
                                         <!-- Quiz Details Hover Modal -->
@@ -530,7 +532,15 @@ const toggleQuestions = (setName) => {
 };
 
 // Update handleEditClick function
-const handleEditClick = async (quizSet) => {
+const handleEditClick = async (quizSetOrItemId) => {
+    // If the argument is a string, it's a quiz item ID
+    if (typeof quizSetOrItemId === 'string' || typeof quizSetOrItemId === 'number') {
+        router.push(`/edit-item/${quizSetOrItemId}`);
+        return;
+    }
+
+    // Otherwise, it's a quiz set
+    const quizSet = quizSetOrItemId;
     if (isUserOwnedDraft(quizSet)) {
         // Navigate directly to edit the draft
         router.push(`/edit-item/${quizSet.id}`);
