@@ -65,8 +65,8 @@ export default {
     },
     emits: ['change-view'],
     props: {
-        selectedQuiz: {
-            type: Number,
+        quizSet: {
+            type: Object,
             required: true
         }
     },
@@ -79,14 +79,12 @@ export default {
         }
     },
     created() {
-        console.log('Selected Quiz Index:', this.selectedQuiz);
-        console.log('Quiz Name:', quizSets[this.selectedQuiz]?.setName);
-        console.log('Full Quiz Data:', quizSets[this.selectedQuiz]);
-
-        this.quizTitle = quizSets[this.selectedQuiz]?.setName || 'New';
+        console.log('Quiz Name:', this.quizSet?.setName);
+        console.log('Full Quiz Data:', this.quizSet);
+        this.quizTitle = this.quizSet?.setName || 'New';
 
         // Ensure we get the episodes array
-        const currentQuiz = quizSets[this.selectedQuiz];
+        const currentQuiz = this.quizSet;
         if (currentQuiz?.podcastEpisodes) {
             console.log('Found podcastEpisodes:', currentQuiz.podcastEpisodes);
             this.podcastEpisodes = [...currentQuiz.podcastEpisodes];

@@ -41,7 +41,7 @@
                         driven
                         effort</a>, created by <a href="https://skunkworks-edu.com">Skunkworks\edu</a>.</p>
                 <div class="router-link-container">
-                    <router-link to="/new-item" class="button-75">Suggest a New Quiz Entry</router-link>
+                    <router-link to="/QuizSetView" class="button-75">Contribute to these quizzes</router-link>
                 </div>
             </div>
         </div>
