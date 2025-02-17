@@ -1,7 +1,16 @@
 <template>
     <div class="p-4">
-        <div class="flex justify-between items-center mb-4">
-            <h1 class="text-2xl">Quiz Set View</h1>
+        <div class="flex justify-end gap-4 mb-4">
+            <span class="text-sm text-orange-300 dark:text-orange-300">Quiz Set editor is in fluid developent. Caveat
+                emptor.</span>
+            <button @click="showCreateModal = true"
+                class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Create/Edit A Quiz Item
+            </button>
             <button @click="showCreateModal = true"
                 class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
@@ -12,9 +21,13 @@
             </button>
         </div>
 
-        <!-- Quiz Sets Overview Visualization -->
-        <div class="mb-2">
-            <QuizSetTree :publishedQuizSets="publishedQuizSets" :proposedQuizSets="proposedQuizSets" />
+        <!-- Quiz Sets Overview Visualization with Tree -->
+        <QuizSetTree :publishedQuizSets="publishedQuizSets" :proposedQuizSets="proposedQuizSets"
+            @select-quiz-set="handleSelectQuizSet" />
+
+        <!-- Preview InProgress Component if a proposed quizset is selected -->
+        <div v-if="selectedQuizSet && selectedQuizSet.inProgress" class="my-4">
+            <InProgress :quizSet="selectedQuizSet" @close="selectedQuizSet = null" />
         </div>
 
         <!-- Tab Navigation -->
@@ -89,8 +102,9 @@
                             <ul class="text-sm text-gray-600 dark:text-gray-400 list-disc pl-5 text-left">
                                 <li v-for="itemId in quizSet.items" :key="itemId" class="mb-2">
                                     <div class="truncate relative">
-                                        <span class="cursor-help hover:text-blue-500"
-                                            @mouseenter="showQuizDetails(itemId)" @mouseleave="hideQuizDetails">
+                                        <span class="cursor-pointer hover:text-blue-500"
+                                            @click="handleEditClick(itemId)" @mouseenter="showQuizDetails(itemId)"
+                                            @mouseleave="hideQuizDetails">
                                             {{ getQuizItemTitle(itemId) || 'Untitled Question' }}
                                         </span>
                                         <!-- Quiz Details Hover Modal -->
@@ -155,15 +169,19 @@
                             </div>
                         </div>
 
-                        <!-- Start Quiz Button -->
+                        <!-- Edit Button -->
                         <div class="flex justify-end mt-4">
-                            <button @click="startQuiz(quizSet)"
-                                class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200 flex items-center">
-                                <span>Start Quiz</span>
+                            <button @click="handleQuizSetClick(quizSet)" :class="[
+                                'px-3 py-1 text-sm rounded transition-colors duration-200 flex items-center text-white',
+                                isUserOwnedDraft(quizSet) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
+                            ]">
+                                <span>View Details</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5l7 7-7 7" />
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
                             </button>
                         </div>
@@ -225,8 +243,9 @@
                             <ul class="text-sm text-gray-600 dark:text-gray-400 list-disc pl-5 text-left">
                                 <li v-for="itemId in quizSet.items" :key="itemId" class="mb-2">
                                     <div class="truncate relative">
-                                        <span class="cursor-help hover:text-blue-500"
-                                            @mouseenter="showQuizDetails(itemId)" @mouseleave="hideQuizDetails">
+                                        <span class="cursor-pointer hover:text-blue-500"
+                                            @click="handleEditClick(itemId)" @mouseenter="showQuizDetails(itemId)"
+                                            @mouseleave="hideQuizDetails">
                                             {{ getQuizItemTitle(itemId) || 'Untitled Question' }}
                                         </span>
                                         <!-- Quiz Details Hover Modal -->
@@ -291,15 +310,19 @@
                             </div>
                         </div>
 
-                        <!-- Start Quiz Button -->
+                        <!-- Edit Button -->
                         <div class="flex justify-end mt-4">
-                            <button @click="startQuiz(quizSet)"
-                                class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200 flex items-center">
-                                <span>Start Quiz</span>
+                            <button @click="handleQuizSetClick(quizSet)" :class="[
+                                'px-3 py-1 text-sm rounded transition-colors duration-200 flex items-center text-white',
+                                isUserOwnedDraft(quizSet) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
+                            ]">
+                                <span>View Details</span>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5l7 7-7 7" />
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
                             </button>
                         </div>
@@ -366,6 +389,43 @@
             </div>
         </div>
     </div>
+
+    <!-- Preview Modal -->
+    <div v-if="selectedQuizSet"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 z-50 overflow-y-auto"
+        @click="selectedQuizSet = null">
+        <div class="relative my-8 bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl w-full mx-auto" @click.stop>
+            <div
+                class="modal-header flex justify-between items-center mb-4 sticky top-0 bg-white dark:bg-gray-800 z-10">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedQuizSet.setName }}</h3>
+                <button @click="selectedQuizSet = null" class="text-gray-500 hover:text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body overflow-y-auto">
+                <InProgress v-if="selectedQuizSet && selectedQuizSet.inProgress" :quizSet="selectedQuizSet"
+                    @close="selectedQuizSet = null" />
+                <div v-else class="space-y-6">
+                    <div v-for="itemId in selectedQuizSet.items" :key="itemId" class="quiz-item-container">
+                        <QuizItem :currentQuizItem="getQuizItem(itemId)" :itemNum="0" :reviewMode="false"
+                            :basicMode="selectedQuizSet.basicMode" :debug="false" :userAnswer="null" />
+                        <div class="edit-button-container">
+                            <button @click="handleEditClick(selectedQuizSet)" :class="[
+                                'edit-button px-3 py-1 text-sm rounded transition-colors duration-200 flex items-center text-white',
+                                isUserOwnedDraft(selectedQuizSet) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
+                            ]">
+                                {{ getEditButtonLabel(selectedQuizSet) }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup>
@@ -374,8 +434,11 @@ import { quizSets } from '../data/quizSets';
 import { quizEntries } from '../data/quiz-items';
 import { useRouter } from 'vue-router';
 import { db } from '../firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, addDoc } from 'firebase/firestore';
 import QuizSetTree from '../components/QuizSetTree.vue';
+import InProgress from '../components/InProgress.vue'; // Import the InProgress component
+import { useAuth } from '../composables/useAuth';
+import QuizItem from '../components/QuizItem.vue';
 
 const router = useRouter();
 const currentTab = ref('current');
@@ -392,14 +455,26 @@ const newQuizSet = reactive({
     items: []
 });
 
-// Filter quiz sets based on inProgress flag
+// Filtered quiz sets
 const publishedQuizSets = quizSets.filter(set => !set.inProgress);
 const proposedQuizSets = quizSets.filter(set => set.inProgress);
+
+// Use a ref to track the selected quiz set (for previewing the InProgress component)
+const selectedQuizSet = ref(null);
+
+// Add auth setup in script setup section after other const declarations
+const auth = useAuth();
+
+// Event handler for when a quiz set is selected from the QuizSetTree (via click)
+const handleSelectQuizSet = (quizSet) => {
+    selectedQuizSet.value = quizSet;
+    // Optionally, switch to the 'proposed' tab if the quiz set is in progress
+    currentTab.value = quizSet.inProgress ? 'proposed' : 'current';
+};
 
 // Create new quiz set
 const createQuizSet = async () => {
     try {
-        // Create a new quiz set document in Firestore
         const quizSetRef = doc(db, 'quizSets', newQuizSet.setName.toLowerCase().replace(/\s+/g, '-'));
         await setDoc(quizSetRef, {
             setName: newQuizSet.setName,
@@ -410,7 +485,6 @@ const createQuizSet = async () => {
             createdAt: new Date().toISOString()
         });
 
-        // Add the new quiz set to the local array
         quizSets.push({
             setName: newQuizSet.setName,
             basicMode: newQuizSet.basicMode,
@@ -419,7 +493,6 @@ const createQuizSet = async () => {
             items: []
         });
 
-        // Reset form and close modal
         Object.assign(newQuizSet, {
             setName: '',
             basicMode: true,
@@ -428,8 +501,6 @@ const createQuizSet = async () => {
             items: []
         });
         showCreateModal.value = false;
-
-        // Switch to appropriate tab
         currentTab.value = newQuizSet.inProgress ? 'proposed' : 'current';
     } catch (error) {
         console.error('Error creating quiz set:', error);
@@ -460,24 +531,70 @@ const toggleQuestions = (setName) => {
     expandedSets.value = newExpandedSets;
 };
 
-// Function to start a quiz
-const startQuiz = (quizSet) => {
-    // Find the index of the quiz set in the original quizSets array
-    const quizIndex = quizSets.findIndex(set => set.setName === quizSet.setName);
-    if (quizIndex !== -1) {
-        router.push(`/quiz/${quizIndex}`);
+// Update handleEditClick function
+const handleEditClick = async (quizSetOrItemId) => {
+    // If the argument is a string, it's a quiz item ID
+    if (typeof quizSetOrItemId === 'string' || typeof quizSetOrItemId === 'number') {
+        router.push(`/edit-item/${quizSetOrItemId}`);
+        return;
     }
+
+    // Otherwise, it's a quiz set
+    const quizSet = quizSetOrItemId;
+    if (isUserOwnedDraft(quizSet)) {
+        // Navigate directly to edit the draft
+        router.push(`/edit-item/${quizSet.id}`);
+    } else {
+        try {
+            // Create a copy of the quiz set for proposing changes
+            const quizSetCopy = {
+                setName: quizSet.setName,
+                basicMode: quizSet.basicMode,
+                items: [...quizSet.items],
+                podcastEpisodes: quizSet.podcastEpisodes || [],
+                resource: quizSet.resource || null,
+                originalId: quizSet.id || quizSet.setName,
+                isDraft: true,
+                inProgress: true,
+                createdBy: auth.user?.uid || 'anonymous',
+                createdAt: new Date().toISOString(),
+                status: 'proposed'
+            };
+
+            // Save to Firebase
+            const docRef = await addDoc(collection(db, 'quizSets'), quizSetCopy);
+
+            // Navigate to edit the new copy
+            router.push(`/edit-item/${docRef.id}`);
+        } catch (error) {
+            console.error('Error creating proposal:', error);
+            alert('Failed to create proposal. Please try again.');
+        }
+    }
+};
+
+// Function to check if a quiz set is user-owned and in draft status
+const isUserOwnedDraft = (quizSet) => {
+    return quizSet.isDraft && quizSet.createdBy === auth.user?.uid;
+};
+
+// Function to get edit button label
+const getEditButtonLabel = (quizSet) => {
+    if (isUserOwnedDraft(quizSet)) {
+        return 'Edit';
+    }
+    return 'Propose Changes';
 };
 
 // Function to show quiz details
 const showQuizDetails = (id) => {
-    console.log('Showing quiz details for id:', id); // Debug log
+    console.log('Showing quiz details for id:', id);
     hoveredQuizId.value = id;
 };
 
 // Function to hide quiz details
 const hideQuizDetails = () => {
-    console.log('Hiding quiz details, current id:', hoveredQuizId.value); // Debug log
+    console.log('Hiding quiz details, current id:', hoveredQuizId.value);
     hoveredQuizId.value = null;
 };
 
@@ -485,7 +602,6 @@ const hideQuizDetails = () => {
 const getQuizItemOptions = (id) => {
     const quizItem = quizEntries.find(item => item.id === id);
     if (!quizItem) return [];
-
     return [
         quizItem.option1,
         quizItem.option2,
@@ -493,13 +609,23 @@ const getQuizItemOptions = (id) => {
         quizItem.option4,
         quizItem.option5,
         quizItem.option6
-    ].filter(option => option); // Filter out empty options
+    ].filter(option => option);
 };
 
 // Function to check if an option is the correct answer
 const isCorrectAnswer = (id, optionNumber) => {
     const quizItem = quizEntries.find(item => item.id === id);
     return quizItem?.correctAnswer === optionNumber;
+};
+
+// Update the click handler for quiz sets to show modal instead of direct edit
+const handleQuizSetClick = (quizSet) => {
+    selectedQuizSet.value = quizSet;
+};
+
+// Add getQuizItem function
+const getQuizItem = (id) => {
+    return quizEntries.find(item => item.id === id);
 };
 </script>
 
@@ -520,5 +646,44 @@ const isCorrectAnswer = (id, optionNumber) => {
 
 [class*="z-9999"] {
     z-index: 9999 !important;
+}
+
+.modal-body {
+    max-height: calc(90vh - 100px);
+    /* Subtract header height and padding */
+    overflow-y: auto;
+}
+
+.quiz-item-container {
+    position: relative;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid rgba(156, 163, 175, 0.2);
+    background-color: white;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+.quiz-item-container:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.edit-button-container {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+}
+
+.edit-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+    .quiz-item-container {
+        background-color: rgb(31, 41, 55);
+    }
 }
 </style>

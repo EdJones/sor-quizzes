@@ -1,6 +1,34 @@
 <template>
     <div class="quiz-tree-container">
-        <canvas ref="canvas" class="quiz-tree-canvas"></canvas>
+        <canvas ref="canvas" class="quiz-tree-canvas" @click="handleCanvasClick"></canvas>
+
+        <!-- Preview Modal -->
+        <div v-if="selectedSet" class="preview-modal" @click="selectedSet = null">
+            <div class="modal-content" @click.stop>
+                <div class="modal-header">
+                    <h3 class="text-xl font-bold mb-4">{{ selectedSet.setName }}</h3>
+                    <button @click="selectedSet = null" class="close-button">×</button>
+                </div>
+                <div class="modal-body">
+                    <InProgress v-if="selectedSet && selectedSet.inProgress" :quizSet="selectedSet"
+                        @close="selectedSet = null" />
+                    <div v-else>
+                        <div v-for="itemId in selectedSet.items" :key="itemId" class="mb-6 quiz-item-container">
+                            <QuizItem :currentQuizItem="getQuizItem(itemId)" :itemNum="0" :reviewMode="false"
+                                :basicMode="selectedSet.basicMode" :debug="false" :userAnswer="null" />
+                            <div class="edit-button-container">
+                                <button @click="handleEditClick(itemId)" :class="[
+                                    'edit-button',
+                                    isUserOwnedDraft(itemId) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
+                                ]">
+                                    {{ getEditButtonLabel(itemId) }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -16,7 +44,7 @@ export default {
     height: 400px;
     background: white;
     border-radius: 8px;
-    padding: 16px;
+    padding: 10px;
 }
 
 .quiz-tree-canvas {
@@ -24,16 +52,94 @@ export default {
     height: 100%;
 }
 
+.preview-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.close-button {
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.quiz-item-container {
+    position: relative;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid rgba(156, 163, 175, 0.2);
+}
+
+.edit-button-container {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+}
+
+.edit-button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
     .quiz-tree-container {
         background: #1F2937;
     }
+
+    .modal-content {
+        background: #1F2937;
+        color: white;
+    }
+
+    .quiz-item-container {
+        border-bottom-color: rgba(156, 163, 175, 0.1);
+    }
 }
 </style>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
+import QuizItem from './QuizItem.vue';
+import InProgress from './InProgress.vue';
+import { quizEntries } from '../data/quiz-items';
+import { useRouter } from 'vue-router';
+import { db } from '../firebase';
+import { collection, addDoc } from 'firebase/firestore';
+import { useAuth } from '../composables/useAuth';
+
+const router = useRouter();
+const auth = useAuth();
 
 const props = defineProps({
     publishedQuizSets: {
@@ -47,7 +153,9 @@ const props = defineProps({
 });
 
 const canvas = ref(null);
+const selectedSet = ref(null);
 let ctx = null;
+let nodePositions = []; // Store clickable areas
 
 // Node styling
 const styles = {
@@ -97,8 +205,36 @@ const drawRoundedRect = (x, y, width, height, radius, style) => {
     ctx.closePath();
 };
 
-// Draw a node with text
-const drawNode = (x, y, text, style) => {
+// Get quiz item by ID
+const getQuizItem = (id) => {
+    return quizEntries.find(item => item.id === id);
+};
+
+// Handle canvas clicks
+const handleCanvasClick = (event) => {
+    const rect = canvas.value.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    // Check if click is within any node
+    for (const node of nodePositions) {
+        if (x >= node.x && x <= node.x + node.width &&
+            y >= node.y && y <= node.y + node.height) {
+            if (node.set.inProgress) {
+                selectedSet.value = {
+                    ...node.set,
+                    items: node.set.items ? node.set.items.map(id => getQuizItem(id)).filter(item => item) : []
+                };
+            } else {
+                selectedSet.value = node.set;
+            }
+            break;
+        }
+    }
+};
+
+// Modified drawNode function to store clickable areas
+const drawNode = (x, y, text, style, set = null) => {
     if (!ctx) return;
 
     // Calculate text dimensions
@@ -111,6 +247,17 @@ const drawNode = (x, y, text, style) => {
     // Calculate node position (centered on x)
     const nodeX = x - (nodeWidth / 2);
     const nodeY = y - (nodeHeight / 2);
+
+    // Store clickable area if this is a quiz set node
+    if (set) {
+        nodePositions.push({
+            x: nodeX,
+            y: nodeY,
+            width: nodeWidth,
+            height: nodeHeight,
+            set
+        });
+    }
 
     // Draw background
     ctx.fillStyle = style.color;
@@ -157,11 +304,12 @@ const drawLine = (x1, y1, x2, y2, isDashed = false) => {
     ctx.setLineDash([]); // Reset dash pattern
 };
 
-// Main drawing function
+// Modified drawTree function
 const drawTree = () => {
     if (!canvas.value || !ctx) return;
 
-    // Clear canvas
+    // Clear node positions and canvas
+    nodePositions = [];
     ctx.clearRect(0, 0, canvas.value.width, canvas.value.height);
 
     // Calculate dimensions
@@ -197,7 +345,7 @@ const drawTree = () => {
             const isProposed = props.proposedQuizSets.includes(set);
 
             // Draw node
-            drawNode(x, y, set.setName, isProposed ? styles.proposedNode : styles.publishedNode);
+            drawNode(x, y, set.setName, isProposed ? styles.proposedNode : styles.publishedNode, set);
 
             // Draw connecting line to root
             drawLine(
@@ -234,4 +382,49 @@ onMounted(() => {
 watch([() => props.publishedQuizSets, () => props.proposedQuizSets], () => {
     drawTree();
 }, { deep: true });
+
+// Function to check if an item is a draft owned by the current user
+const isUserOwnedDraft = (itemId) => {
+    const item = getQuizItem(itemId);
+    return item?.isDraft && item?.createdBy === auth.user?.uid;
+};
+
+// Function to get the appropriate button label
+const getEditButtonLabel = (itemId) => {
+    if (isUserOwnedDraft(itemId)) {
+        return 'Edit';
+    }
+    return 'Propose Changes';
+};
+
+// Handle edit button click
+const handleEditClick = async (itemId) => {
+    const item = getQuizItem(itemId);
+
+    if (isUserOwnedDraft(itemId)) {
+        // Navigate directly to edit the draft
+        router.push(`/edit-item/${itemId}`);
+    } else {
+        try {
+            // Create a copy of the item for proposing changes
+            const itemCopy = {
+                ...item,
+                originalId: itemId,
+                isDraft: true,
+                createdBy: auth.user?.uid || 'anonymous',
+                createdAt: new Date().toISOString(),
+                status: 'proposed'
+            };
+
+            // Save to Firebase
+            const docRef = await addDoc(collection(db, 'proposedQuizItems'), itemCopy);
+
+            // Navigate to edit the new copy
+            router.push(`/edit-item/${docRef.id}`);
+        } catch (error) {
+            console.error('Error creating proposal:', error);
+            alert('Failed to create proposal. Please try again.');
+        }
+    }
+};
 </script>
