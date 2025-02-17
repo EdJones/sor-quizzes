@@ -414,11 +414,11 @@
                         <QuizItem :currentQuizItem="getQuizItem(itemId)" :itemNum="0" :reviewMode="false"
                             :basicMode="selectedQuizSet.basicMode" :debug="false" :userAnswer="null" />
                         <div class="edit-button-container">
-                            <button @click="handleEditClick(selectedQuizSet)" :class="[
+                            <button @click="handleEditClick(itemId)" :class="[
                                 'edit-button px-3 py-1 text-sm rounded transition-colors duration-200 flex items-center text-white',
-                                isUserOwnedDraft(selectedQuizSet) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
+                                'bg-blue-500 hover:bg-blue-600'
                             ]">
-                                {{ getEditButtonLabel(selectedQuizSet) }}
+                                Edit Quiz Item
                             </button>
                         </div>
                     </div>
