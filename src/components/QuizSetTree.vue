@@ -1,34 +1,6 @@
 <template>
     <div class="quiz-tree-container">
         <canvas ref="canvas" class="quiz-tree-canvas" @click="handleCanvasClick"></canvas>
-
-        <!-- Preview Modal -->
-        <div v-if="selectedSet" class="preview-modal" @click="selectedSet = null">
-            <div class="modal-content" @click.stop>
-                <div class="modal-header">
-                    <h3 class="text-xl font-bold mb-4">{{ selectedSet.setName }}</h3>
-                    <button @click="selectedSet = null" class="close-button">×</button>
-                </div>
-                <div class="modal-body">
-                    <InProgress v-if="selectedSet && selectedSet.inProgress" :quizSet="selectedSet"
-                        @close="selectedSet = null" />
-                    <div v-else>
-                        <div v-for="itemId in selectedSet.items" :key="itemId" class="mb-6 quiz-item-container">
-                            <QuizItem :currentQuizItem="getQuizItem(itemId)" :itemNum="0" :reviewMode="false"
-                                :basicMode="selectedSet.basicMode" :debug="false" :userAnswer="null" />
-                            <div class="edit-button-container">
-                                <button @click="handleEditClick(itemId)" :class="[
-                                    'edit-button',
-                                    isUserOwnedDraft(itemId) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
-                                ]">
-                                    {{ getEditButtonLabel(itemId) }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </template>
 
@@ -152,8 +124,9 @@ const props = defineProps({
     }
 });
 
+const emit = defineEmits(['select-quiz-set']);
+
 const canvas = ref(null);
-const selectedSet = ref(null);
 let ctx = null;
 let nodePositions = []; // Store clickable areas
 
@@ -220,14 +193,7 @@ const handleCanvasClick = (event) => {
     for (const node of nodePositions) {
         if (x >= node.x && x <= node.x + node.width &&
             y >= node.y && y <= node.y + node.height) {
-            if (node.set.inProgress) {
-                selectedSet.value = {
-                    ...node.set,
-                    items: node.set.items ? node.set.items.map(id => getQuizItem(id)).filter(item => item) : []
-                };
-            } else {
-                selectedSet.value = node.set;
-            }
+            emit('select-quiz-set', node.set);
             break;
         }
     }
