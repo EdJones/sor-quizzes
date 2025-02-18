@@ -72,7 +72,18 @@
                     </div>
                 </div>
                 <div class="text-xs text-gray-600 dark:text-gray-300" @click="showContributions = true">
-                    Contributor: {{ hasContributed }}
+                    <div
+                        class="flex items-center gap-1 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 rounded px-2 py-1 transition-colors">
+                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        <span v-if="contributionStats.total > 0">
+                            {{ contributionStats.total }} quiz {{ contributionStats.total === 1 ? 'entry' : 'entries' }}
+                            ({{ contributionStats.published }} published)
+                        </span>
+                        <span v-else>No quiz entries yet</span>
+                    </div>
                 </div>
                 <!-- Contributor Mode Toggle -->
                 <button @click="toggleContributorMode"
@@ -144,6 +155,7 @@ export default {
         const router = useRouter();
         const contributorMode = ref(false);
         const hasContributed = ref(false);
+        const contributionStats = ref({ total: 0, published: 0, draft: 0 });
 
         const fetchContributorStatus = async () => {
             if (!authStore.user || authStore.user.isAnonymous) return;
@@ -165,14 +177,29 @@ export default {
                     getDocs(userIdQuery)
                 ]);
 
-                // User has contributed if either query returns results
-                hasContributed.value = !emailSnapshot.empty || !userIdSnapshot.empty;
+                // Combine results and remove duplicates
+                const uniqueEntries = new Map();
+                [...emailSnapshot.docs, ...userIdSnapshot.docs].forEach(doc => {
+                    if (!uniqueEntries.has(doc.id)) {
+                        uniqueEntries.set(doc.id, doc.data());
+                    }
+                });
+
+                // Calculate stats
+                const entries = Array.from(uniqueEntries.values());
+                contributionStats.value = {
+                    total: entries.length,
+                    published: entries.filter(entry => !entry.isDraft).length,
+                    draft: entries.filter(entry => entry.isDraft).length
+                };
+
+                // User has contributed if they have any entries
+                hasContributed.value = contributionStats.value.total > 0;
 
                 console.log('Contributor status:', {
                     email: authStore.user.email,
                     uid: authStore.user.uid,
-                    emailMatches: emailSnapshot.size,
-                    uidMatches: userIdSnapshot.size,
+                    stats: contributionStats.value,
                     hasContributed: hasContributed.value
                 });
             } catch (error) {
@@ -251,7 +278,8 @@ export default {
             handleSignOut,
             contributorMode,
             toggleContributorMode,
-            hasContributed
+            hasContributed,
+            contributionStats,
         };
     }
 };
