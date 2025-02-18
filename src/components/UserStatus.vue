@@ -30,14 +30,14 @@
                         {{ displayName }}
                     </span>
                     <!-- Contributor Badge -->
-                    <span v-if="hasContributed"
-                        class="ml-2 px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 rounded-full flex items-center gap-1">
+                    <button v-if="hasContributed" @click="showContributions = true"
+                        class="ml-2 px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 rounded-full flex items-center gap-1 hover:bg-amber-200 dark:hover:bg-amber-800 transition-colors">
                         <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                         </svg>
                         Contributor
-                    </span>
+                    </button>
                     <!-- Contributor Mode Badge -->
                     <span v-if="contributorMode"
                         class="ml-2 px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded-full flex items-center gap-1">
@@ -71,7 +71,9 @@
                         </svg>
                     </div>
                 </div>
-
+                <div class="text-xs text-gray-600 dark:text-gray-300" @click="showContributions = true">
+                    Contributor: {{ hasContributed }}
+                </div>
                 <!-- Contributor Mode Toggle -->
                 <button @click="toggleContributorMode"
                     class="flex items-center gap-2 text-xs px-2 py-1 rounded transition-colors" :class="[
@@ -112,6 +114,9 @@
 
         <!-- Progress Details Popup -->
         <ProgressDetailsPopup :show="showProgressDetails" @close="showProgressDetails = false" />
+
+        <!-- Contributions Modal -->
+        <ContributionsModal :show="showContributions" @close="showContributions = false" />
     </div>
 </template>
 
@@ -121,18 +126,21 @@ import { useProgressStore } from '../stores/progressStore';
 import { onMounted, computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import ProgressDetailsPopup from './ProgressDetailsPopup.vue';
+import ContributionsModal from './ContributionsModal.vue';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export default {
     name: 'UserStatus',
     components: {
-        ProgressDetailsPopup
+        ProgressDetailsPopup,
+        ContributionsModal
     },
     setup() {
         const authStore = useAuthStore();
         const progressStore = useProgressStore();
         const showProgressDetails = ref(false);
+        const showContributions = ref(false);
         const router = useRouter();
         const contributorMode = ref(false);
         const hasContributed = ref(false);
@@ -214,6 +222,7 @@ export default {
             authStore,
             progressStore,
             showProgressDetails,
+            showContributions,
             displayName,
             provider,
             progressText,
