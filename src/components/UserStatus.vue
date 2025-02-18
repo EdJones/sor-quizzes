@@ -29,10 +29,23 @@
                     <span class="text-gray-600">
                         {{ displayName }}
                     </span>
+                    <!-- Contributor Badge -->
+                    <span v-if="hasContributed"
+                        class="ml-2 px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 rounded-full flex items-center gap-1">
+                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                        </svg>
+                        Contributor
+                    </span>
                     <!-- Contributor Mode Badge -->
                     <span v-if="contributorMode"
-                        class="ml-2 px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded-full">
-                        Contributor
+                        class="ml-2 px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded-full flex items-center gap-1">
+                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                        Editing
                     </span>
                 </div>
 
@@ -108,6 +121,8 @@ import { useProgressStore } from '../stores/progressStore';
 import { onMounted, computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import ProgressDetailsPopup from './ProgressDetailsPopup.vue';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 export default {
     name: 'UserStatus',
@@ -120,6 +135,20 @@ export default {
         const showProgressDetails = ref(false);
         const router = useRouter();
         const contributorMode = ref(false);
+        const hasContributed = ref(false);
+
+        const fetchContributorStatus = async () => {
+            if (!authStore.user || authStore.user.isAnonymous) return;
+
+            try {
+                const userDoc = await getDoc(doc(db, 'users', authStore.user.uid));
+                if (userDoc.exists()) {
+                    hasContributed.value = userDoc.data().hasContributed || false;
+                }
+            } catch (error) {
+                console.error('Error fetching contributor status:', error);
+            }
+        };
 
         onMounted(async () => {
             console.log('UserStatus mounted');
@@ -132,6 +161,7 @@ export default {
             if (savedMode) {
                 contributorMode.value = JSON.parse(savedMode);
             }
+            await fetchContributorStatus();
         });
 
         // Watch for changes in progress, but don't re-fetch if already initialized
@@ -142,6 +172,15 @@ export default {
         // Watch for changes in contributor mode and save to localStorage
         watch(contributorMode, (newValue) => {
             localStorage.setItem('contributorMode', JSON.stringify(newValue));
+        });
+
+        // Watch for auth changes to update contributor status
+        watch(() => authStore.user, async (newUser) => {
+            if (newUser && !newUser.isAnonymous) {
+                await fetchContributorStatus();
+            } else {
+                hasContributed.value = false;
+            }
         });
 
         const displayName = computed(() => {
@@ -180,7 +219,8 @@ export default {
             progressText,
             handleSignOut,
             contributorMode,
-            toggleContributorMode
+            toggleContributorMode,
+            hasContributed
         };
     }
 };
