@@ -32,22 +32,33 @@
 
         <!-- Tab Navigation -->
         <div class="border-b border-gray-200">
-            <nav class="-mb-px flex">
-                <button @click="currentTab = 'current'" :class="[
-                    currentTab === 'current'
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                    'w-24 py-2 px-1 text-center border-b-2 font-medium text-sm'
-                ]">
-                    Current
-                </button>
-                <button @click="currentTab = 'proposed'" :class="[
-                    currentTab === 'proposed'
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                    'w-24 py-2 px-1 text-center border-b-2 font-medium text-sm'
-                ]">
-                    Proposed
+            <nav class="-mb-px flex justify-between items-center">
+                <div class="flex">
+                    <button @click="currentTab = 'current'" :class="[
+                        currentTab === 'current'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                        'w-24 py-2 px-1 text-center border-b-2 font-medium text-sm'
+                    ]">
+                        Current
+                    </button>
+                    <button @click="currentTab = 'proposed'" :class="[
+                        currentTab === 'proposed'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                        'w-24 py-2 px-1 text-center border-b-2 font-medium text-sm'
+                    ]">
+                        Proposed
+                    </button>
+                </div>
+                <button @click="router.push('/issues')"
+                    class="flex items-center gap-1 px-3 py-1 text-sm border-green-400 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Issues
                 </button>
             </nav>
         </div>
