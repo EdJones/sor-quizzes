@@ -1,8 +1,7 @@
 <template>
     <div class="p-4">
         <div class="flex justify-end gap-4 mb-4">
-            <span class="text-sm text-orange-300 dark:text-orange-300">Quiz Set editor is in fluid developent. Caveat
-                emptor.</span>
+
             <button @click="handleNewQuizItem"
                 class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
@@ -19,8 +18,20 @@
                 </svg>
                 Create New Quiz Set
             </button>
-        </div>
 
+            <button @click="router.push('/issues')"
+                class="flex items-center gap-1 px-3 py-1 text-sm border-green-400 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-green-400 dark:text-green-400 rounded-lg transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Issues
+            </button>
+        </div>
+        <div> <span class="text-sm text-orange-300 dark:text-orange-300">Quiz Set editor is in fluid developent.
+                Caveat
+                emptor.</span></div>
         <!-- Quiz Sets Overview Visualization with Tree -->
         <QuizSetTree :publishedQuizSets="publishedQuizSets" :proposedQuizSets="proposedQuizSets"
             @select-quiz-set="handleSelectQuizSet" />
@@ -51,15 +62,7 @@
                         Proposed
                     </button>
                 </div>
-                <button @click="router.push('/issues')"
-                    class="flex items-center gap-1 px-3 py-1 text-sm border-green-400 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors duration-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Issues
-                </button>
+
             </nav>
         </div>
 
@@ -96,7 +99,8 @@
                         <!-- Quiz Items List -->
                         <div class="mt-3 space-y-1">
                             <div class="flex justify-between items-center">
-                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 text-left">Quiz Items:
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 text-left">Quiz
+                                    Items:
                                 </h4>
                                 <button @click="toggleQuestions(quizSet.setName)"
                                     class="text-sm text-blue-500 hover:text-blue-600 flex items-center">
@@ -237,7 +241,8 @@
                         <!-- Quiz Items List -->
                         <div class="mt-3 space-y-1">
                             <div class="flex justify-between items-center">
-                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 text-left">Quiz Items:
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 text-left">Quiz
+                                    Items:
                                 </h4>
                                 <button @click="toggleQuestions(quizSet.setName)"
                                     class="text-sm text-blue-500 hover:text-blue-600 flex items-center">
