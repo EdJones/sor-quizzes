@@ -42,6 +42,13 @@ const routes = [
     path: '/edit-item/:id',
     name: 'EditQuizItem',
     component: QuizItemEditor,
+    beforeEnter: requireAuth,
+    props: true
+  },
+  {
+    path: '/edit-item/new',
+    name: 'NewQuizItem',
+    component: QuizItemEditor,
     beforeEnter: requireAuth
   },
   // Catch all route for 404

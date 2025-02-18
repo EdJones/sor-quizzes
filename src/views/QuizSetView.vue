@@ -544,7 +544,7 @@ const toggleQuestions = (setName) => {
 
 //handle new quiz item
 const handleNewQuizItem = () => {
-    router.push('/edit-item/new');
+    router.push({ name: 'NewQuizItem' });
 }
 
 // Update handleEditClick function
