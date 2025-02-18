@@ -85,7 +85,7 @@
                         </div>
                     </div>
                     <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                        Created {{ new Date(item.createdAt).toLocaleDateString() }}
+                        Created {{ item.timestamp.toDate().toLocaleDateString() }}
                     </div>
                 </div>
             </div>
