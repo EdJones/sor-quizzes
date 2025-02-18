@@ -127,7 +127,7 @@ import { onMounted, computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import ProgressDetailsPopup from './ProgressDetailsPopup.vue';
 import ContributionsModal from './ContributionsModal.vue';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, query, collection, getDocs, where } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export default {
@@ -149,10 +149,32 @@ export default {
             if (!authStore.user || authStore.user.isAnonymous) return;
 
             try {
-                const userDoc = await getDoc(doc(db, 'users', authStore.user.uid));
-                if (userDoc.exists()) {
-                    hasContributed.value = userDoc.data().hasContributed || false;
-                }
+                // Create queries for both email and userId
+                const emailQuery = query(
+                    collection(db, 'quizEntries'),
+                    where('userEmail', '==', authStore.user.email)
+                );
+                const userIdQuery = query(
+                    collection(db, 'quizEntries'),
+                    where('userId', '==', authStore.user.uid)
+                );
+
+                // Execute both queries
+                const [emailSnapshot, userIdSnapshot] = await Promise.all([
+                    getDocs(emailQuery),
+                    getDocs(userIdQuery)
+                ]);
+
+                // User has contributed if either query returns results
+                hasContributed.value = !emailSnapshot.empty || !userIdSnapshot.empty;
+
+                console.log('Contributor status:', {
+                    email: authStore.user.email,
+                    uid: authStore.user.uid,
+                    emailMatches: emailSnapshot.size,
+                    uidMatches: userIdSnapshot.size,
+                    hasContributed: hasContributed.value
+                });
             } catch (error) {
                 console.error('Error fetching contributor status:', error);
             }
