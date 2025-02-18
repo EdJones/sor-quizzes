@@ -82,22 +82,17 @@
                             {{ contributionStats.total }} quiz {{ contributionStats.total === 1 ? 'entry' : 'entries' }}
                             ({{ contributionStats.published }} published)
                         </span>
+
                         <span v-else>No quiz entries yet</span>
+                        <svg class="h-4 w-4 ml-1 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300 transition-colors"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                     </div>
                 </div>
                 <!-- Contributor Mode Toggle -->
-                <button @click="toggleContributorMode"
-                    class="flex items-center gap-2 text-xs px-2 py-1 rounded transition-colors" :class="[
-                        contributorMode
-                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-800'
-                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    ]">
-                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    {{ contributorMode ? 'Exit Contributor Mode' : 'Enter Contributor Mode' }}
-                </button>
+
 
                 <!-- Login/Sign Out Buttons -->
                 <router-link v-if="authStore.user.isAnonymous" to="/login"
