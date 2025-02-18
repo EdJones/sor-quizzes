@@ -122,7 +122,7 @@ const props = defineProps({
     }
 });
 
-defineEmits(['close']);
+const emit = defineEmits(['close']);
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -214,6 +214,9 @@ const handleEditItem = (itemId) => {
 };
 
 const handleNewContribution = () => {
+    // Close the modal first
+    emit('close');
+    // Then navigate
     router.push({ name: 'NewQuizItem' });
 };
 
