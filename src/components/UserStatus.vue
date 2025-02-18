@@ -29,6 +29,11 @@
                     <span class="text-gray-600">
                         {{ displayName }}
                     </span>
+                    <!-- Contributor Mode Badge -->
+                    <span v-if="contributorMode"
+                        class="ml-2 px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded-full">
+                        Contributor
+                    </span>
                 </div>
 
                 <!-- Progress Indicator with Info Icon -->
@@ -53,6 +58,20 @@
                         </svg>
                     </div>
                 </div>
+
+                <!-- Contributor Mode Toggle -->
+                <button @click="toggleContributorMode"
+                    class="flex items-center gap-2 text-xs px-2 py-1 rounded transition-colors" :class="[
+                        contributorMode
+                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-800'
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    ]">
+                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    {{ contributorMode ? 'Exit Contributor Mode' : 'Enter Contributor Mode' }}
+                </button>
 
                 <!-- Login/Sign Out Buttons -->
                 <router-link v-if="authStore.user.isAnonymous" to="/login"
@@ -100,6 +119,7 @@ export default {
         const progressStore = useProgressStore();
         const showProgressDetails = ref(false);
         const router = useRouter();
+        const contributorMode = ref(false);
 
         onMounted(async () => {
             console.log('UserStatus mounted');
@@ -107,12 +127,22 @@ export default {
                 await progressStore.initialize();
                 await progressStore.fetchProgress();
             }
+            // Load contributor mode from localStorage
+            const savedMode = localStorage.getItem('contributorMode');
+            if (savedMode) {
+                contributorMode.value = JSON.parse(savedMode);
+            }
         });
 
         // Watch for changes in progress, but don't re-fetch if already initialized
         watch(() => progressStore.lastUpdated, () => {
             console.log('Progress updated in store');
         }, { deep: true });
+
+        // Watch for changes in contributor mode and save to localStorage
+        watch(contributorMode, (newValue) => {
+            localStorage.setItem('contributorMode', JSON.stringify(newValue));
+        });
 
         const displayName = computed(() => {
             if (authStore.user.isAnonymous) return 'Anonymous User';
@@ -127,6 +157,10 @@ export default {
         const progressText = computed(() => {
             return `${progressStore.quizCompletionCount}/${progressStore.totalQuizzes} quizzes`;
         });
+
+        const toggleContributorMode = () => {
+            contributorMode.value = !contributorMode.value;
+        };
 
         const handleSignOut = async () => {
             try {
@@ -144,7 +178,9 @@ export default {
             displayName,
             provider,
             progressText,
-            handleSignOut
+            handleSignOut,
+            contributorMode,
+            toggleContributorMode
         };
     }
 };
