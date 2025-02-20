@@ -3,6 +3,7 @@ export const quizSets = [{
     basicMode: false,
     items: [2, 1, 5, 4, 6, 15, 16, 17, 18, 19],
     displayLevel: 1,
+    displayColumn: 1,
     children: []
 },
 {
@@ -10,20 +11,23 @@ export const quizSets = [{
     basicMode: true,
     items: [10, 22, 11, 14, 21, 4, 6, 12, 13, 3],
     displayLevel: 1,
+    displayColumn: 1,
     children: []
 },
 {
     setName: "kinder-first",
     basicMode: true,
     items: [23, 42, 41, 24, 26, 25, 11],
-    displayLevel: 2,
+    displayLevel: 1,
+    displayColumn: 2,
     children: []
 },
 {
     setName: "admin",
     basicMode: true,
     items: [14, 30, 28, 18, 29, 32, 16, 27, 31],
-    displayLevel: 2,
+    displayLevel: 1,
+    displayColumn: 3,
     children: []
 },
 {
@@ -32,6 +36,8 @@ export const quizSets = [{
     inProgress: true,
     items: [2, 1, 5],
     displayLevel: 3,
+    displayColumn: 1,
+    display: "debug",
     children: []
 },
 {
@@ -47,6 +53,7 @@ export const quizSets = [{
     items: [42],
     inProgress: true,
     displayLevel: 2,
+    displayColumn: 1,
     children: [],
     podcastEpisodes: [{
         title: "Why the science of reading needs the science of learning",
@@ -68,7 +75,8 @@ export const quizSets = [{
     basicMode: true,
     items: [40],
     inProgress: true,
-    displayLevel: 2,
+    displayLevel: 1,
+    displayColumn: 3,
     children: [],
     resource: {
         title: "Science of Reading (SoR) Legislation and Implementation State Scan ",
@@ -90,7 +98,8 @@ export const quizSets = [{
     basicMode: true,
     items: [41],
     inProgress: true,
-    displayLevel: 2,
+    displayLevel: 1,
+    displayColumn: 2,
     children: [],
     podcastEpisodes: [{
         title: "",
@@ -105,7 +114,8 @@ export const quizSets = [{
     basicMode: true,
     items: [41],
     inProgress: true,
-    displayLevel: 3,
+    displayLevel: 2,
+    displayColumn: 2,
     children: [],
     inProgressText: "We put this here to show the deeper areas the quizzes should go in to. Do you know what content belongs here?",
     resource: {

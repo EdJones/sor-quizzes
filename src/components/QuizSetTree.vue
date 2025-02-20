@@ -134,10 +134,10 @@ let nodePositions = []; // Store clickable areas
 const styles = {
     rootNode: {
         color: '#4B5563', // gray-600
-        height: 50,
+        height: 30,
         padding: 20,
         borderRadius: 12,
-        font: '14px Inter'
+        font: 'bold 16px Inter'
     },
     publishedNode: {
         color: '#3B82F6', // blue-500
@@ -281,47 +281,98 @@ const drawTree = () => {
     // Calculate dimensions
     const width = canvas.value.width;
     const height = canvas.value.height;
+    const columnWidth = width / 3;
 
-    // Root node position
-    const rootX = width / 2;
-    const rootY = 60;
-
-    // Draw root node
-    drawNode(rootX, rootY, 'Quiz Sets', styles.rootNode);
-
-    // Group sets by display level
-    const levelSets = [...props.publishedQuizSets, ...props.proposedQuizSets].reduce((acc, set) => {
-        const level = set.displayLevel;
-        if (!acc[level]) acc[level] = [];
-        acc[level].push(set);
-        return acc;
-    }, {});
-
-    // Calculate vertical spacing
-    const maxLevel = Math.max(...Object.keys(levelSets).map(Number));
-    const verticalSpacing = (height - rootY - styles.rootNode.height) / (maxLevel + 2);
-
-    // Draw each level
-    Object.entries(levelSets).forEach(([level, sets]) => {
-        const y = rootY + ((Number(level) + 1) * verticalSpacing);
-        const horizontalSpacing = width / (sets.length + 1);
-
-        sets.forEach((set, index) => {
-            const x = horizontalSpacing * (index + 1);
-            const isProposed = props.proposedQuizSets.includes(set);
-
-            // Draw node
-            drawNode(x, y, set.setName, isProposed ? styles.proposedNode : styles.publishedNode, set);
-
-            // Draw connecting line to root
-            drawLine(
-                rootX,
-                rootY + (styles.rootNode.height / 2),
-                x,
-                y - (styles.publishedNode.height / 2),
-                isProposed
-            );
+    // Filter out debug nodes and group by displayLevel
+    const levelGroups = new Map();
+    [...props.publishedQuizSets, ...props.proposedQuizSets]
+        .filter(set => set.display !== "debug") // Filter out debug nodes
+        .forEach(set => {
+            const level = set.displayLevel || 0;
+            if (!levelGroups.has(level)) {
+                levelGroups.set(level, []);
+            }
+            levelGroups.get(level).push(set);
         });
+
+    // Sort levels
+    const sortedLevels = Array.from(levelGroups.keys()).sort((a, b) => a - b);
+
+    // Calculate vertical spacing based on number of levels
+    const startY = 40; // Reduced from headerY + 50 since we removed headers
+    const levelSpacing = (height - startY) / (sortedLevels.length + 1);
+
+    // Store node positions for drawing connections later
+    const nodesByName = new Map();
+
+    // Draw sets level by level
+    sortedLevels.forEach((level, levelIndex) => {
+        const y = startY + (levelIndex * levelSpacing);
+        const setsInLevel = levelGroups.get(level);
+
+        // Calculate horizontal spacing for items in this level
+        const itemsInColumns = {
+            1: setsInLevel.filter(set => (set.displayColumn || 1) === 1),
+            2: setsInLevel.filter(set => set.displayColumn === 2),
+            3: setsInLevel.filter(set => set.displayColumn === 3)
+        };
+
+        // Draw items in each column
+        Object.entries(itemsInColumns).forEach(([column, sets]) => {
+            if (sets.length === 0) return;
+
+            const columnX = columnWidth * (parseInt(column) - 0.5);
+
+            // Calculate maximum node width in this column
+            let maxNodeWidth = 0;
+            sets.forEach(set => {
+                ctx.font = styles.publishedNode.font;
+                const textMetrics = ctx.measureText(set.setName);
+                const nodeWidth = textMetrics.width + (styles.publishedNode.padding * 2);
+                maxNodeWidth = Math.max(maxNodeWidth, nodeWidth);
+            });
+
+            // Calculate minimum spacing between nodes to prevent overlap
+            const minSpacing = maxNodeWidth + 20; // Add 20px buffer
+            const totalWidth = (sets.length - 1) * minSpacing;
+            const startX = columnX - (totalWidth / 2);
+
+            sets.forEach((set, setIndex) => {
+                const isProposed = props.proposedQuizSets.includes(set);
+                const offsetX = startX + (setIndex * minSpacing);
+
+                // Draw node
+                drawNode(offsetX, y, set.setName, isProposed ? styles.proposedNode : styles.publishedNode, set);
+
+                // Store node position for connections
+                nodesByName.set(set.setName, {
+                    x: offsetX,
+                    y: y,
+                    isProposed: isProposed,
+                    set: set
+                });
+            });
+        });
+    });
+
+    // Draw connections based on children field
+    nodesByName.forEach((node, setName) => {
+        const set = node.set;
+        if (set.children && Array.isArray(set.children)) {
+            set.children.forEach(childName => {
+                const childNode = nodesByName.get(childName);
+                if (childNode) {
+                    // Draw line from parent to child
+                    drawLine(
+                        node.x,
+                        node.y + (styles.publishedNode.height / 2),
+                        childNode.x,
+                        childNode.y - (styles.publishedNode.height / 2),
+                        childNode.isProposed
+                    );
+                }
+            });
+        }
     });
 };
 

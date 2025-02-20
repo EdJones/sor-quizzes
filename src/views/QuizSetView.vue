@@ -20,7 +20,7 @@
             </button>
 
             <button @click="router.push('/issues')"
-                class="flex items-center gap-1 px-3 py-1 text-sm border-green-400 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-green-400 dark:text-green-400 rounded-lg transition-colors duration-200">
+                class="flex items-center gap-1 px-3 py-1 text-sm border-green-400 bg-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-green-400 dark:text-green-400 rounded-lg transition-colors duration-200">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
