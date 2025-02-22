@@ -20,7 +20,8 @@
     </div>
 
     <div class="flex items-center gap-4">
-      <span class="preview-controls-text">Help build these quizzes.</span>
+      <span class="preview-controls-text">{{ store.draftQuizEntry.originalId ? `Editing Quiz Item
+        #${store.draftQuizEntry.originalId}` : 'Create New Quiz Item' }}</span>
       <div class="preview-controls">
         <div class="button-group">
           <div class="flex flex-col gap-1">
@@ -86,8 +87,10 @@
     <form v-else @submit.prevent="submitForm">
       <!-- Add this at the top of the form, before other sections -->
       <div class="template-selector">
+
         <div class="form1-section bg-indigo-950/10 dark:bg-indigo-950/30 ">
           <div class="form-group1">
+            <!--- Can we live without the selector now?
             <label for="template-select" class="text-stone-400">Choose a starting point:</label>
             <select id="template-select" v-model="selectedTemplate" @change="useTemplate" class="w-full px-4 py-2 rounded-lg border border-gray-300/50 
                      bg-white/50 dark:bg-gray-500/50 
@@ -102,10 +105,10 @@
               <template v-if="isLoadingDrafts">
                 <option disabled>Loading draft items...</option>
               </template>
-              <template v-else-if="draftLoadError">
+<template v-else-if="draftLoadError">
                 <option disabled>Error loading drafts: {{ draftLoadError }}</option>
               </template>
-              <template v-else>
+<template v-else>
                 <optgroup label="My Draft Quiz Items" class="font-medium" v-if="userDraftQuizItems.length">
                   <option v-for="item in userDraftQuizItems" :key="item.id" :value="item.id" class="py-1">
                     {{ item.title || 'Untitled Draft' }}
@@ -122,18 +125,21 @@
                   </option>
                 </optgroup>
               </template>
-              <optgroup label="Permanent Quiz Items" class="font-medium text-blue-500">
-                <option v-for="item in permanentQuizItems" :key="item.id" :value="item.id" class="py-1 text-blue-700">
-                  {{ String(item.id).padStart(3, '0') }}. {{ item.title }}
-                </option>
-              </optgroup>
-            </select>
+<optgroup label="Permanent Quiz Items" class="font-medium text-blue-500">
+  <option v-for="item in permanentQuizItems" :key="item.id" :value="item.id" class="py-1 text-blue-700">
+    {{ String(item.id).padStart(3, '0') }}. {{ item.title }}
+  </option>
+</optgroup>
+</select>
+--->
             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
               <svg class="fill-current h-4 w-4 text-gray-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
               </svg>
             </div>
           </div>
+
+
         </div>
       </div>
       <!-- Question Group -->
@@ -585,6 +591,7 @@ import 'vue-json-pretty/lib/styles.css'
 import { quizEntries } from '../data/quiz-items';
 import { ref, watch, onMounted, computed } from 'vue';
 import ProgressSteps from '../components/ProgressSteps.vue';
+import { useRoute, useRouter } from 'vue-router';
 
 export default {
   components: {
@@ -595,6 +602,8 @@ export default {
   setup() {
     const store = quizStore();
     const auth = useAuthStore();
+    const route = useRoute();
+    const router = useRouter();
 
     const userDraftQuizItems = computed(() => {
       return store.draftQuizItems
@@ -616,6 +625,33 @@ export default {
 
     onMounted(async () => {
       await store.fetchDraftQuizItems();
+
+      // Get the ID from the route
+      const itemId = route.params.id;
+
+      if (itemId) {
+        // First check if it's a draft item
+        const draftItem = [...userDraftQuizItems.value, ...otherDraftQuizItems.value, ...pendingQuizItems.value]
+          .find(item => item.id === itemId);
+
+        if (draftItem) {
+          // Load draft item
+          store.updateDraftQuizEntry(draftItem);
+        } else {
+          // Check if it's a permanent quiz item
+          const permanentItem = quizEntries.find(item => item.id.toString() === itemId);
+          if (permanentItem) {
+            // Create a copy of the permanent item for editing
+            const copyItem = { ...permanentItem };
+            copyItem.originalId = copyItem.id;  // Save the original ID
+            copyItem.id = null;  // Reset ID for new draft
+            store.updateDraftQuizEntry(copyItem);
+          } else {
+            // Item not found, redirect to home
+            router.push('/');
+          }
+        }
+      }
     });
 
     return { store, auth, userDraftQuizItems, otherDraftQuizItems, pendingQuizItems };
