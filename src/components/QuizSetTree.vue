@@ -13,12 +13,12 @@ export default {
 <style scoped>
 .quiz-tree-container {
     width: 100%;
-    min-height: 400px;
+    min-height: 200px;
     height: auto;
 
     /* Adjust height for mobile */
     @media (max-width: 768px) {
-        min-height: 600px;
+        min-height: 300px;
     }
 
     background: white;
@@ -350,6 +350,8 @@ const drawTree = () => {
     // Update canvas height if needed
     if (canvas.value.height < maxHeight) {
         canvas.value.height = maxHeight;
+        // Also update container height to match content
+        canvas.value.parentElement.style.height = `${maxHeight}px`;
     }
 
     // Draw sets level by level
@@ -433,8 +435,8 @@ const resizeCanvas = () => {
     const container = canvas.value.parentElement;
     canvas.value.width = container.clientWidth;
 
-    // Set initial height - will be adjusted in drawTree if needed
-    canvas.value.height = Math.max(400, container.clientHeight);
+    // Set initial height to a smaller value
+    canvas.value.height = Math.max(200, container.clientHeight);
 
     // Update context and redraw
     ctx = canvas.value.getContext('2d');
