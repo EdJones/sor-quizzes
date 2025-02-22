@@ -1,22 +1,24 @@
 <template>
     <div class="p-4">
-        <div class="flex justify-end gap-4 mb-4">
+        <div class="flex justify-end gap-2 mb-4">
 
-            <button @click="handleNewQuizItem"
-                class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
+            <button @click="handleNewQuizItem" class="bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center
+                       px-4 py-2 text-sm md:text-base md:px-4 md:py-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 md:h-5 md:w-5 md:mr-2" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                Create/Edit A Quiz Item
+                <span class="hidden md:inline">Create/Edit A Quiz Item</span>
+                <span class="md:hidden">New Item</span>
             </button>
-            <button @click="showCreateModal = true"
-                class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
+            <button @click="showCreateModal = true" class="bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center
+                       px-4 py-2 text-sm md:text-base md:px-4 md:py-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 md:h-5 md:w-5 md:mr-2" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                Create New Quiz Set
+                <span class="hidden md:inline">Create New Quiz Set</span>
+                <span class="md:hidden">New Set</span>
             </button>
 
             <button @click="router.push('/issues')"
@@ -26,7 +28,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Issues
+                <span class="hidden md:inline">Issues</span>
             </button>
         </div>
         <div> <span class="text-sm text-orange-300 dark:text-orange-300">Quiz Set editor is in fluid developent.
