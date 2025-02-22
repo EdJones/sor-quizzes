@@ -29,6 +29,24 @@
                     <span class="text-gray-600">
                         {{ displayName }}
                     </span>
+                    <!-- Contributor Badge -->
+                    <button v-if="hasContributed" @click="showContributions = true"
+                        class="ml-2 px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 rounded-full flex items-center gap-1 hover:bg-amber-200 dark:hover:bg-amber-800 transition-colors">
+                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                        </svg>
+                        Contributor
+                    </button>
+                    <!-- Contributor Mode Badge -->
+                    <span v-if="contributorMode"
+                        class="ml-2 px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded-full flex items-center gap-1">
+                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                        Editing
+                    </span>
                 </div>
 
                 <!-- Progress Indicator with Info Icon -->
@@ -53,6 +71,28 @@
                         </svg>
                     </div>
                 </div>
+                <div class="text-xs text-gray-600 dark:text-gray-300" @click="showContributions = true">
+                    <div
+                        class="flex items-center gap-1 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 rounded px-2 py-1 transition-colors">
+                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        <span v-if="contributionStats.total > 0">
+                            {{ contributionStats.total }} quiz {{ contributionStats.total === 1 ? 'entry' : 'entries' }}
+                            ({{ contributionStats.published }} published)
+                        </span>
+
+                        <span v-else>No quiz entries yet</span>
+                        <svg class="h-4 w-4 ml-1 text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300 transition-colors"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <!-- Contributor Mode Toggle -->
+
 
                 <!-- Login/Sign Out Buttons -->
                 <router-link v-if="authStore.user.isAnonymous" to="/login"
@@ -80,6 +120,9 @@
 
         <!-- Progress Details Popup -->
         <ProgressDetailsPopup :show="showProgressDetails" @close="showProgressDetails = false" />
+
+        <!-- Contributions Modal -->
+        <ContributionsModal :show="showContributions" @close="showContributions = false" />
     </div>
 </template>
 
@@ -89,17 +132,75 @@ import { useProgressStore } from '../stores/progressStore';
 import { onMounted, computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import ProgressDetailsPopup from './ProgressDetailsPopup.vue';
+import ContributionsModal from './ContributionsModal.vue';
+import { doc, getDoc, query, collection, getDocs, where } from 'firebase/firestore';
+import { db } from '../firebase';
 
 export default {
     name: 'UserStatus',
     components: {
-        ProgressDetailsPopup
+        ProgressDetailsPopup,
+        ContributionsModal
     },
     setup() {
         const authStore = useAuthStore();
         const progressStore = useProgressStore();
         const showProgressDetails = ref(false);
+        const showContributions = ref(false);
         const router = useRouter();
+        const contributorMode = ref(false);
+        const hasContributed = ref(false);
+        const contributionStats = ref({ total: 0, published: 0, draft: 0 });
+
+        const fetchContributorStatus = async () => {
+            if (!authStore.user || authStore.user.isAnonymous) return;
+
+            try {
+                // Create queries for both email and userId
+                const emailQuery = query(
+                    collection(db, 'quizEntries'),
+                    where('userEmail', '==', authStore.user.email)
+                );
+                const userIdQuery = query(
+                    collection(db, 'quizEntries'),
+                    where('userId', '==', authStore.user.uid)
+                );
+
+                // Execute both queries
+                const [emailSnapshot, userIdSnapshot] = await Promise.all([
+                    getDocs(emailQuery),
+                    getDocs(userIdQuery)
+                ]);
+
+                // Combine results and remove duplicates
+                const uniqueEntries = new Map();
+                [...emailSnapshot.docs, ...userIdSnapshot.docs].forEach(doc => {
+                    if (!uniqueEntries.has(doc.id)) {
+                        uniqueEntries.set(doc.id, doc.data());
+                    }
+                });
+
+                // Calculate stats
+                const entries = Array.from(uniqueEntries.values());
+                contributionStats.value = {
+                    total: entries.length,
+                    published: entries.filter(entry => !entry.isDraft).length,
+                    draft: entries.filter(entry => entry.isDraft).length
+                };
+
+                // User has contributed if they have any entries
+                hasContributed.value = contributionStats.value.total > 0;
+
+                console.log('Contributor status:', {
+                    email: authStore.user.email,
+                    uid: authStore.user.uid,
+                    stats: contributionStats.value,
+                    hasContributed: hasContributed.value
+                });
+            } catch (error) {
+                console.error('Error fetching contributor status:', error);
+            }
+        };
 
         onMounted(async () => {
             console.log('UserStatus mounted');
@@ -107,12 +208,32 @@ export default {
                 await progressStore.initialize();
                 await progressStore.fetchProgress();
             }
+            // Load contributor mode from localStorage
+            const savedMode = localStorage.getItem('contributorMode');
+            if (savedMode) {
+                contributorMode.value = JSON.parse(savedMode);
+            }
+            await fetchContributorStatus();
         });
 
         // Watch for changes in progress, but don't re-fetch if already initialized
         watch(() => progressStore.lastUpdated, () => {
             console.log('Progress updated in store');
         }, { deep: true });
+
+        // Watch for changes in contributor mode and save to localStorage
+        watch(contributorMode, (newValue) => {
+            localStorage.setItem('contributorMode', JSON.stringify(newValue));
+        });
+
+        // Watch for auth changes to update contributor status
+        watch(() => authStore.user, async (newUser) => {
+            if (newUser && !newUser.isAnonymous) {
+                await fetchContributorStatus();
+            } else {
+                hasContributed.value = false;
+            }
+        });
 
         const displayName = computed(() => {
             if (authStore.user.isAnonymous) return 'Anonymous User';
@@ -128,6 +249,10 @@ export default {
             return `${progressStore.quizCompletionCount}/${progressStore.totalQuizzes} quizzes`;
         });
 
+        const toggleContributorMode = () => {
+            contributorMode.value = !contributorMode.value;
+        };
+
         const handleSignOut = async () => {
             try {
                 await authStore.signOut();
@@ -141,10 +266,15 @@ export default {
             authStore,
             progressStore,
             showProgressDetails,
+            showContributions,
             displayName,
             provider,
             progressText,
-            handleSignOut
+            handleSignOut,
+            contributorMode,
+            toggleContributorMode,
+            hasContributed,
+            contributionStats,
         };
     }
 };

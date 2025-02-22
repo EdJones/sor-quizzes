@@ -1,26 +1,39 @@
 <template>
     <div class="p-4">
-        <div class="flex justify-end gap-4 mb-4">
-            <span class="text-sm text-orange-300 dark:text-orange-300">Quiz Set editor is in fluid developent. Caveat
-                emptor.</span>
-            <button @click="showCreateModal = true"
-                class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
+        <div class="flex justify-end gap-2 mb-4">
+
+            <button @click="handleNewQuizItem" class="bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center
+                       px-4 py-2 text-sm md:text-base md:px-4 md:py-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 md:h-5 md:w-5 md:mr-2" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                Create/Edit A Quiz Item
+                <span class="hidden md:inline">Create/Edit A Quiz Item</span>
+                <span class="md:hidden">New Item</span>
             </button>
-            <button @click="showCreateModal = true"
-                class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
+            <button @click="showCreateModal = true" class="bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center
+                       px-4 py-2 text-sm md:text-base md:px-4 md:py-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 md:h-5 md:w-5 md:mr-2" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                Create New Quiz Set
+                <span class="hidden md:inline">Create New Quiz Set</span>
+                <span class="md:hidden">New Set</span>
+            </button>
+
+            <button @click="router.push('/issues')"
+                class="flex items-center gap-1 px-3 py-1 text-sm border-green-400 bg-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-green-400 dark:text-green-400 rounded-lg transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="hidden md:inline">Issues</span>
             </button>
         </div>
-
+        <div> <span class="text-sm text-orange-300 dark:text-orange-300">Quiz Set editor is in fluid developent.
+                Caveat
+                emptor.</span></div>
         <!-- Quiz Sets Overview Visualization with Tree -->
         <QuizSetTree :publishedQuizSets="publishedQuizSets" :proposedQuizSets="proposedQuizSets"
             @select-quiz-set="handleSelectQuizSet" />
@@ -32,23 +45,26 @@
 
         <!-- Tab Navigation -->
         <div class="border-b border-gray-200">
-            <nav class="-mb-px flex">
-                <button @click="currentTab = 'current'" :class="[
-                    currentTab === 'current'
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                    'w-24 py-2 px-1 text-center border-b-2 font-medium text-sm'
-                ]">
-                    Current
-                </button>
-                <button @click="currentTab = 'proposed'" :class="[
-                    currentTab === 'proposed'
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                    'w-24 py-2 px-1 text-center border-b-2 font-medium text-sm'
-                ]">
-                    Proposed
-                </button>
+            <nav class="-mb-px flex justify-between items-center">
+                <div class="flex">
+                    <button @click="currentTab = 'current'" :class="[
+                        currentTab === 'current'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                        'w-24 py-2 px-1 text-center border-b-2 font-medium text-sm'
+                    ]">
+                        Current
+                    </button>
+                    <button @click="currentTab = 'proposed'" :class="[
+                        currentTab === 'proposed'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                        'w-24 py-2 px-1 text-center border-b-2 font-medium text-sm'
+                    ]">
+                        Proposed
+                    </button>
+                </div>
+
             </nav>
         </div>
 
@@ -85,7 +101,8 @@
                         <!-- Quiz Items List -->
                         <div class="mt-3 space-y-1">
                             <div class="flex justify-between items-center">
-                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 text-left">Quiz Items:
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 text-left">Quiz
+                                    Items:
                                 </h4>
                                 <button @click="toggleQuestions(quizSet.setName)"
                                     class="text-sm text-blue-500 hover:text-blue-600 flex items-center">
@@ -226,7 +243,8 @@
                         <!-- Quiz Items List -->
                         <div class="mt-3 space-y-1">
                             <div class="flex justify-between items-center">
-                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 text-left">Quiz Items:
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 text-left">Quiz
+                                    Items:
                                 </h4>
                                 <button @click="toggleQuestions(quizSet.setName)"
                                     class="text-sm text-blue-500 hover:text-blue-600 flex items-center">
@@ -414,11 +432,11 @@
                         <QuizItem :currentQuizItem="getQuizItem(itemId)" :itemNum="0" :reviewMode="false"
                             :basicMode="selectedQuizSet.basicMode" :debug="false" :userAnswer="null" />
                         <div class="edit-button-container">
-                            <button @click="handleEditClick(selectedQuizSet)" :class="[
+                            <button @click="handleEditClick(itemId)" :class="[
                                 'edit-button px-3 py-1 text-sm rounded transition-colors duration-200 flex items-center text-white',
-                                isUserOwnedDraft(selectedQuizSet) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
+                                'bg-blue-500 hover:bg-blue-600'
                             ]">
-                                {{ getEditButtonLabel(selectedQuizSet) }}
+                                Edit Quiz Item
                             </button>
                         </div>
                     </div>
@@ -530,6 +548,11 @@ const toggleQuestions = (setName) => {
     }
     expandedSets.value = newExpandedSets;
 };
+
+//handle new quiz item
+const handleNewQuizItem = () => {
+    router.push({ name: 'NewQuizItem' });
+}
 
 // Update handleEditClick function
 const handleEditClick = async (quizSetOrItemId) => {

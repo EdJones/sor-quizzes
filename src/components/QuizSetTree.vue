@@ -1,34 +1,6 @@
 <template>
     <div class="quiz-tree-container">
         <canvas ref="canvas" class="quiz-tree-canvas" @click="handleCanvasClick"></canvas>
-
-        <!-- Preview Modal -->
-        <div v-if="selectedSet" class="preview-modal" @click="selectedSet = null">
-            <div class="modal-content" @click.stop>
-                <div class="modal-header">
-                    <h3 class="text-xl font-bold mb-4">{{ selectedSet.setName }}</h3>
-                    <button @click="selectedSet = null" class="close-button">×</button>
-                </div>
-                <div class="modal-body">
-                    <InProgress v-if="selectedSet && selectedSet.inProgress" :quizSet="selectedSet"
-                        @close="selectedSet = null" />
-                    <div v-else>
-                        <div v-for="itemId in selectedSet.items" :key="itemId" class="mb-6 quiz-item-container">
-                            <QuizItem :currentQuizItem="getQuizItem(itemId)" :itemNum="0" :reviewMode="false"
-                                :basicMode="selectedSet.basicMode" :debug="false" :userAnswer="null" />
-                            <div class="edit-button-container">
-                                <button @click="handleEditClick(itemId)" :class="[
-                                    'edit-button',
-                                    isUserOwnedDraft(itemId) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
-                                ]">
-                                    {{ getEditButtonLabel(itemId) }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </template>
 
@@ -41,15 +13,25 @@ export default {
 <style scoped>
 .quiz-tree-container {
     width: 100%;
-    height: 400px;
+    min-height: 200px;
+    height: auto;
+
+    /* Adjust height for mobile */
+    @media (max-width: 768px) {
+        min-height: 300px;
+    }
+
     background: white;
     border-radius: 8px;
     padding: 10px;
+    overflow: visible;
+    /* Changed from hidden to allow content to determine height */
 }
 
 .quiz-tree-canvas {
     width: 100%;
     height: 100%;
+    min-height: inherit;
 }
 
 .preview-modal {
@@ -152,41 +134,57 @@ const props = defineProps({
     }
 });
 
+const emit = defineEmits(['select-quiz-set']);
+
 const canvas = ref(null);
-const selectedSet = ref(null);
 let ctx = null;
 let nodePositions = []; // Store clickable areas
 
 // Node styling
 const styles = {
     rootNode: {
-        color: '#4B5563', // gray-600
-        height: 50,
+        color: '#4B5563',
+        height: 30,
         padding: 20,
         borderRadius: 12,
-        font: '14px Inter'
+        font: 'bold 16px Inter'
     },
     publishedNode: {
-        color: '#3B82F6', // blue-500
-        height: 40,
-        padding: 16,
+        color: '#3B82F6',
+        height: window.innerWidth <= 768 ? 30 : 40,
+        padding: window.innerWidth <= 768 ? 12 : 16,
         borderRadius: 10,
-        font: '12px Inter',
+        font: window.innerWidth <= 768 ? '11px Inter' : '12px Inter',
         borderStyle: 'solid'
     },
     proposedNode: {
-        color: '#F59E0B', // amber-500
-        height: 40,
-        padding: 16,
+        color: '#F59E0B',
+        height: window.innerWidth <= 768 ? 30 : 40,
+        padding: window.innerWidth <= 768 ? 12 : 16,
         borderRadius: 10,
-        font: '12px Inter',
+        font: window.innerWidth <= 768 ? '11px Inter' : '12px Inter',
         borderStyle: 'dashed'
     },
     line: {
-        color: '#E5E7EB', // gray-200
+        color: '#E5E7EB',
         width: 1.5
     }
 };
+
+// Add a resize handler to update styles when window size changes
+window.addEventListener('resize', () => {
+    styles.publishedNode.height = window.innerWidth <= 768 ? 30 : 40;
+    styles.publishedNode.padding = window.innerWidth <= 768 ? 12 : 16;
+    styles.publishedNode.font = window.innerWidth <= 768 ? '11px Inter' : '12px Inter';
+
+    styles.proposedNode.height = window.innerWidth <= 768 ? 30 : 40;
+    styles.proposedNode.padding = window.innerWidth <= 768 ? 12 : 16;
+    styles.proposedNode.font = window.innerWidth <= 768 ? '11px Inter' : '12px Inter';
+
+    if (canvas.value) {
+        drawTree();
+    }
+});
 
 // Helper function to draw a rounded rectangle
 const drawRoundedRect = (x, y, width, height, radius, style) => {
@@ -220,14 +218,7 @@ const handleCanvasClick = (event) => {
     for (const node of nodePositions) {
         if (x >= node.x && x <= node.x + node.width &&
             y >= node.y && y <= node.y + node.height) {
-            if (node.set.inProgress) {
-                selectedSet.value = {
-                    ...node.set,
-                    items: node.set.items ? node.set.items.map(id => getQuizItem(id)).filter(item => item) : []
-                };
-            } else {
-                selectedSet.value = node.set;
-            }
+            emit('select-quiz-set', node.set);
             break;
         }
     }
@@ -314,48 +305,126 @@ const drawTree = () => {
 
     // Calculate dimensions
     const width = canvas.value.width;
-    const height = canvas.value.height;
+    const columnWidth = width / 3;
+    const minNodeSpacing = window.innerWidth <= 768 ? 15 : 20;
+    const startY = window.innerWidth <= 768 ? 30 : 40;
 
-    // Root node position
-    const rootX = width / 2;
-    const rootY = 60;
-
-    // Draw root node
-    drawNode(rootX, rootY, 'Quiz Sets', styles.rootNode);
-
-    // Group sets by display level
-    const levelSets = [...props.publishedQuizSets, ...props.proposedQuizSets].reduce((acc, set) => {
-        const level = set.displayLevel;
-        if (!acc[level]) acc[level] = [];
-        acc[level].push(set);
-        return acc;
-    }, {});
-
-    // Calculate vertical spacing
-    const maxLevel = Math.max(...Object.keys(levelSets).map(Number));
-    const verticalSpacing = (height - rootY - styles.rootNode.height) / (maxLevel + 2);
-
-    // Draw each level
-    Object.entries(levelSets).forEach(([level, sets]) => {
-        const y = rootY + ((Number(level) + 1) * verticalSpacing);
-        const horizontalSpacing = width / (sets.length + 1);
-
-        sets.forEach((set, index) => {
-            const x = horizontalSpacing * (index + 1);
-            const isProposed = props.proposedQuizSets.includes(set);
-
-            // Draw node
-            drawNode(x, y, set.setName, isProposed ? styles.proposedNode : styles.publishedNode, set);
-
-            // Draw connecting line to root
-            drawLine(
-                rootX,
-                rootY + (styles.rootNode.height / 2),
-                x,
-                y - (styles.publishedNode.height / 2),
-                isProposed
-            );
+    // Group and filter sets
+    const levelGroups = new Map();
+    [...props.publishedQuizSets, ...props.proposedQuizSets]
+        .filter(set => set.display !== "debug")
+        .forEach(set => {
+            const level = set.displayLevel || 0;
+            if (!levelGroups.has(level)) {
+                levelGroups.set(level, []);
+            }
+            levelGroups.get(level).push(set);
         });
+
+    const sortedLevels = Array.from(levelGroups.keys()).sort((a, b) => a - b);
+
+    // Calculate total height needed
+    let maxHeight = startY;
+    const levelHeights = new Map(); // Store height needed for each level
+
+    // First pass: calculate height needed for each level
+    sortedLevels.forEach(level => {
+        const setsInLevel = levelGroups.get(level);
+        const columnHeights = [0, 0, 0]; // Track height for each column
+
+        // Calculate height needed for each column in this level
+        setsInLevel.forEach(set => {
+            const column = (set.displayColumn || 1) - 1;
+            columnHeights[column] += styles.publishedNode.height + minNodeSpacing;
+        });
+
+        // Use the tallest column height for this level
+        const levelHeight = Math.max(...columnHeights);
+        levelHeights.set(level, levelHeight);
+        maxHeight += levelHeight;
+    });
+
+    // Add padding to maxHeight
+    maxHeight += minNodeSpacing;
+
+    // Update canvas height if needed
+    if (canvas.value.height < maxHeight) {
+        canvas.value.height = maxHeight;
+        // Also update container height to match content
+        canvas.value.parentElement.style.height = `${maxHeight}px`;
+    }
+
+    // Draw sets level by level
+    let currentY = startY;
+    const nodesByName = new Map();
+
+    sortedLevels.forEach(level => {
+        const setsInLevel = levelGroups.get(level);
+        const levelHeight = levelHeights.get(level);
+
+        // Group sets by column
+        const itemsInColumns = {
+            1: setsInLevel.filter(set => (set.displayColumn || 1) === 1),
+            2: setsInLevel.filter(set => set.displayColumn === 2),
+            3: setsInLevel.filter(set => set.displayColumn === 3)
+        };
+
+        // Draw items in each column
+        Object.entries(itemsInColumns).forEach(([column, sets]) => {
+            if (sets.length === 0) return;
+
+            const columnX = columnWidth * (parseInt(column) - 0.5);
+            let nodeY = currentY;
+
+            sets.forEach(set => {
+                // Calculate node dimensions
+                ctx.font = styles.publishedNode.font;
+                const textMetrics = ctx.measureText(set.setName);
+                const nodeWidth = textMetrics.width + (styles.publishedNode.padding * 2);
+
+                // Check if node would overflow column width
+                if (nodeWidth > columnWidth - 20) {
+                    ctx.font = '10px Inter';
+                }
+
+                // Draw node
+                const isProposed = props.proposedQuizSets.includes(set);
+                drawNode(columnX, nodeY, set.setName, isProposed ? styles.proposedNode : styles.publishedNode, set);
+
+                // Store node position for connections
+                nodesByName.set(set.setName, {
+                    x: columnX,
+                    y: nodeY,
+                    isProposed: isProposed,
+                    set: set
+                });
+
+                // Update Y position for next node
+                nodeY += styles.publishedNode.height + minNodeSpacing;
+            });
+        });
+
+        // Move to next level
+        currentY += levelHeight;
+    });
+
+    // Draw connections
+    nodesByName.forEach((node, setName) => {
+        const set = node.set;
+        if (set.children && Array.isArray(set.children)) {
+            set.children.forEach(childName => {
+                const childNode = nodesByName.get(childName);
+                if (childNode) {
+                    drawLine(
+                        node.x,
+                        node.y + (styles.publishedNode.height / 2),
+                        childNode.x,
+                        childNode.y - (styles.publishedNode.height / 2),
+                        childNode.isProposed
+                    );
+                }
+            });
+        }
     });
 };
 
@@ -365,7 +434,9 @@ const resizeCanvas = () => {
 
     const container = canvas.value.parentElement;
     canvas.value.width = container.clientWidth;
-    canvas.value.height = 400; // Fixed height or adjust as needed
+
+    // Set initial height to a smaller value
+    canvas.value.height = Math.max(200, container.clientHeight);
 
     // Update context and redraw
     ctx = canvas.value.getContext('2d');
