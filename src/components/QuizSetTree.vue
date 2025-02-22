@@ -143,33 +143,48 @@ let nodePositions = []; // Store clickable areas
 // Node styling
 const styles = {
     rootNode: {
-        color: '#4B5563', // gray-600
+        color: '#4B5563',
         height: 30,
         padding: 20,
         borderRadius: 12,
         font: 'bold 16px Inter'
     },
     publishedNode: {
-        color: '#3B82F6', // blue-500
-        height: 40,
-        padding: 16,
+        color: '#3B82F6',
+        height: window.innerWidth <= 768 ? 30 : 40,
+        padding: window.innerWidth <= 768 ? 12 : 16,
         borderRadius: 10,
-        font: '12px Inter',
+        font: window.innerWidth <= 768 ? '11px Inter' : '12px Inter',
         borderStyle: 'solid'
     },
     proposedNode: {
-        color: '#F59E0B', // amber-500
-        height: 40,
-        padding: 16,
+        color: '#F59E0B',
+        height: window.innerWidth <= 768 ? 30 : 40,
+        padding: window.innerWidth <= 768 ? 12 : 16,
         borderRadius: 10,
-        font: '12px Inter',
+        font: window.innerWidth <= 768 ? '11px Inter' : '12px Inter',
         borderStyle: 'dashed'
     },
     line: {
-        color: '#E5E7EB', // gray-200
+        color: '#E5E7EB',
         width: 1.5
     }
 };
+
+// Add a resize handler to update styles when window size changes
+window.addEventListener('resize', () => {
+    styles.publishedNode.height = window.innerWidth <= 768 ? 30 : 40;
+    styles.publishedNode.padding = window.innerWidth <= 768 ? 12 : 16;
+    styles.publishedNode.font = window.innerWidth <= 768 ? '11px Inter' : '12px Inter';
+
+    styles.proposedNode.height = window.innerWidth <= 768 ? 30 : 40;
+    styles.proposedNode.padding = window.innerWidth <= 768 ? 12 : 16;
+    styles.proposedNode.font = window.innerWidth <= 768 ? '11px Inter' : '12px Inter';
+
+    if (canvas.value) {
+        drawTree();
+    }
+});
 
 // Helper function to draw a rounded rectangle
 const drawRoundedRect = (x, y, width, height, radius, style) => {
@@ -291,8 +306,8 @@ const drawTree = () => {
     // Calculate dimensions
     const width = canvas.value.width;
     const columnWidth = width / 3;
-    const minNodeSpacing = 20;
-    const startY = 40;
+    const minNodeSpacing = window.innerWidth <= 768 ? 15 : 20;
+    const startY = window.innerWidth <= 768 ? 30 : 40;
 
     // Group and filter sets
     const levelGroups = new Map();
