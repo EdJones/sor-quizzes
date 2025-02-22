@@ -13,15 +13,25 @@ export default {
 <style scoped>
 .quiz-tree-container {
     width: 100%;
-    height: 400px;
+    min-height: 400px;
+    height: auto;
+
+    /* Adjust height for mobile */
+    @media (max-width: 768px) {
+        min-height: 600px;
+    }
+
     background: white;
     border-radius: 8px;
     padding: 10px;
+    overflow: visible;
+    /* Changed from hidden to allow content to determine height */
 }
 
 .quiz-tree-canvas {
     width: 100%;
     height: 100%;
+    min-height: inherit;
 }
 
 .preview-modal {
@@ -280,13 +290,14 @@ const drawTree = () => {
 
     // Calculate dimensions
     const width = canvas.value.width;
-    const height = canvas.value.height;
     const columnWidth = width / 3;
+    const minNodeSpacing = 20;
+    const startY = 40;
 
-    // Filter out debug nodes and group by displayLevel
+    // Group and filter sets
     const levelGroups = new Map();
     [...props.publishedQuizSets, ...props.proposedQuizSets]
-        .filter(set => set.display !== "debug") // Filter out debug nodes
+        .filter(set => set.display !== "debug")
         .forEach(set => {
             const level = set.displayLevel || 0;
             if (!levelGroups.has(level)) {
@@ -295,22 +306,46 @@ const drawTree = () => {
             levelGroups.get(level).push(set);
         });
 
-    // Sort levels
     const sortedLevels = Array.from(levelGroups.keys()).sort((a, b) => a - b);
 
-    // Calculate vertical spacing based on number of levels
-    const startY = 40; // Reduced from headerY + 50 since we removed headers
-    const levelSpacing = (height - startY) / (sortedLevels.length + 1);
+    // Calculate total height needed
+    let maxHeight = startY;
+    const levelHeights = new Map(); // Store height needed for each level
 
-    // Store node positions for drawing connections later
-    const nodesByName = new Map();
+    // First pass: calculate height needed for each level
+    sortedLevels.forEach(level => {
+        const setsInLevel = levelGroups.get(level);
+        const columnHeights = [0, 0, 0]; // Track height for each column
+
+        // Calculate height needed for each column in this level
+        setsInLevel.forEach(set => {
+            const column = (set.displayColumn || 1) - 1;
+            columnHeights[column] += styles.publishedNode.height + minNodeSpacing;
+        });
+
+        // Use the tallest column height for this level
+        const levelHeight = Math.max(...columnHeights);
+        levelHeights.set(level, levelHeight);
+        maxHeight += levelHeight;
+    });
+
+    // Add padding to maxHeight
+    maxHeight += minNodeSpacing;
+
+    // Update canvas height if needed
+    if (canvas.value.height < maxHeight) {
+        canvas.value.height = maxHeight;
+    }
 
     // Draw sets level by level
-    sortedLevels.forEach((level, levelIndex) => {
-        const y = startY + (levelIndex * levelSpacing);
-        const setsInLevel = levelGroups.get(level);
+    let currentY = startY;
+    const nodesByName = new Map();
 
-        // Calculate horizontal spacing for items in this level
+    sortedLevels.forEach(level => {
+        const setsInLevel = levelGroups.get(level);
+        const levelHeight = levelHeights.get(level);
+
+        // Group sets by column
         const itemsInColumns = {
             1: setsInLevel.filter(set => (set.displayColumn || 1) === 1),
             2: setsInLevel.filter(set => set.displayColumn === 2),
@@ -322,47 +357,47 @@ const drawTree = () => {
             if (sets.length === 0) return;
 
             const columnX = columnWidth * (parseInt(column) - 0.5);
+            let nodeY = currentY;
 
-            // Calculate maximum node width in this column
-            let maxNodeWidth = 0;
             sets.forEach(set => {
+                // Calculate node dimensions
                 ctx.font = styles.publishedNode.font;
                 const textMetrics = ctx.measureText(set.setName);
                 const nodeWidth = textMetrics.width + (styles.publishedNode.padding * 2);
-                maxNodeWidth = Math.max(maxNodeWidth, nodeWidth);
-            });
 
-            // Calculate minimum spacing between nodes to prevent overlap
-            const minSpacing = maxNodeWidth + 20; // Add 20px buffer
-            const totalWidth = (sets.length - 1) * minSpacing;
-            const startX = columnX - (totalWidth / 2);
-
-            sets.forEach((set, setIndex) => {
-                const isProposed = props.proposedQuizSets.includes(set);
-                const offsetX = startX + (setIndex * minSpacing);
+                // Check if node would overflow column width
+                if (nodeWidth > columnWidth - 20) {
+                    ctx.font = '10px Inter';
+                }
 
                 // Draw node
-                drawNode(offsetX, y, set.setName, isProposed ? styles.proposedNode : styles.publishedNode, set);
+                const isProposed = props.proposedQuizSets.includes(set);
+                drawNode(columnX, nodeY, set.setName, isProposed ? styles.proposedNode : styles.publishedNode, set);
 
                 // Store node position for connections
                 nodesByName.set(set.setName, {
-                    x: offsetX,
-                    y: y,
+                    x: columnX,
+                    y: nodeY,
                     isProposed: isProposed,
                     set: set
                 });
+
+                // Update Y position for next node
+                nodeY += styles.publishedNode.height + minNodeSpacing;
             });
         });
+
+        // Move to next level
+        currentY += levelHeight;
     });
 
-    // Draw connections based on children field
+    // Draw connections
     nodesByName.forEach((node, setName) => {
         const set = node.set;
         if (set.children && Array.isArray(set.children)) {
             set.children.forEach(childName => {
                 const childNode = nodesByName.get(childName);
                 if (childNode) {
-                    // Draw line from parent to child
                     drawLine(
                         node.x,
                         node.y + (styles.publishedNode.height / 2),
@@ -382,7 +417,9 @@ const resizeCanvas = () => {
 
     const container = canvas.value.parentElement;
     canvas.value.width = container.clientWidth;
-    canvas.value.height = 400; // Fixed height or adjust as needed
+
+    // Set initial height - will be adjusted in drawTree if needed
+    canvas.value.height = Math.max(400, container.clientHeight);
 
     // Update context and redraw
     ctx = canvas.value.getContext('2d');
