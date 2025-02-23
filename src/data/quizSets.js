@@ -1,15 +1,14 @@
 export const quizSets = [{
-    setName: "expert",
-    basicMode: false,
-    items: [2, 1, 5, 4, 6, 15, 16, 17, 18, 19],
-    displayLevel: 1,
-    displayColumn: 1,
-    children: []
-},
-{
     setName: "general",
     basicMode: true,
     items: [10, 22, 11, 14, 21, 4, 6, 12, 13, 3],
+    displayLevel: 1,
+    displayColumn: 1,
+    children: []
+}, {
+    setName: "expert",
+    basicMode: false,
+    items: [2, 1, 5, 4, 6, 15, 16, 17, 18, 19],
     displayLevel: 1,
     displayColumn: 1,
     children: []
