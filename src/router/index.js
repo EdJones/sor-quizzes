@@ -40,10 +40,11 @@ const routes = [
   },
   {
     path: '/edit-item/:id',
-    name: 'EditQuizItem',
+    name: 'edit-item',
     component: QuizItemEditor,
-    beforeEnter: requireAuth,
-    props: true
+    props: route => ({
+      itemId: route.params.id === 'new' ? null : route.params.id
+    })
   },
   {
     path: '/edit-item/new',

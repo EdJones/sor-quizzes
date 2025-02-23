@@ -447,7 +447,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { quizSets } from '../data/quizSets';
 import { quizEntries } from '../data/quiz-items';
 import { useRouter } from 'vue-router';
@@ -457,6 +457,7 @@ import QuizSetTree from '../components/QuizSetTree.vue';
 import InProgress from '../components/InProgress.vue'; // Import the InProgress component
 import { useAuth } from '../composables/useAuth';
 import QuizItem from '../components/QuizItem.vue';
+import { quizStore } from '../stores/quizStore';
 
 const router = useRouter();
 const currentTab = ref('current');
@@ -549,10 +550,14 @@ const toggleQuestions = (setName) => {
     expandedSets.value = newExpandedSets;
 };
 
-//handle new quiz item
+// handle new quiz item
 const handleNewQuizItem = () => {
-    router.push({ name: 'NewQuizItem' });
-}
+    quizStore().resetDraftQuizEntry();
+    router.push({
+        path: '/edit-item/new',
+        query: { new: 'true' }
+    });
+};
 
 // Update handleEditClick function
 const handleEditClick = async (quizSetOrItemId) => {
@@ -649,6 +654,23 @@ const handleQuizSetClick = (quizSet) => {
 // Add getQuizItem function
 const getQuizItem = (id) => {
     return quizEntries.find(item => item.id === id);
+};
+
+const userPublishedItems = computed(() => {
+    return quizEntries.filter(item =>
+        item.userEmail === auth.user?.email
+    );
+});
+
+// When displaying items, we can mark them as published
+const getItemStatus = (item) => {
+    if (quizEntries.some(qi =>
+        qi.userEmail === auth.user?.email &&
+        qi.title === item.title
+    )) {
+        return 'published';
+    }
+    return item.status || 'draft';
 };
 </script>
 

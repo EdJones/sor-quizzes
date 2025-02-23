@@ -1541,6 +1541,72 @@ export const quizEntries = [{
     closingText: "",
     closingText2: "",
     modal: ""
+}, {
+    id: 43,
+    title: "Teaching Syllabification",
+    subtitle: "",
+    userEmail: "ed.jones@gmail.com", // Add the email of the author
+    Question: "T/F: Teaching syllabification...",
+    questionP2: "",
+    answer_type: "mc",
+    option1: "True",
+    option2: "False",
+    option3: "Third option",
+    option4: "Fourth option",
+    option5: "Fifth option",
+    correctAnswer: 2,
+    explanation: "Not as ongoing as many teachers and leaders seem to think. \n\nCurrent research shows 2-9 hours of instruction being useful. Probably leaning closer to 2 for general classroom instruction. ",
+    explanation2: "While some students may benefit from more explicit syllable instruction in intervention settings, it's common to see teachers worrying excessively over exactly how to break up specific words. \n\nSuch time can generally be better spent in other ways. ",
+    videoUrl: "",
+    videoId: "",
+    image: "",
+    imageUrl: "",
+    imageAltText: "",
+    podcastEpisode: {
+        title: "On Eating Elephants and Teaching Syllabication",
+        EpisodeUrl: "https://podcasts.apple.com/us/podcast/shanahan-on-literacy/id1691952694?i=1000695048216",
+        audioUrl: "",
+        description: "",
+        podcastStartTime: 0
+    },
+    podcastEpisode2: {
+        title: "",
+        EpisodeUrl: "",
+        audioUrl: "",
+        description: "",
+        podcastStartTime: 0
+    },
+    cautionLevel: "",
+    caution: "",
+    citations: [
+        {
+            title: "Does English Have Useful Syllable Division Patterns?",
+            author: "Devin M. Kearns",
+            url: "https://doi.org/10.1002/rrq.342",
+            year: "2020",
+            imageUrl: ""
+        },
+        {
+            title: "Graphosyllabic analysis helps adolescent struggling readers read and spell words",
+            author: "Alpana Bhattacharya, Linnea C Ehri",
+            url: "https://doi.org/10.1177/00222194040370040501",
+            year: "2004",
+            imageUrl: ""
+        }
+    ],
+    ref1: "",
+    ref2: "",
+    resources: [
+        {
+            title: "On Eating Elephants and Teaching Syllabication",
+            author: "Tim Shanahan",
+            url: "https://www.shanahanonliteracy.com/blog/on-eating-elephants-and-teaching-syllabication-2",
+            description: ""
+        }
+    ],
+    closingText: "",
+    closingText2: "",
+    modal: ""
 },
 {
     title: "Learning Science",

@@ -74,74 +74,22 @@
         :selectableType="'single'" />
     </div>
 
-    <div v-if="previewMode" class="preview-section">
-      <QuizItem :currentQuizItem="newEntry" :itemNum="0" :reviewMode="true" :basicMode="false" :previewMode="true"
-        :userAnswer="newEntry.correctAnswer" />
-    </div>
-
-    <div v-else>
+    <div v-if="previewMode">
       <QuizItem :currentQuizItem="newEntry" :itemNum="0" :reviewMode="true" :basicMode="false" :previewMode="true"
         :userAnswer="newEntry.correctAnswer" />
     </div>
 
     <form v-else @submit.prevent="submitForm">
-      <!-- Add this at the top of the form, before other sections -->
+      <!-- Template selector -->
       <div class="template-selector">
-
-        <div class="form1-section bg-indigo-950/10 dark:bg-indigo-950/30 ">
+        <div class="form1-section bg-indigo-950/10 dark:bg-indigo-950/30">
           <div class="form-group1">
-            <!--- Can we live without the selector now?
-            <label for="template-select" class="text-stone-400">Choose a starting point:</label>
-            <select id="template-select" v-model="selectedTemplate" @change="useTemplate" class="w-full px-4 py-2 rounded-lg border border-gray-300/50 
-                     bg-white/50 dark:bg-gray-500/50 
-                     dark:border-gray-600/50 color:#ffffff
-                     focus:ring-2 focus:ring-amber-400 focus:border-transparent
-                     backdrop-blur-sm
-                     transition-colors duration-200 ease-in-out
-                     appearance-none cursor-pointer
-                     hover:bg-white/40 dark:hover:bg-gray-500/40
-                     dark:[&>*]:bg-gray-700 text-white">
-              <option value="" class="py-2 text-white">Start from scratch</option>
-              <template v-if="isLoadingDrafts">
-                <option disabled>Loading draft items...</option>
-              </template>
-<template v-else-if="draftLoadError">
-                <option disabled>Error loading drafts: {{ draftLoadError }}</option>
-              </template>
-<template v-else>
-                <optgroup label="My Draft Quiz Items" class="font-medium" v-if="userDraftQuizItems.length">
-                  <option v-for="item in userDraftQuizItems" :key="item.id" :value="item.id" class="py-1">
-                    {{ item.title || 'Untitled Draft' }}
-                  </option>
-                </optgroup>
-                <optgroup label="Pending Review" class="font-medium" v-if="pendingQuizItems.length">
-                  <option v-for="item in pendingQuizItems" :key="item.id" :value="item.id" class="py-1">
-                    {{ item.title || 'Untitled Pending' }} ({{ item.userEmail || 'Anonymous' }})
-                  </option>
-                </optgroup>
-                <optgroup label="Other Draft Items" class="font-medium" v-if="otherDraftQuizItems.length">
-                  <option v-for="item in otherDraftQuizItems" :key="item.id" :value="item.id" class="py-1">
-                    {{ item.title || 'Untitled Draft' }}
-                  </option>
-                </optgroup>
-              </template>
-<optgroup label="Permanent Quiz Items" class="font-medium text-blue-500">
-  <option v-for="item in permanentQuizItems" :key="item.id" :value="item.id" class="py-1 text-blue-700">
-    {{ String(item.id).padStart(3, '0') }}. {{ item.title }}
-  </option>
-</optgroup>
-</select>
---->
-            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
-              <svg class="fill-current h-4 w-4 text-gray-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-              </svg>
-            </div>
+            <QuizSelector v-if="route.params.id === 'new'" :existingItem="null" />
+            <QuizSelector v-else :existingItem="store.draftQuizEntry" />
           </div>
-
-
         </div>
       </div>
+
       <!-- Question Group -->
       <div class="form-group-section question-section">
         <div class="question-content-wrapper">
@@ -573,7 +521,7 @@
       </div>
     </form>
 
-    <!-- Add save status indicator -->
+    <!-- Save status indicator -->
     <div v-if="saveStatus.show" :class="['save-status-indicator', saveStatus.type]" role="status" aria-live="polite">
       {{ saveStatus.message }}
     </div>
@@ -592,12 +540,14 @@ import { quizEntries } from '../data/quiz-items';
 import { ref, watch, onMounted, computed } from 'vue';
 import ProgressSteps from '../components/ProgressSteps.vue';
 import { useRoute, useRouter } from 'vue-router';
+import QuizSelector from '../components/QuizSelector.vue';
 
 export default {
   components: {
     QuizItem,
     VueJsonPretty,
-    ProgressSteps
+    ProgressSteps,
+    QuizSelector
   },
   setup() {
     const store = quizStore();
@@ -605,46 +555,35 @@ export default {
     const route = useRoute();
     const router = useRouter();
 
-    const userDraftQuizItems = computed(() => {
-      return store.draftQuizItems
-        .filter(item => item.userId === auth.user?.uid)
-        .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-    });
-
-    const otherDraftQuizItems = computed(() => {
-      return store.draftQuizItems
-        .filter(item => item.userId && item.userId !== auth.user?.uid)
-        .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-    });
-
-    const pendingQuizItems = computed(() => {
-      return store.draftQuizItems
-        .filter(item => item.status === 'pending')
-        .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-    });
-
     onMounted(async () => {
       await store.fetchDraftQuizItems();
 
       // Get the ID from the route
       const itemId = route.params.id;
 
+      // Check if this is a new item
+      if (itemId === 'new' || route.query.new === 'true') {
+        store.resetDraftQuizEntry();
+        return;
+      }
+
       if (itemId) {
         // First check if it's a draft item
-        const draftItem = [...userDraftQuizItems.value, ...otherDraftQuizItems.value, ...pendingQuizItems.value]
+        const draftItem = store.draftQuizItems
           .find(item => item.id === itemId);
 
         if (draftItem) {
-          // Load draft item
           store.updateDraftQuizEntry(draftItem);
         } else {
           // Check if it's a permanent quiz item
-          const permanentItem = quizEntries.find(item => item.id.toString() === itemId);
+          const permanentItem = quizEntries.find(item =>
+            item.id.toString() === itemId.toString()
+          );
           if (permanentItem) {
             // Create a copy of the permanent item for editing
             const copyItem = { ...permanentItem };
-            copyItem.originalId = copyItem.id;  // Save the original ID
-            copyItem.id = null;  // Reset ID for new draft
+            copyItem.originalId = copyItem.id;
+            copyItem.id = null;
             store.updateDraftQuizEntry(copyItem);
           } else {
             // Item not found, redirect to home
@@ -654,7 +593,11 @@ export default {
       }
     });
 
-    return { store, auth, userDraftQuizItems, otherDraftQuizItems, pendingQuizItems };
+    return {
+      store,
+      auth,
+      route
+    };
   },
   computed: {
     newEntry: {
@@ -667,14 +610,6 @@ export default {
     },
     formattedJson() {
       return JSON.stringify(this.newEntry, null, 2);
-    },
-    permanentQuizItems() {
-      // Sort by numeric ID, handling potential string IDs
-      return [...quizEntries].sort((a, b) => {
-        const aId = typeof a.id === 'string' ? parseInt(a.id, 10) : a.id;
-        const bId = typeof b.id === 'string' ? parseInt(b.id, 10) : b.id;
-        return aId - bId;
-      });
     },
     isLoadingDrafts() {
       return this.store.draftQuizItemsLoading;
@@ -740,8 +675,6 @@ export default {
       submittedEntry: null,
       activeSection: '',
       copySuccess: false,
-      selectedTemplate: '',
-      existingQuizItems: quizEntries,
       autoSaveTimeout: null,
       lastSaved: null,
       saveStatus: {
@@ -924,35 +857,6 @@ export default {
         this.copySuccess = false;
       }
     },
-    useTemplate() {
-      if (!this.selectedTemplate) {
-        this.store.resetDraftQuizEntry();
-        this.initializeNewEntry();
-        return;
-      }
-
-      // First check if it's a permanent quiz item
-      const permanentItem = this.permanentQuizItems.find(item => item.id === this.selectedTemplate);
-      if (permanentItem) {
-        // Create a copy of the permanent item
-        const copyItem = { ...permanentItem };
-        copyItem.originalId = copyItem.id;  // Save the original ID
-        copyItem.id = null;  // Reset ID for new draft
-        this.store.updateDraftQuizEntry(copyItem);
-        return;
-      }
-
-      // If not permanent, check drafts
-      const draftItem = [...this.userDraftQuizItems, ...this.otherDraftQuizItems, ...this.pendingQuizItems]
-        .find(item => item.id === this.selectedTemplate);
-
-      if (draftItem) {
-        const copyItem = { ...draftItem };
-        copyItem.originalId = copyItem.id;  // Save the original ID
-        copyItem.id = null;  // Reset ID for new draft
-        this.store.updateDraftQuizEntry(copyItem);
-      }
-    },
     async checkValidation() {
       const validation = this.store.validateDraftQuizEntry(this.store.draftQuizEntry);
       this.validationState = {
@@ -1052,7 +956,6 @@ export default {
     }
   }
 };
-// Spurious comment
 </script>
 
 <style scoped>
