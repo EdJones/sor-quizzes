@@ -74,17 +74,12 @@
         :selectableType="'single'" />
     </div>
 
-    <div v-if="previewMode" class="preview-section">
+    <div v-if="previewMode">
       <QuizItem :currentQuizItem="newEntry" :itemNum="0" :reviewMode="true" :basicMode="false" :previewMode="true"
         :userAnswer="newEntry.correctAnswer" />
     </div>
 
-    <div v-else>
-      <QuizItem :currentQuizItem="newEntry" :itemNum="0" :reviewMode="true" :basicMode="false" :previewMode="true"
-        :userAnswer="newEntry.correctAnswer" />
-    </div>
-
-    <form v-if="!previewMode" @submit.prevent="submitForm">
+    <form v-else @submit.prevent="submitForm">
       <!-- Template selector -->
       <div class="template-selector">
         <div class="form1-section bg-indigo-950/10 dark:bg-indigo-950/30">
