@@ -550,8 +550,9 @@ const toggleQuestions = (setName) => {
 };
 
 //handle new quiz item
-const handleNewQuizItem = () => {
-    router.push({ name: 'NewQuizItem' });
+const handleNewQuizItem = (showSelector = true) => {
+    // Instead of managing a modal state, we'll navigate to the new item route
+    router.push('/edit-item/new')
 }
 
 // Update handleEditClick function
