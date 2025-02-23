@@ -135,6 +135,7 @@ import ProgressDetailsPopup from './ProgressDetailsPopup.vue';
 import ContributionsModal from './ContributionsModal.vue';
 import { doc, getDoc, query, collection, getDocs, where } from 'firebase/firestore';
 import { db } from '../firebase';
+import { quizEntries } from '../data/quiz-items';
 
 export default {
     name: 'UserStatus',
@@ -150,7 +151,7 @@ export default {
         const router = useRouter();
         const contributorMode = ref(false);
         const hasContributed = ref(false);
-        const contributionStats = ref({ total: 0, published: 0, draft: 0 });
+        const userQuizItems = ref([]);
 
         const fetchContributorStatus = async () => {
             if (!authStore.user || authStore.user.isAnonymous) return;
@@ -182,6 +183,7 @@ export default {
 
                 // Calculate stats
                 const entries = Array.from(uniqueEntries.values());
+                userQuizItems.value = entries;
                 contributionStats.value = {
                     total: entries.length,
                     published: entries.filter(entry => !entry.isDraft).length,
@@ -262,6 +264,25 @@ export default {
             }
         };
 
+        const contributionStats = computed(() => {
+            const published = quizEntries.filter(item =>
+                item.userEmail === authStore.user?.email
+            ).length;
+
+            const draft = userQuizItems.value.filter(item =>
+                !quizEntries.some(qi =>
+                    qi.userEmail === authStore.user?.email &&
+                    qi.title === item.title
+                )
+            ).length;
+
+            return {
+                total: published + draft,
+                published,
+                draft
+            };
+        });
+
         return {
             authStore,
             progressStore,
@@ -275,6 +296,7 @@ export default {
             toggleContributorMode,
             hasContributed,
             contributionStats,
+            userQuizItems
         };
     }
 };
