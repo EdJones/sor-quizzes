@@ -84,7 +84,8 @@
       <div class="template-selector">
         <div class="form1-section bg-indigo-950/10 dark:bg-indigo-950/30">
           <div class="form-group1">
-            <QuizSelector v-if="showSelector" />
+            <QuizSelector v-if="route.params.id === 'new'" :existingItem="null" />
+            <QuizSelector v-else :existingItem="store.draftQuizEntry" />
           </div>
         </div>
       </div>
@@ -560,22 +561,29 @@ export default {
       // Get the ID from the route
       const itemId = route.params.id;
 
+      // Check if this is a new item
+      if (itemId === 'new' || route.query.new === 'true') {
+        store.resetDraftQuizEntry();
+        return;
+      }
+
       if (itemId) {
         // First check if it's a draft item
         const draftItem = store.draftQuizItems
           .find(item => item.id === itemId);
 
         if (draftItem) {
-          // Load draft item
           store.updateDraftQuizEntry(draftItem);
         } else {
           // Check if it's a permanent quiz item
-          const permanentItem = quizEntries.find(item => item.id.toString() === itemId);
+          const permanentItem = quizEntries.find(item =>
+            item.id.toString() === itemId.toString()
+          );
           if (permanentItem) {
             // Create a copy of the permanent item for editing
             const copyItem = { ...permanentItem };
-            copyItem.originalId = copyItem.id;  // Save the original ID
-            copyItem.id = null;  // Reset ID for new draft
+            copyItem.originalId = copyItem.id;
+            copyItem.id = null;
             store.updateDraftQuizEntry(copyItem);
           } else {
             // Item not found, redirect to home
@@ -585,7 +593,11 @@ export default {
       }
     });
 
-    return { store, auth };
+    return {
+      store,
+      auth,
+      route
+    };
   },
   computed: {
     newEntry: {
@@ -649,7 +661,6 @@ export default {
   },
   data() {
     return {
-      showSelector: true,
       previewMode: false,
       jsonPreviewMode: false,
       showExplanationSection: false,
@@ -945,7 +956,6 @@ export default {
     }
   }
 };
-// Spurious comment
 </script>
 
 <style scoped>

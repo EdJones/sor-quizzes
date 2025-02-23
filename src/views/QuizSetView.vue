@@ -457,6 +457,7 @@ import QuizSetTree from '../components/QuizSetTree.vue';
 import InProgress from '../components/InProgress.vue'; // Import the InProgress component
 import { useAuth } from '../composables/useAuth';
 import QuizItem from '../components/QuizItem.vue';
+import { quizStore } from '../stores/quizStore';
 
 const router = useRouter();
 const currentTab = ref('current');
@@ -549,11 +550,14 @@ const toggleQuestions = (setName) => {
     expandedSets.value = newExpandedSets;
 };
 
-//handle new quiz item
-const handleNewQuizItem = (showSelector = true) => {
-    // Instead of managing a modal state, we'll navigate to the new item route
-    router.push('/edit-item/new')
-}
+// handle new quiz item
+const handleNewQuizItem = () => {
+    quizStore().resetDraftQuizEntry();
+    router.push({
+        path: '/edit-item/new',
+        query: { new: 'true' }
+    });
+};
 
 // Update handleEditClick function
 const handleEditClick = async (quizSetOrItemId) => {
