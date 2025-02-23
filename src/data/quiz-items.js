@@ -1545,7 +1545,8 @@ export const quizEntries = [{
     id: 43,
     title: "Teaching Syllabification",
     subtitle: "",
-    Question: "T/F: Teaching syllabification (breaking words into syllables) should be a regular and ongoing component of early literacy instruction. ",
+    userEmail: "ed.jones@gmail.com", // Add the email of the author
+    Question: "T/F: Teaching syllabification...",
     questionP2: "",
     answer_type: "mc",
     option1: "True",

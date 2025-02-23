@@ -69,11 +69,11 @@
                         <div class="flex items-center gap-2">
                             <span :class="[
                                 'px-2 py-1 text-xs rounded-full',
-                                item.status === 'published'
+                                getItemStatus(item) === 'published'
                                     ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                     : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
                             ]">
-                                {{ item.status === 'published' ? 'Published' : 'Draft' }}
+                                {{ getItemStatus(item) === 'published' ? 'Published' : 'Draft' }}
                             </span>
                             <button @click="handleEditItem(item.id)"
                                 class="p-1 text-gray-500 hover:text-purple-500 dark:text-gray-400 dark:hover:text-purple-400">
@@ -114,6 +114,7 @@ import { useRouter } from 'vue-router';
 import { collection, query, where, getDocs, or } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuthStore } from '../stores/authStore';
+import { quizEntries } from '../data/quiz-items';
 
 const props = defineProps({
     show: {
@@ -131,12 +132,50 @@ const isLoading = ref(false);
 
 // Computed stats
 const publishedCount = computed(() =>
-    userQuizItems.value.filter(item => !item.isDraft).length
+    userQuizItems.value.filter(item => getItemStatus(item) === 'published').length
 );
 
 const draftCount = computed(() =>
-    userQuizItems.value.filter(item => item.isDraft).length
+    userQuizItems.value.filter(item => getItemStatus(item) === 'draft').length
 );
+
+// Add this computed property to find published items by email
+const publishedItems = computed(() => {
+    return userQuizItems.value.filter(item =>
+        item.userEmail === authStore.user?.email
+    );
+});
+
+// Modify the existing getItemStatus function to use userEmail
+const getItemStatus = (item) => {
+    console.log('Checking item:', {
+        itemTitle: item.title,
+        itemEmail: item.userEmail,
+        authEmail: authStore.user?.email
+    });
+
+    // First check if it exists in quiz-items.js
+    const matchingItems = quizEntries.filter(qi => {
+        const isMatch = qi.userEmail === authStore.user?.email && qi.title === item.title;
+        console.log('Comparing with quiz entry:', {
+            qiTitle: qi.title,
+            qiEmail: qi.userEmail,
+            isMatch
+        });
+        return isMatch;
+    });
+
+    console.log(`Found ${matchingItems.length} matches`);
+
+    // If found in quiz-items.js, it's published
+    if (matchingItems.length > 0) {
+        console.log('Marking as published');
+        return 'published';
+    }
+
+    console.log('Marking as draft');
+    return 'draft';
+};
 
 // Fetch user's quiz items
 const fetchUserQuizItems = async () => {

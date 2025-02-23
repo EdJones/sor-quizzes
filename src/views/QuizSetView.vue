@@ -447,7 +447,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { quizSets } from '../data/quizSets';
 import { quizEntries } from '../data/quiz-items';
 import { useRouter } from 'vue-router';
@@ -654,6 +654,23 @@ const handleQuizSetClick = (quizSet) => {
 // Add getQuizItem function
 const getQuizItem = (id) => {
     return quizEntries.find(item => item.id === id);
+};
+
+const userPublishedItems = computed(() => {
+    return quizEntries.filter(item =>
+        item.userEmail === auth.user?.email
+    );
+});
+
+// When displaying items, we can mark them as published
+const getItemStatus = (item) => {
+    if (quizEntries.some(qi =>
+        qi.userEmail === auth.user?.email &&
+        qi.title === item.title
+    )) {
+        return 'published';
+    }
+    return item.status || 'draft';
 };
 </script>
 
