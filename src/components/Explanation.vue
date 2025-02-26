@@ -1,7 +1,7 @@
 <template>
     <div class="explanation-wrapper">
         <!-- Display explanation content here -->
-        <div :class="{ [`hidden`]: !reviewMode }"
+        <div
             class="rounded-md explanation p-4 lg:mt-0 sm:mt-2 place-self-center lg:ml-10 lg:w-full lg:mr-20 text-gray-900 dark:text-white">
             <div class="content-wrapper">
                 <div class="text-content justified">
@@ -142,6 +142,16 @@ export default {
     max-width: 33.333%;
     /* Ensure the video/image doesn't get too small */
     margin-top: .7rem;
+}
+
+.explanation {
+    color: #333 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    .explanation {
+        color: #f7fafc !important;
+    }
 }
 
 @media (max-width: 768px) {

@@ -75,8 +75,10 @@
     </div>
 
     <div v-if="previewMode">
-      <QuizItem :currentQuizItem="newEntry" :itemNum="0" :reviewMode="true" :basicMode="false" :previewMode="true"
-        :userAnswer="newEntry.correctAnswer" />
+      <div class="preview-container">
+        <QuizItem :currentQuizItem="newEntry" :itemNum="0" :reviewMode="true" :basicMode="false" :previewMode="true"
+          :userAnswer="newEntry.correctAnswer" />
+      </div>
     </div>
 
     <form v-else @submit.prevent="submitForm">
@@ -1836,5 +1838,43 @@ option {
 
 .yellow-text {
   color: #ffd700;
+}
+
+.preview-container {
+  background: #f5f5f5;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 20px 0;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+}
+
+.preview-container :deep(.quiz-item) {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+.preview-container :deep(.question-text),
+.preview-container :deep(.answer),
+.preview-container :deep(.list-item-right),
+.preview-container :deep(.explanation) {
+  color: #333 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .preview-container {
+    background: #2d3748;
+  }
+
+  .preview-container :deep(.quiz-item) {
+    background: #1a202c;
+    border-color: #4a5568;
+  }
+
+  .preview-container :deep(.question-text),
+  .preview-container :deep(.answer),
+  .preview-container :deep(.list-item-right),
+  .preview-container :deep(.explanation) {
+    color: #f7fafc !important;
+  }
 }
 </style>
