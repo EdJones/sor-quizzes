@@ -7,30 +7,30 @@
                     <p class="h2 mt-8">We're just getting started, but for now...</p>
                     <p class="font-bold text-sky-900 h2">Choose a role / level of difficulty:</p>
                     <div class="mt-4 mb-2 gap-8 columns-1">
-                        <div><button @click="showQuiz(5)" class="lg:text-3xl sm:text-2xl px-4 py-1">Why Care?</button>
+                        <div><button @click="showQuiz(6)" class="lg:text-3xl sm:text-2xl px-4 py-1">Why Care?</button>
                         </div>
                     </div>
                     <div class="mt-2 mb-2 gap-8 columns-2">
-                        <div><button @click="showQuiz(0)" class="lg:text-3xl sm:text-2xl px-4 py-1">Expert</button>
+                        <div><button @click="showQuiz(1)" class="lg:text-3xl sm:text-2xl px-4 py-1">Expert</button>
                         </div>
-                        <div><button @click="showQuiz(1)" class="lg:text-3xl sm:text-2xl px-4 py-1">Basic</button></div>
+                        <div><button @click="showQuiz(0)" class="lg:text-3xl sm:text-2xl px-4 py-1">Basic</button></div>
                     </div>
                     <div class="mt-2 mb-2 gap-8 columns-2">
-                        <div><button @click="showQuiz(2)"
+                        <div><button @click="showQuiz(3)"
                                 class="place-self-center place-content-center lg:text-3xl sm:text-2xl px-4 py-1">Kinder-First</button>
                         </div>
-                        <div><button @click="showQuiz(3)"
+                        <div><button @click="showQuiz(4)"
                                 class="place-self-center place-content-center lg:text-3xl sm:text-2xl px-4 py-1">Admin,
                                 Board
                                 Members</button></div>
                     </div>
                     <div v-if="debug" class="mt-2 mb-8">
-                        <button @click="showQuiz(4)"
+                        <button @click="showQuiz(5)"
                             class="place-self-center place-content-center lg:text-3xl sm:text-2xl">Test
                             Expert</button>
                     </div>
                     <div class="mt-2 mb-2">
-                        <button @click="showQuiz(6)"
+                        <button @click="showQuiz(7)"
                             class="place-self-center place-content-center lg:text-2xl sm:text-xl  px-4 py-1">Learning
                             Science</button>
                     </div>

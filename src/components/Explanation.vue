@@ -1,7 +1,7 @@
 <template>
     <div class="explanation-wrapper">
         <!-- Display explanation content here -->
-        <div
+        <div :class="{ [`hidden`]: !reviewMode }"
             class="rounded-md explanation p-4 lg:mt-0 sm:mt-2 place-self-center lg:ml-10 lg:w-full lg:mr-20 text-gray-900 dark:text-white">
             <div class="content-wrapper">
                 <div class="text-content justified">
