@@ -65,9 +65,15 @@ export default {
     },
     emits: ['change-view'],
     props: {
+        selectedQuiz: {
+            type: Number,
+            required: false,
+            default: null
+        },
         quizSet: {
             type: Object,
-            required: true
+            required: false,
+            default: null
         }
     },
     data() {
@@ -78,19 +84,37 @@ export default {
             podcastEpisodes: null
         }
     },
+    computed: {
+        currentQuiz() {
+            // If quizSet is provided directly, use it
+            if (this.quizSet) {
+                return this.quizSet;
+            }
+            // Otherwise, look up the quiz set by index
+            else if (this.selectedQuiz !== null) {
+                return quizSets[this.selectedQuiz];
+            }
+            // Fallback
+            return null;
+        }
+    },
     created() {
-        console.log('Quiz Name:', this.quizSet?.setName);
-        console.log('Full Quiz Data:', this.quizSet);
-        this.quizTitle = this.quizSet?.setName || 'New';
+        if (!this.currentQuiz) {
+            console.error('No quiz data available - either selectedQuiz or quizSet must be provided');
+            return;
+        }
+
+        console.log('Quiz Name:', this.currentQuiz?.setName);
+        console.log('Full Quiz Data:', this.currentQuiz);
+        this.quizTitle = this.currentQuiz?.setName || 'New';
 
         // Ensure we get the episodes array
-        const currentQuiz = this.quizSet;
-        if (currentQuiz?.podcastEpisodes) {
-            console.log('Found podcastEpisodes:', currentQuiz.podcastEpisodes);
-            this.podcastEpisodes = [...currentQuiz.podcastEpisodes];
-        } else if (currentQuiz?.podcastEpisode) {
+        if (this.currentQuiz?.podcastEpisodes) {
+            console.log('Found podcastEpisodes:', this.currentQuiz.podcastEpisodes);
+            this.podcastEpisodes = [...this.currentQuiz.podcastEpisodes];
+        } else if (this.currentQuiz?.podcastEpisode) {
             console.log('Found single podcastEpisode');
-            this.podcastEpisode = currentQuiz.podcastEpisode;
+            this.podcastEpisode = this.currentQuiz.podcastEpisode;
         } else {
             console.log('No podcast data found');
         }
@@ -105,7 +129,16 @@ export default {
             if (this.feedback.trim()) {
                 try {
                     const progressStore = useProgressStore();
-                    await progressStore.saveQuizProgress(this.selectedQuiz, {
+                    // Use selectedQuiz if available, otherwise try to find the index
+                    const quizId = this.selectedQuiz !== null ?
+                        this.selectedQuiz :
+                        quizSets.findIndex(set => set.setName === this.currentQuiz?.setName);
+
+                    if (quizId === -1) {
+                        throw new Error('Could not determine quiz ID for feedback');
+                    }
+
+                    await progressStore.saveQuizProgress(quizId, {
                         inProgressFeedback: this.feedback,
                         timestamp: new Date()
                     });
