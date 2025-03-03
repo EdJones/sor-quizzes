@@ -16,6 +16,15 @@
                     <p v-if="quizItem.ref1" class="mt-2 text-sm">{{ quizItem.ref1 }}</p>
                     <p v-if="quizItem.ref2" class="text-sm">{{ quizItem.ref2 }}</p>
                     <p v-if="quizItem.ref3" class="mb- text-sm">{{ quizItem.ref3 }}</p>
+
+                    <!-- Modal button - only show if modal content exists -->
+                    <div v-if="quizItem.modal && quizItem.modal.trim() !== '' && quizItem.modal !== 'Enter modal content here'"
+                        class="mt-4">
+                        <button @click="showModal = true" class="modal-button">
+                            Learn More
+                        </button>
+                    </div>
+
                     <div v-if="quizItem.resources && quizItem.resources.length > 0 && quizItem.resources[0].title != ''"
                         class="resources-wrapper">
                         <Resource v-for="(resource, index) in quizItem.resources" :key="index" :resource="resource" />
@@ -41,6 +50,19 @@
                 <Citation v-for="(citation, index) in quizItem.citations" :key="index" :citation="citation" />
             </div>
             <Caution :message="quizItem.caution" />
+        </div>
+
+        <!-- Modal Dialog -->
+        <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4"
+            @click.self="showModal = false">
+            <div class="relative bg-white dark:bg-gray-800 rounded-lg p-6 max-w-3xl max-h-[90vh] overflow-y-auto">
+                <button @click="showModal = false"
+                    class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white text-xl"
+                    aria-label="Close">
+                    ×
+                </button>
+                <div class="modal-content prose dark:prose-invert max-w-none" v-html="formattedModalContent"></div>
+            </div>
         </div>
     </div>
 </template>
@@ -80,12 +102,24 @@ export default {
     setup(props) {
         console.log('Explanation setup, quizItem:', props.quizItem);
         const showFeedback = ref(false);
+        const showModal = ref(false);
 
         const isCorrect = computed(() => {
             if (props.quizItem.answer_type === 'sortable') {
                 return props.userAnswer.every((id, index) => id === props.quizItem.correctOrder[index]);
             }
             // ... handle other question types ...
+        });
+
+        // Format modal content to handle line breaks
+        const formattedModalContent = computed(() => {
+            if (!props.quizItem.modal) return '';
+
+            // Convert line breaks to <br> tags and handle paragraphs
+            return props.quizItem.modal
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>')
+                .replace(/^(.+)$/, '<p>$1</p>');
         });
 
         // Function to be called when an answer is submitted
@@ -95,9 +129,26 @@ export default {
 
         return {
             showFeedback,
+            showModal,
             isCorrect,
-            checkAnswer
+            checkAnswer,
+            formattedModalContent
         };
+    },
+    mounted() {
+        // Add event listener for escape key to close modal
+        document.addEventListener('keydown', this.handleKeyDown);
+    },
+    beforeUnmount() {
+        // Remove event listener
+        document.removeEventListener('keydown', this.handleKeyDown);
+    },
+    methods: {
+        handleKeyDown(e) {
+            if (e.key === 'Escape' && this.showModal) {
+                this.showModal = false;
+            }
+        }
     }
 }
 </script>
@@ -178,5 +229,45 @@ export default {
     margin-top: 1rem;
     margin-right: -1rem;
     padding-right: 0%;
+}
+
+/* Modal styles */
+.modal-button {
+    background-image: linear-gradient(90deg, #4a7ff3 40%, #702afa);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.modal-button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.modal-content {
+    color: #333;
+}
+
+:root[class~="dark"] .modal-content {
+    color: #f7fafc;
+}
+
+/* Animation for modal */
+.fixed {
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 </style>
