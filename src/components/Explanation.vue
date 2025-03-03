@@ -61,7 +61,8 @@
                     aria-label="Close">
                     ×
                 </button>
-                <div class="modal-content prose dark:prose-invert max-w-none" v-html="formattedModalContent"></div>
+                <div class="modal-content prose dark:prose-invert max-w-none text-left" v-html="formattedModalContent">
+                </div>
             </div>
         </div>
     </div>
@@ -115,11 +116,42 @@ export default {
         const formattedModalContent = computed(() => {
             if (!props.quizItem.modal) return '';
 
-            // Convert line breaks to <br> tags and handle paragraphs
-            return props.quizItem.modal
-                .replace(/\n\n/g, '</p><p>')
-                .replace(/\n/g, '<br>')
-                .replace(/^(.+)$/, '<p>$1</p>');
+            // Process the content with Markdown-like formatting
+            let content = props.quizItem.modal
+                // Handle headings
+                .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold mb-4 text-left">$1</h1>')
+                .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold mb-3 mt-4 text-left">$1</h2>')
+                .replace(/^### (.+)$/gm, '<h3 class="text-lg font-bold mb-2 mt-3 text-left">$1</h3>')
+
+                // Handle lists
+                .replace(/^- (.+)$/gm, '<li class="ml-4 mb-1 text-left">$1</li>')
+
+                // Handle bold text
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+
+                // Handle paragraphs and line breaks
+                .replace(/\n\n/g, '</p><p class="mb-4 text-left">')
+                .replace(/\n/g, '<br>');
+
+            // Wrap in paragraph tags if not already wrapped
+            if (!content.startsWith('<h1') && !content.startsWith('<h2') && !content.startsWith('<h3')) {
+                content = '<p class="mb-4 text-left">' + content;
+            }
+
+            // Close any unclosed paragraphs
+            if (!content.endsWith('</p>') && !content.endsWith('</h1>') && !content.endsWith('</h2>') && !content.endsWith('</h3>')) {
+                content += '</p>';
+            }
+
+            // Wrap lists in ul tags
+            content = content.replace(/<li class="ml-4 mb-1 text-left">(.+?)<\/li>/g, function (match) {
+                return '<ul class="list-disc ml-6 mb-4">' + match + '</ul>';
+            });
+
+            // Fix nested ul tags
+            content = content.replace(/<\/ul><ul class="list-disc ml-6 mb-4">/g, '');
+
+            return content;
         });
 
         // Function to be called when an answer is submitted
@@ -250,10 +282,43 @@ export default {
 
 .modal-content {
     color: #333;
+    text-align: left !important;
 }
 
 :root[class~="dark"] .modal-content {
     color: #f7fafc;
+}
+
+/* Add specific styling for modal content elements */
+:deep(.modal-content h1),
+:deep(.modal-content h2),
+:deep(.modal-content h3),
+:deep(.modal-content p),
+:deep(.modal-content ul),
+:deep(.modal-content ol) {
+    text-align: left !important;
+    margin-bottom: 1rem;
+}
+
+:deep(.modal-content ul),
+:deep(.modal-content ol) {
+    padding-left: 1.5rem;
+}
+
+:deep(.modal-content li) {
+    margin-bottom: 0.5rem;
+    text-align: left !important;
+}
+
+/* Ensure proper contrast */
+.modal-content {
+    background-color: white;
+    color: #333 !important;
+}
+
+:root[class~="dark"] .modal-content {
+    background-color: #1f2937;
+    color: #f7fafc !important;
 }
 
 /* Animation for modal */
