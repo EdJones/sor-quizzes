@@ -274,8 +274,9 @@ export default {
 .modal-button {
     background-image: linear-gradient(90deg, #4a7ff3 40%, #702afa);
     color: white;
-    padding: 0.5rem 1rem;
+    padding: 0.1rem 0.2rem;
     border-radius: 0.375rem;
+    font-size: 0.8rem;
     font-weight: 500;
     transition: all 0.3s ease;
     border: none;
