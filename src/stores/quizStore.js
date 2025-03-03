@@ -105,6 +105,34 @@ export const quizStore = defineStore('quiz', {
             this.simpleAnswers[index] = selectedAnswer;
 
             if (Array.isArray(selectedAnswer)) {
+                // For multiple select questions
+                if (quizEntry.answer_type === 'ms') {
+                    const correctAnswers = quizEntry.correctAnswers || [];
+                    const isCorrect = selectedAnswer.length === correctAnswers.length &&
+                        selectedAnswer.every(answer => correctAnswers.includes(answer));
+
+                    this.userAnswers[index] = {
+                        selected: selectedAnswer,
+                        correct: isCorrect,
+                        questionId: questionId || '',
+                        questionTitle: questionTitle || '',
+                        timestamp: new Date().toISOString()
+                    };
+
+                    if (!isCorrect && !this.incorrectQuestions.some(q => q.id === questionId)) {
+                        const chosenOptionsText = selectedAnswer
+                            .map(answer => quizEntry[`option${answer}`])
+                            .filter(Boolean)
+                            .join(', ');
+                        this.incorrectQuestions.push({
+                            id: questionId || '',
+                            title: questionTitle || '',
+                            chosenAnswer: chosenOptionsText.substring(0, 100) || ''
+                        });
+                    }
+                    return;
+                }
+                // For sortable list answers
                 console.log('Sortable list answer - skipping correctness check');
                 this.userAnswers[index] = {
                     selected: selectedAnswer,
@@ -544,6 +572,46 @@ export const quizStore = defineStore('quiz', {
                     validation.errors.push('The correct answer cannot be a default option');
                     validation.invalidFields.add(`option${draft.correctAnswer}`);
                 }
+            } else if (draft.answer_type === 'ms') {
+                // For multiple select, need at least 2 options and at least one correct answer
+                const options = [
+                    draft.option1,
+                    draft.option2,
+                    draft.option3,
+                    draft.option4,
+                    draft.option5
+                ];
+
+                // Check if options are just default values
+                const nonDefaultOptions = options.filter(
+                    (opt, index) => opt?.trim() && opt !== defaultValues[`option${index + 1}`]
+                );
+
+                if (nonDefaultOptions.length < 2) {
+                    validation.errors.push('Multiple select questions require at least 2 non-default options');
+                    // Mark all empty or default options as invalid
+                    options.forEach((opt, index) => {
+                        if (!opt?.trim() || opt === defaultValues[`option${index + 1}`]) {
+                            validation.invalidFields.add(`option${index + 1}`);
+                        }
+                    });
+                }
+
+                if (!draft.correctAnswers || !Array.isArray(draft.correctAnswers) || draft.correctAnswers.length === 0) {
+                    validation.errors.push('Please select at least one correct answer');
+                    validation.invalidFields.add('correctAnswers');
+                }
+
+                // Check if any of the selected correct answers are default values
+                if (draft.correctAnswers) {
+                    draft.correctAnswers.forEach(answer => {
+                        const index = answer - 1;
+                        if (index >= 0 && options[index] === defaultValues[`option${answer}`]) {
+                            validation.errors.push(`Correct answer option ${answer} cannot be a default option`);
+                            validation.invalidFields.add(`option${answer}`);
+                        }
+                    });
+                }
             }
 
             // Explanation validation - check for default value
@@ -620,6 +688,7 @@ export const quizStore = defineStore('quiz', {
                 option4: 'Fourth option',
                 option5: 'Fifth option',
                 correctAnswer: 1,
+                correctAnswers: [], // For multiple select questions
                 explanation: 'Here is why option 1 is correct...',
                 explanation2: '',
                 videoUrl: '',

@@ -140,48 +140,50 @@
               <span class="arrow-indicator">▼</span>
             </summary>
             <div class="form-section">
+              <!-- Answer Type Selection -->
               <div class="form-group">
-                <label for="option1">Option 1:</label>
-                <input type="text" id="option1" v-model="newEntry.option1"
-                  :class="['form-input', { 'invalid-field': invalidFields.has('option1') }]"
-                  :data-error="getFieldError('option1')" :placeholder="newEntry.option1"
-                  @focus="handleFocus($event, 'option1')" @blur="handleBlur($event, 'option1')" />
+                <label for="answer-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Answer Type
+                </label>
+                <select id="answer-type" v-model="newEntry.answer_type"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                  <option value="mc">Multiple Choice (Single Answer)</option>
+                  <option value="ms">Multiple Choice (Multiple Answers)</option>
+                  <option value="true_false">True/False</option>
+                  <option value="short_answer">Short Answer</option>
+                  <option value="sortable">Sortable List</option>
+                </select>
               </div>
-              <div class="form-group">
-                <label for="option2">Option 2:</label>
-                <input type="text" id="option2" v-model="newEntry.option2"
-                  :class="['form-input', { 'invalid-field': invalidFields.has('option2') }]"
-                  :data-error="getFieldError('option2')" :placeholder="newEntry.option2"
-                  @focus="handleFocus($event, 'option2')" @blur="handleBlur($event, 'option2')" />
-              </div>
-              <div class="form-group">
-                <label for="option3">Option 3:</label>
-                <input type="text" id="option3" v-model="newEntry.option3"
-                  :class="['form-input', { 'invalid-field': invalidFields.has('option3') }]"
-                  :data-error="getFieldError('option3')" :placeholder="newEntry.option3"
-                  @focus="handleFocus($event, 'option3')" @blur="handleBlur($event, 'option3')" />
-              </div>
-              <div class="form-group">
-                <label for="option4">Option 4:</label>
-                <input type="text" id="option4" v-model="newEntry.option4"
-                  :class="['form-input', { 'invalid-field': invalidFields.has('option4') }]"
-                  :data-error="getFieldError('option4')" :placeholder="newEntry.option4"
-                  @focus="handleFocus($event, 'option4')" @blur="handleBlur($event, 'option4')" />
-              </div>
-              <div class="form-group">
-                <label for="option5">Option 5:</label>
-                <input type="text" id="option5" v-model="newEntry.option5"
-                  :class="['form-input', { 'invalid-field': invalidFields.has('option5') }]"
-                  :data-error="getFieldError('option5')" :placeholder="newEntry.option5"
-                  @focus="handleFocus($event, 'option5')" @blur="handleBlur($event, 'option5')" />
-              </div>
-              <div class="form-group">
-                <label for="correctAnswer">Correct Answer (1-5):</label>
-                <input type="number" id="correctAnswer" v-model="newEntry.correctAnswer"
-                  :class="['form-input', { 'invalid-field': invalidFields.has('correctAnswer') }]"
-                  :data-error="getFieldError('correctAnswer')" min="1" max="5" required
-                  :placeholder="newEntry.correctAnswer" @focus="handleFocus($event, 'correctAnswer')"
-                  @blur="handleBlur($event, 'correctAnswer')" />
+
+              <!-- Options -->
+              <div v-if="newEntry.answer_type === 'mc' || newEntry.answer_type === 'ms'" class="space-y-4">
+                <div v-for="n in 6" :key="n" class="form-group">
+                  <label :for="'option' + n">Option {{ n }}:</label>
+                  <div class="flex items-center gap-2">
+                    <input type="text" :id="'option' + n" v-model="newEntry['option' + n]"
+                      :class="['form-input flex-1', { 'invalid-field': invalidFields.has('option' + n) }]"
+                      :data-error="getFieldError('option' + n)" :placeholder="newEntry['option' + n]"
+                      @focus="handleFocus($event, 'option' + n)" @blur="handleBlur($event, 'option' + n)" />
+
+                    <!-- Single correct answer for MC -->
+                    <template v-if="newEntry.answer_type === 'mc'">
+                      <input type="radio" :value="n" v-model="newEntry.correctAnswer" :name="'correct-answer'"
+                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 dark:bg-gray-700" />
+                      <label :for="'option' + n" class="text-sm text-gray-600 dark:text-gray-400">
+                        Correct
+                      </label>
+                    </template>
+
+                    <!-- Multiple correct answers for MS -->
+                    <template v-else>
+                      <input type="checkbox" :value="n" v-model="newEntry.correctAnswers"
+                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 dark:bg-gray-700" />
+                      <label :for="'option' + n" class="text-sm text-gray-600 dark:text-gray-400">
+                        Correct
+                      </label>
+                    </template>
+                  </div>
+                </div>
               </div>
             </div>
           </details>

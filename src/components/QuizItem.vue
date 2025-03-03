@@ -10,9 +10,14 @@
   <div v-if="currentQuizItem" class="w-full place-content-center mx-auto">
     <!-- Display the question for all question types -->
     <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">{{ quizItem.subtitle }}</h2>
-    <!-- Existing question types -->
+    <!-- Question types -->
     <div v-if="quizItem.answer_type == 'mc'" class="text-gray-900 dark:text-white">
       <MultipleChoice v-model:userAnswer="userAnswer" @answer-selected="handleAnswerSelected" :quizItem="quizItem"
+        :reviewMode="reviewMode" :itemNum="itemNum" :basicMode="basicMode" />
+    </div>
+
+    <div v-else-if="quizItem.answer_type == 'ms'" class="text-gray-900 dark:text-white">
+      <MultipleSelect v-model:userAnswer="userAnswer" @answer-selected="handleAnswerSelected" :quizItem="quizItem"
         :reviewMode="reviewMode" :itemNum="itemNum" :basicMode="basicMode" />
     </div>
 
@@ -47,6 +52,7 @@
 
 <script>
 import MultipleChoice from './MultipleChoice.vue';
+import MultipleSelect from './MultipleSelect.vue';
 import LiteYouTubeEmbed from 'vue-lite-youtube-embed';
 import Explanation from './Explanation.vue';
 import SortableList from './SortableList.vue';
@@ -56,6 +62,7 @@ export default {
   name: 'QuizItem',
   components: {
     MultipleChoice,
+    MultipleSelect,
     Explanation,
     LiteYouTubeEmbed,
     SortableList,
