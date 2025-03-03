@@ -110,7 +110,14 @@ export default {
             if (props.quizItem.answer_type === 'sortable') {
                 return props.userAnswer.every((id, index) => id === props.quizItem.correctOrder[index]);
             }
-            // ... handle other question types ...
+            if (props.quizItem.answer_type === 'ms') {
+                const correctAnswers = props.quizItem.correctAnswers || [];
+                return Array.isArray(props.userAnswer) &&
+                    props.userAnswer.length === correctAnswers.length &&
+                    props.userAnswer.every(answer => correctAnswers.includes(answer));
+            }
+            // For multiple choice questions
+            return String(props.userAnswer) === String(props.quizItem.correctAnswer);
         });
 
         // Format modal content to handle line breaks
