@@ -70,78 +70,28 @@
           <span v-else>Copied!</span>
         </button>
       </div>
-      <VueJsonPretty :data="newEntry" :deep="2" :showLength="true" :showDoubleQuotes="true" :showLine="true"
+      <VueJsonPretty :data="newEntry" :deep="2" :showLength="true" :showDoubleQuotes="false" :showLine="true"
         :selectableType="'single'" />
     </div>
 
-    <div v-if="previewMode" class="preview-section">
-      <QuizItem :currentQuizItem="newEntry" :itemNum="0" :reviewMode="true" :basicMode="false" :previewMode="true"
-        :userAnswer="newEntry.correctAnswer" />
-    </div>
-
-    <div v-else>
-      <QuizItem :currentQuizItem="newEntry" :itemNum="0" :reviewMode="true" :basicMode="false" :previewMode="true"
-        :userAnswer="newEntry.correctAnswer" />
+    <div v-if="previewMode">
+      <div class="preview-container">
+        <QuizItem :currentQuizItem="newEntry" :itemNum="0" :reviewMode="true" :basicMode="false" :previewMode="true"
+          :userAnswer="newEntry.correctAnswer" />
+      </div>
     </div>
 
     <form v-else @submit.prevent="submitForm">
-      <!-- Add this at the top of the form, before other sections -->
+      <!-- Template selector -->
       <div class="template-selector">
-
-        <div class="form1-section bg-indigo-950/10 dark:bg-indigo-950/30 ">
+        <div class="form1-section bg-indigo-950/10 dark:bg-indigo-950/30">
           <div class="form-group1">
-            <!--- Can we live without the selector now?
-            <label for="template-select" class="text-stone-400">Choose a starting point:</label>
-            <select id="template-select" v-model="selectedTemplate" @change="useTemplate" class="w-full px-4 py-2 rounded-lg border border-gray-300/50 
-                     bg-white/50 dark:bg-gray-500/50 
-                     dark:border-gray-600/50 color:#ffffff
-                     focus:ring-2 focus:ring-amber-400 focus:border-transparent
-                     backdrop-blur-sm
-                     transition-colors duration-200 ease-in-out
-                     appearance-none cursor-pointer
-                     hover:bg-white/40 dark:hover:bg-gray-500/40
-                     dark:[&>*]:bg-gray-700 text-white">
-              <option value="" class="py-2 text-white">Start from scratch</option>
-              <template v-if="isLoadingDrafts">
-                <option disabled>Loading draft items...</option>
-              </template>
-<template v-else-if="draftLoadError">
-                <option disabled>Error loading drafts: {{ draftLoadError }}</option>
-              </template>
-<template v-else>
-                <optgroup label="My Draft Quiz Items" class="font-medium" v-if="userDraftQuizItems.length">
-                  <option v-for="item in userDraftQuizItems" :key="item.id" :value="item.id" class="py-1">
-                    {{ item.title || 'Untitled Draft' }}
-                  </option>
-                </optgroup>
-                <optgroup label="Pending Review" class="font-medium" v-if="pendingQuizItems.length">
-                  <option v-for="item in pendingQuizItems" :key="item.id" :value="item.id" class="py-1">
-                    {{ item.title || 'Untitled Pending' }} ({{ item.userEmail || 'Anonymous' }})
-                  </option>
-                </optgroup>
-                <optgroup label="Other Draft Items" class="font-medium" v-if="otherDraftQuizItems.length">
-                  <option v-for="item in otherDraftQuizItems" :key="item.id" :value="item.id" class="py-1">
-                    {{ item.title || 'Untitled Draft' }}
-                  </option>
-                </optgroup>
-              </template>
-<optgroup label="Permanent Quiz Items" class="font-medium text-blue-500">
-  <option v-for="item in permanentQuizItems" :key="item.id" :value="item.id" class="py-1 text-blue-700">
-    {{ String(item.id).padStart(3, '0') }}. {{ item.title }}
-  </option>
-</optgroup>
-</select>
---->
-            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
-              <svg class="fill-current h-4 w-4 text-gray-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-              </svg>
-            </div>
+            <QuizSelector v-if="route.params.id === 'new'" :existingItem="null" />
+            <QuizSelector v-else :existingItem="store.draftQuizEntry" />
           </div>
-
-
         </div>
       </div>
+
       <!-- Question Group -->
       <div class="form-group-section question-section">
         <div class="question-content-wrapper">
@@ -190,48 +140,50 @@
               <span class="arrow-indicator">▼</span>
             </summary>
             <div class="form-section">
+              <!-- Answer Type Selection -->
               <div class="form-group">
-                <label for="option1">Option 1:</label>
-                <input type="text" id="option1" v-model="newEntry.option1"
-                  :class="['form-input', { 'invalid-field': invalidFields.has('option1') }]"
-                  :data-error="getFieldError('option1')" :placeholder="newEntry.option1"
-                  @focus="handleFocus($event, 'option1')" @blur="handleBlur($event, 'option1')" />
+                <label for="answer-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Answer Type
+                </label>
+                <select id="answer-type" v-model="newEntry.answer_type"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                  <option value="mc">Multiple Choice (Single Answer)</option>
+                  <option value="ms">Multiple Choice (Multiple Answers)</option>
+                  <option value="true_false">True/False</option>
+                  <option value="short_answer">Short Answer</option>
+                  <option value="sortable">Sortable List</option>
+                </select>
               </div>
-              <div class="form-group">
-                <label for="option2">Option 2:</label>
-                <input type="text" id="option2" v-model="newEntry.option2"
-                  :class="['form-input', { 'invalid-field': invalidFields.has('option2') }]"
-                  :data-error="getFieldError('option2')" :placeholder="newEntry.option2"
-                  @focus="handleFocus($event, 'option2')" @blur="handleBlur($event, 'option2')" />
-              </div>
-              <div class="form-group">
-                <label for="option3">Option 3:</label>
-                <input type="text" id="option3" v-model="newEntry.option3"
-                  :class="['form-input', { 'invalid-field': invalidFields.has('option3') }]"
-                  :data-error="getFieldError('option3')" :placeholder="newEntry.option3"
-                  @focus="handleFocus($event, 'option3')" @blur="handleBlur($event, 'option3')" />
-              </div>
-              <div class="form-group">
-                <label for="option4">Option 4:</label>
-                <input type="text" id="option4" v-model="newEntry.option4"
-                  :class="['form-input', { 'invalid-field': invalidFields.has('option4') }]"
-                  :data-error="getFieldError('option4')" :placeholder="newEntry.option4"
-                  @focus="handleFocus($event, 'option4')" @blur="handleBlur($event, 'option4')" />
-              </div>
-              <div class="form-group">
-                <label for="option5">Option 5:</label>
-                <input type="text" id="option5" v-model="newEntry.option5"
-                  :class="['form-input', { 'invalid-field': invalidFields.has('option5') }]"
-                  :data-error="getFieldError('option5')" :placeholder="newEntry.option5"
-                  @focus="handleFocus($event, 'option5')" @blur="handleBlur($event, 'option5')" />
-              </div>
-              <div class="form-group">
-                <label for="correctAnswer">Correct Answer (1-5):</label>
-                <input type="number" id="correctAnswer" v-model="newEntry.correctAnswer"
-                  :class="['form-input', { 'invalid-field': invalidFields.has('correctAnswer') }]"
-                  :data-error="getFieldError('correctAnswer')" min="1" max="5" required
-                  :placeholder="newEntry.correctAnswer" @focus="handleFocus($event, 'correctAnswer')"
-                  @blur="handleBlur($event, 'correctAnswer')" />
+
+              <!-- Options -->
+              <div v-if="newEntry.answer_type === 'mc' || newEntry.answer_type === 'ms'" class="space-y-4">
+                <div v-for="n in 6" :key="n" class="form-group">
+                  <label :for="'option' + n">Option {{ n }}:</label>
+                  <div class="flex items-center gap-2">
+                    <input type="text" :id="'option' + n" v-model="newEntry['option' + n]"
+                      :class="['form-input flex-1', { 'invalid-field': invalidFields.has('option' + n) }]"
+                      :data-error="getFieldError('option' + n)" :placeholder="newEntry['option' + n]"
+                      @focus="handleFocus($event, 'option' + n)" @blur="handleBlur($event, 'option' + n)" />
+
+                    <!-- Single correct answer for MC -->
+                    <template v-if="newEntry.answer_type === 'mc'">
+                      <input type="radio" :value="n" v-model="newEntry.correctAnswer" :name="'correct-answer'"
+                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 dark:bg-gray-700" />
+                      <label :for="'option' + n" class="text-sm text-gray-600 dark:text-gray-400">
+                        Correct
+                      </label>
+                    </template>
+
+                    <!-- Multiple correct answers for MS -->
+                    <template v-else>
+                      <input type="checkbox" :value="n" v-model="newEntry.correctAnswers"
+                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 dark:bg-gray-700" />
+                      <label :for="'option' + n" class="text-sm text-gray-600 dark:text-gray-400">
+                        Correct
+                      </label>
+                    </template>
+                  </div>
+                </div>
               </div>
             </div>
           </details>
@@ -573,7 +525,7 @@
       </div>
     </form>
 
-    <!-- Add save status indicator -->
+    <!-- Save status indicator -->
     <div v-if="saveStatus.show" :class="['save-status-indicator', saveStatus.type]" role="status" aria-live="polite">
       {{ saveStatus.message }}
     </div>
@@ -592,12 +544,14 @@ import { quizEntries } from '../data/quiz-items';
 import { ref, watch, onMounted, computed } from 'vue';
 import ProgressSteps from '../components/ProgressSteps.vue';
 import { useRoute, useRouter } from 'vue-router';
+import QuizSelector from '../components/QuizSelector.vue';
 
 export default {
   components: {
     QuizItem,
     VueJsonPretty,
-    ProgressSteps
+    ProgressSteps,
+    QuizSelector
   },
   setup() {
     const store = quizStore();
@@ -605,56 +559,114 @@ export default {
     const route = useRoute();
     const router = useRouter();
 
-    const userDraftQuizItems = computed(() => {
-      return store.draftQuizItems
-        .filter(item => item.userId === auth.user?.uid)
-        .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-    });
+    // Function to handle item loading
+    const loadItem = async (itemId) => {
+      try {
+        console.log('Loading item:', itemId);
 
-    const otherDraftQuizItems = computed(() => {
-      return store.draftQuizItems
-        .filter(item => item.userId && item.userId !== auth.user?.uid)
-        .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-    });
+        // Check if this is a new item
+        if (itemId === 'new' || route.query.new === 'true') {
+          store.resetDraftQuizEntry();
+          return;
+        }
 
-    const pendingQuizItems = computed(() => {
-      return store.draftQuizItems
-        .filter(item => item.status === 'pending')
-        .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-    });
+        if (itemId) {
+          // First check if it's a permanent quiz item
+          const permanentItem = quizEntries.find(item =>
+            item.id.toString() === itemId.toString()
+          );
 
-    onMounted(async () => {
-      await store.fetchDraftQuizItems();
-
-      // Get the ID from the route
-      const itemId = route.params.id;
-
-      if (itemId) {
-        // First check if it's a draft item
-        const draftItem = [...userDraftQuizItems.value, ...otherDraftQuizItems.value, ...pendingQuizItems.value]
-          .find(item => item.id === itemId);
-
-        if (draftItem) {
-          // Load draft item
-          store.updateDraftQuizEntry(draftItem);
-        } else {
-          // Check if it's a permanent quiz item
-          const permanentItem = quizEntries.find(item => item.id.toString() === itemId);
           if (permanentItem) {
+            console.log('Found permanent item:', permanentItem.id);
             // Create a copy of the permanent item for editing
             const copyItem = { ...permanentItem };
-            copyItem.originalId = copyItem.id;  // Save the original ID
-            copyItem.id = null;  // Reset ID for new draft
+            copyItem.originalId = copyItem.id;
+            copyItem.id = null;
             store.updateDraftQuizEntry(copyItem);
-          } else {
-            // Item not found, redirect to home
-            router.push('/');
+            return;
           }
+
+          // If not found in permanent items, fetch and check draft items
+          console.log('Fetching draft items...');
+          await store.fetchDraftQuizItems();
+
+          // Log all draft items for debugging
+          const draftIds = store.draftQuizItems.map(d => d.id);
+          console.log('Available drafts:', draftIds);
+
+          // Check if it's a draft item
+          const draftItem = store.draftQuizItems.find(item => item.id === itemId);
+
+          if (draftItem) {
+            console.log('Found draft item:', draftItem.id);
+            store.updateDraftQuizEntry(draftItem);
+            return;
+          }
+
+          // If we get here, the item was not found in either permanent or draft items
+          console.warn('Item not found:', itemId);
+          store.saveStatus = {
+            show: true,
+            type: 'error',
+            message: `Quiz item ${itemId} was not found in either permanent or draft items. It may have been deleted or moved. You can create a new item or return to the quiz list.`
+          };
+
+          // Initialize a new entry while keeping the ID for reference
+          store.resetDraftQuizEntry();
+
+          // Add buttons for user actions
+          setTimeout(() => {
+            store.saveStatus = {
+              ...store.saveStatus,
+              show: true,
+              type: 'error',
+              message: `
+                <div class="flex flex-col gap-4">
+                  <p>Quiz item ${itemId} was not found. Would you like to:</p>
+                  <div class="flex gap-4">
+                    <button @click="$router.push('/')" class="px-4 py-2 bg-gray-600 text-white rounded">
+                      Return to Quiz List
+                    </button>
+                    <button @click="$router.push('/edit-item/new')" class="px-4 py-2 bg-blue-600 text-white rounded">
+                      Create New Item
+                    </button>
+                  </div>
+                </div>
+              `
+            };
+          }, 100);
+        }
+      } catch (error) {
+        console.error('Error in QuizItemEditor setup:', error);
+        store.saveStatus = {
+          show: true,
+          type: 'error',
+          message: 'Error loading quiz item. Please try again or return to the quiz list.'
+        };
+      }
+    };
+
+    // Watch for route changes
+    watch(
+      () => route.params.id,
+      async (newId, oldId) => {
+        if (newId !== oldId) {
+          console.log('Route changed from', oldId, 'to', newId);
+          await loadItem(newId);
         }
       }
+    );
+
+    // Initial load
+    onMounted(async () => {
+      await loadItem(route.params.id);
     });
 
-    return { store, auth, userDraftQuizItems, otherDraftQuizItems, pendingQuizItems };
+    return {
+      store,
+      auth,
+      route
+    };
   },
   computed: {
     newEntry: {
@@ -667,14 +679,6 @@ export default {
     },
     formattedJson() {
       return JSON.stringify(this.newEntry, null, 2);
-    },
-    permanentQuizItems() {
-      // Sort by numeric ID, handling potential string IDs
-      return [...quizEntries].sort((a, b) => {
-        const aId = typeof a.id === 'string' ? parseInt(a.id, 10) : a.id;
-        const bId = typeof b.id === 'string' ? parseInt(b.id, 10) : b.id;
-        return aId - bId;
-      });
     },
     isLoadingDrafts() {
       return this.store.draftQuizItemsLoading;
@@ -740,8 +744,6 @@ export default {
       submittedEntry: null,
       activeSection: '',
       copySuccess: false,
-      selectedTemplate: '',
-      existingQuizItems: quizEntries,
       autoSaveTimeout: null,
       lastSaved: null,
       saveStatus: {
@@ -912,7 +914,9 @@ export default {
     },
     async copyToClipboard() {
       try {
-        const jsonString = JSON.stringify(this.newEntry, null, 2);
+        // Convert to string with custom replacer to remove property quotes
+        const jsonString = JSON.stringify(this.newEntry, null, 2)
+          .replace(/"(\w+)":/g, '$1:'); // Remove quotes around property names
         await navigator.clipboard.writeText(jsonString);
         this.copySuccess = true;
         console.log('Copied to clipboard:', jsonString); // Debug log
@@ -922,35 +926,6 @@ export default {
       } catch (err) {
         console.error('Failed to copy text: ', err);
         this.copySuccess = false;
-      }
-    },
-    useTemplate() {
-      if (!this.selectedTemplate) {
-        this.store.resetDraftQuizEntry();
-        this.initializeNewEntry();
-        return;
-      }
-
-      // First check if it's a permanent quiz item
-      const permanentItem = this.permanentQuizItems.find(item => item.id === this.selectedTemplate);
-      if (permanentItem) {
-        // Create a copy of the permanent item
-        const copyItem = { ...permanentItem };
-        copyItem.originalId = copyItem.id;  // Save the original ID
-        copyItem.id = null;  // Reset ID for new draft
-        this.store.updateDraftQuizEntry(copyItem);
-        return;
-      }
-
-      // If not permanent, check drafts
-      const draftItem = [...this.userDraftQuizItems, ...this.otherDraftQuizItems, ...this.pendingQuizItems]
-        .find(item => item.id === this.selectedTemplate);
-
-      if (draftItem) {
-        const copyItem = { ...draftItem };
-        copyItem.originalId = copyItem.id;  // Save the original ID
-        copyItem.id = null;  // Reset ID for new draft
-        this.store.updateDraftQuizEntry(copyItem);
       }
     },
     async checkValidation() {
@@ -1052,7 +1027,6 @@ export default {
     }
   }
 };
-// Spurious comment
 </script>
 
 <style scoped>
@@ -1369,7 +1343,6 @@ details[open] .form-section {
 
 .github-button:hover {
   background-color: #2c974b;
-  transform: translateY(-1px);
 }
 
 .preview-controls-text {
@@ -1933,5 +1906,43 @@ option {
 
 .yellow-text {
   color: #ffd700;
+}
+
+.preview-container {
+  background: #f5f5f5;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 20px 0;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+}
+
+.preview-container :deep(.quiz-item) {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+.preview-container :deep(.question-text),
+.preview-container :deep(.answer),
+.preview-container :deep(.list-item-right),
+.preview-container :deep(.explanation) {
+  color: #333 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .preview-container {
+    background: #2d3748;
+  }
+
+  .preview-container :deep(.quiz-item) {
+    background: #1a202c;
+    border-color: #4a5568;
+  }
+
+  .preview-container :deep(.question-text),
+  .preview-container :deep(.answer),
+  .preview-container :deep(.list-item-right),
+  .preview-container :deep(.explanation) {
+    color: #f7fafc !important;
+  }
 }
 </style>

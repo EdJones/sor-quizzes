@@ -224,7 +224,6 @@ ul {
     list-style-type: none;
 }
 
-
 a {
     color: #42b983;
 }
@@ -233,13 +232,14 @@ a {
     border-style: solid;
     border-top-right-radius: 2dvw;
     border-radius: 2dvw;
-
+    color: #333;
 }
 
 .question-text {
     margin: 2;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     font-weight: 400;
+    color: #333;
 }
 
 .answer {
@@ -248,16 +248,28 @@ a {
     border-style: solid;
     border-width: 2pt;
     text-align: left;
+    color: #333;
 }
 
+@media (prefers-color-scheme: dark) {
+    .quiz-item {
+        color: #f7fafc;
+    }
+
+    .question-text {
+        color: #f7fafc;
+    }
+
+    .answer {
+        color: #f7fafc;
+    }
+}
 
 .list-asking {
-
     margin-top: auto;
     margin-bottom: auto;
     margin-right: 10px;
     margin-left: 10px;
-
     color: red;
 }
 

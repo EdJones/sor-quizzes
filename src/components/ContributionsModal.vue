@@ -69,11 +69,11 @@
                         <div class="flex items-center gap-2">
                             <span :class="[
                                 'px-2 py-1 text-xs rounded-full',
-                                item.status === 'published'
+                                getItemStatus(item) === 'published'
                                     ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                     : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
                             ]">
-                                {{ item.status === 'published' ? 'Published' : 'Draft' }}
+                                {{ getItemStatus(item) === 'published' ? 'Published' : 'Draft' }}
                             </span>
                             <button @click="handleEditItem(item.id)"
                                 class="p-1 text-gray-500 hover:text-purple-500 dark:text-gray-400 dark:hover:text-purple-400">
@@ -114,6 +114,7 @@ import { useRouter } from 'vue-router';
 import { collection, query, where, getDocs, or } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuthStore } from '../stores/authStore';
+import { quizEntries } from '../data/quiz-items';
 
 const props = defineProps({
     show: {
@@ -129,14 +130,29 @@ const authStore = useAuthStore();
 const userQuizItems = ref([]);
 const isLoading = ref(false);
 
-// Computed stats
+// Add this computed property to find published items by email
+const publishedItemTitles = computed(() => {
+    // Create a Set of published item titles for O(1) lookup
+    return new Set(
+        quizEntries
+            .filter(qi => qi.userEmail === authStore.user?.email)
+            .map(qi => qi.title)
+    );
+});
+
+// Computed stats using the cached published items
 const publishedCount = computed(() =>
-    userQuizItems.value.filter(item => !item.isDraft).length
+    userQuizItems.value.filter(item => publishedItemTitles.value.has(item.title)).length
 );
 
 const draftCount = computed(() =>
-    userQuizItems.value.filter(item => item.isDraft).length
+    userQuizItems.value.filter(item => !publishedItemTitles.value.has(item.title)).length
 );
+
+// Modify getItemStatus to use the cached set
+const getItemStatus = (item) => {
+    return publishedItemTitles.value.has(item.title) ? 'published' : 'draft';
+};
 
 // Fetch user's quiz items
 const fetchUserQuizItems = async () => {
@@ -209,8 +225,68 @@ const fetchUserQuizItems = async () => {
 };
 
 // Navigation handlers
-const handleEditItem = (itemId) => {
-    router.push(`/edit-item/${itemId}`);
+const handleEditItem = async (itemId) => {
+    try {
+        console.log('Handling edit for item:', itemId);
+
+        // Wait for auth state to be initialized
+        if (authStore.loading) {
+            console.log('Waiting for auth initialization...');
+            await authStore.init();
+        }
+
+        console.log('Auth state:', {
+            isAuthenticated: authStore.isAuthenticated,
+            canEdit: authStore.canEdit,
+            isAnonymous: authStore.isAnonymous,
+            user: authStore.user?.email,
+            currentRoute: router.currentRoute.value.path
+        });
+
+        // Check if user can edit
+        if (!authStore.canEdit) {
+            console.log('User cannot edit, redirecting to login');
+            // Redirect to login with return URL
+            await router.push({
+                path: '/login',
+                query: { redirect: `/edit-item/${itemId}` }
+            });
+            emit('close');
+            return;
+        }
+
+        // User can edit, proceed with navigation
+        console.log('User can edit, proceeding with navigation');
+
+        // First close the modal
+        emit('close');
+
+        // Then navigate using name and wait for it to complete
+        try {
+            await router.push({
+                name: 'edit-item',
+                params: { id: itemId },
+                // Force navigation even if we're already on a similar path
+                replace: false,
+                // Add a timestamp to force a new navigation
+                query: { _t: Date.now() }
+            });
+
+            // Double check that we ended up where we expected
+            const expectedPath = `/edit-item/${itemId}`;
+            if (router.currentRoute.value.path !== expectedPath) {
+                console.warn('Navigation may have been intercepted, retrying with path...');
+                await router.push(expectedPath);
+            }
+
+            console.log('Navigation completed to:', router.currentRoute.value.path);
+        } catch (navError) {
+            console.error('Navigation error:', navError);
+            throw navError;
+        }
+    } catch (error) {
+        console.error('Error in handleEditItem:', error);
+    }
 };
 
 const handleNewContribution = () => {

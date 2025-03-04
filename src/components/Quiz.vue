@@ -239,25 +239,54 @@ export default {
       }
 
       for (let i = 0; i < this.quizItems.length; i++) {
-        if (!this.quizItems[i] || !this.quizItems[i].correctAnswer) {
-          console.warn(`Missing quiz item or correct answer at index ${i}`);
+        if (!this.quizItems[i]) {
+          console.warn(`Missing quiz item at index ${i}`);
           continue;
         }
 
         const userAnswer = this.userAnswers[i];
-        // Convert both to numbers for comparison
-        const correctAnswer = Number(this.quizItems[i].correctAnswer);
+        const quizItem = this.quizItems[i];
+
+        // Skip if no answer provided
+        if (userAnswer === undefined) {
+          console.warn(`No user answer for question ${i + 1}`);
+          continue;
+        }
 
         console.log("Question", i + 1, ":");
         console.log("User answer:", userAnswer);
+
+        // Handle multiple select questions
+        if (quizItem.answer_type === 'ms') {
+          const correctAnswers = quizItem.correctAnswers || [];
+          console.log("Multiple Select - Correct answers:", correctAnswers);
+
+          if (Array.isArray(userAnswer) && Array.isArray(correctAnswers)) {
+            const isCorrect = userAnswer.length === correctAnswers.length &&
+              userAnswer.every(answer => correctAnswers.includes(answer));
+
+            if (isCorrect) {
+              correct++;
+              console.log("✓ Multiple Select Correct!");
+            } else {
+              console.log("✗ Multiple Select Incorrect");
+            }
+          } else {
+            console.warn("Invalid answer format for multiple select question");
+          }
+          continue;
+        }
+
+        // Handle multiple choice questions
+        const correctAnswer = Number(quizItem.correctAnswer);
         console.log("Correct answer:", correctAnswer);
 
-        // Compare the numeric values
+        // Compare the numeric values for MC questions
         if (!isNaN(correctAnswer) && userAnswer === correctAnswer) {
           correct++;
-          console.log("✓ Correct!");
+          console.log("✓ Multiple Choice Correct!");
         } else {
-          console.log("✗ Incorrect");
+          console.log("✗ Multiple Choice Incorrect");
           console.log("Types - User answer:", typeof userAnswer, "Correct answer:", typeof correctAnswer);
         }
       }
@@ -354,7 +383,7 @@ export default {
         console.log('Current question:', currentQuestion);
 
         if (!this.userAnswers[this.itemNum]) {
-          console.error('No valid answer for multiple choice question:', this.itemNum);
+          console.error('No valid answer for question:', this.itemNum);
           return;
         }
 
@@ -370,8 +399,16 @@ export default {
           // For sortable lists, just use the items array
           selectedAnswer = currentQuestion.items || [];
           console.log('Using sortable items:', selectedAnswer);
+        } else if (currentQuestion.answer_type === 'ms') {
+          // For multiple select questions
+          selectedAnswer = this.userAnswers[this.itemNum];
+          if (!Array.isArray(selectedAnswer)) {
+            console.error('Invalid answer format for multiple select question:', selectedAnswer);
+            return;
+          }
+          console.log('Using multiple select answers:', selectedAnswer);
         } else {
-          // Only for multiple choice
+          // For multiple choice
           selectedAnswer = this.userAnswers[this.itemNum];
           if (selectedAnswer === undefined) {
             console.error('No valid answer for multiple choice question:', this.itemNum);
@@ -381,7 +418,7 @@ export default {
 
         const questionData = {
           selectedAnswer,
-          correctAnswer: currentQuestion.correctAnswer || '',
+          correctAnswer: currentQuestion.answer_type === 'ms' ? currentQuestion.correctAnswers : currentQuestion.correctAnswer,
           questionId: currentQuestion.id || '',
           questionTitle: currentQuestion.title || '',
           quizEntry: currentQuestion
@@ -410,13 +447,9 @@ export default {
         console.log("In checkIt, itemNum: ", this.itemNum, "quizItems.length: ", this.quizItems.length);
         if (this.itemNum === this.quizItems.length - 1) {
           this.complete = true;
-
-
         } else {
           this.complete = false;
-          // this.itemNum++;
-          this.chosen = false
-
+          this.chosen = false;
         }
 
       } catch (error) {
@@ -430,7 +463,16 @@ export default {
       this.userAnswers[this.itemNum] = option;
 
       // Check if answer is correct
-      const isCorrect = option === this.currentQuizItem.correctAnswer;
+      let isCorrect = false;
+      if (this.currentQuizItem.answer_type === 'ms') {
+        const correctAnswers = this.currentQuizItem.correctAnswers || [];
+        isCorrect = Array.isArray(option) &&
+          option.length === correctAnswers.length &&
+          option.every(answer => correctAnswers.includes(answer));
+      } else {
+        isCorrect = option === this.currentQuizItem.correctAnswer;
+      }
+
       if (isCorrect) {
         // Pass both quizId and questionId
         await this.progressStore.markQuizItemCorrect(
@@ -444,7 +486,7 @@ export default {
       this.store.setUserAnswer(
         this.itemNum,
         option,
-        this.currentQuizItem.correctAnswer,
+        this.currentQuizItem.answer_type === 'ms' ? this.currentQuizItem.correctAnswers : this.currentQuizItem.correctAnswer,
         this.currentQuizItem.id,
         this.currentQuizItem.title,
         this.currentQuizItem

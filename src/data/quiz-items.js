@@ -1541,6 +1541,137 @@ export const quizEntries = [{
     closingText: "",
     closingText2: "",
     modal: ""
+}, {
+    id: 43,
+    title: "Teaching Syllabification",
+    subtitle: "",
+    userEmail: "ed.jones@gmail.com", // Add the email of the author
+    Question: "T/F: Teaching syllabification (breaking words into syllables) should be a regular and ongoing component of early literacy instruction.",
+    questionP2: "",
+    answer_type: "mc",
+    option1: "True",
+    option2: "False",
+    option3: "",
+    option4: "",
+    option5: "",
+    correctAnswer: 2,
+    explanation: "Not as ongoing as many teachers and leaders seem to think. \n\nCurrent research shows 2-9 hours of instruction being useful. Probably leaning closer to 3-6 for general classroom instruction. ",
+    explanation2: "While some students may benefit from more explicit syllable instruction in intervention settings, it's common to see teachers worrying excessively over exactly how to break up specific words. \n\nSuch time can generally be better spent in other ways. ",
+    videoUrl: "",
+    videoId: "",
+    image: "",
+    imageUrl: "",
+    imageAltText: "",
+    podcastEpisode: {
+        title: "On Eating Elephants and Teaching Syllabication",
+        EpisodeUrl: "https://podcasts.apple.com/us/podcast/shanahan-on-literacy/id1691952694?i=1000695048216",
+        audioUrl: "",
+        description: "",
+        podcastStartTime: 0
+    },
+    podcastEpisode2: {
+        title: "",
+        EpisodeUrl: "",
+        audioUrl: "",
+        description: "",
+        podcastStartTime: 0
+    },
+    cautionLevel: "",
+    caution: "",
+    citations: [
+        {
+            title: "Does English Have Useful Syllable Division Patterns?",
+            author: "Devin M. Kearns",
+            url: "https://doi.org/10.1002/rrq.342",
+            year: "2020",
+            imageUrl: ""
+        },
+        {
+            title: "Graphosyllabic analysis helps adolescent struggling readers read and spell words",
+            author: "Alpana Bhattacharya, Linnea C Ehri",
+            url: "https://doi.org/10.1177/00222194040370040501",
+            year: "2004",
+            imageUrl: ""
+        }
+    ],
+    ref1: "",
+    ref2: "",
+    resources: [
+        {
+            title: "On Eating Elephants and Teaching Syllabication",
+            author: "Tim Shanahan",
+            url: "https://www.shanahanonliteracy.com/blog/on-eating-elephants-and-teaching-syllabication-2",
+            description: ""
+        }
+    ],
+    closingText: "",
+    closingText2: "",
+    modal: "# Lyn Stone on Syllabification\n\nFebruary 26 at 8:41 PM\n\n\"Syllabification\" - another hangover from weird phonics practices that can't see beyond grapheme-phoneme correspondences.\n\nI received a text the other day from a lovely friend and colleague. She asked, \"How do you syllabify 'ordinary'?\"\n\nWell I don't.\n\nHere is my response:\n\n\"How would you syllabify X word? This person says you should do it this way and this person says you should do it that way and this person...\"\n\nIs that not a red flag to you? If adults can't even give you a straight answer, what hope do kids have?\n\nWhat is the end goal here? Pronunciation in a single unit of time or placement in LTM?\n\nMaybe ask better questions such as:\n\n- What are the significant elements in this word?\n- What other words share those elements?\n\nI'll do your example word for you, but only if you promise to ask better questions next time and start using the Online Etymology Dictionary.\n\n## Ordinary:\n\nThe ordin- part denotes \"customary, regular, usual, orderly\"\n\nThe -ary part is an adjective and noun-forming suffix\n\nSo where else do you see these parts?\n\n**ordin:**\n\nordinal, ordinance, coordinate, inordinate, ordination, subordinate, extraordinary\n\n**-ary:**\n\nprimary, secondary, binary, dietary, honorary, literary, salivary, customary, imaginary etc.\n\nWho cares where you \"syllabify\" these parts? What's that got to do with anything?\n\nYou might say that we need to teach kids to pronounce those words when reading. Sure. But a significant number of those words are already in their oral lexicon. They already know how to pronounce them, they need to now orthographically map them.\n\nAnd the words they don't know how to pronounce, well they need to understand their meaning, regardless. We all have words we can understand in print that we don't have the 100% accurate pronunciation for. Why apply dodgy \"syllabification\" rules to these and use up the cognitive real estate we could use for meaning and schema-building instead?\n\nBesides, there's this concept of 'set for variability' that takes care of alternative pronunciations. Look it up, you'll love it."
+},
+{
+    title: "Reading First",
+    subtitle: "",
+    id: 44,
+    userEmail: "ed.jones@gmail.com",
+    isAnonymous: false,
+    beta: true,
+    Question: "In the middle stages of the Reading First program, two programs were considered to have met the strict evidence based requirements of the program.",
+    questionP2: "They were:",
+    answer_type: "ms",
+    option1: "Success for All",
+    option2: "Reading Recovery",
+    option3: "Direct Instruction",
+    option4: "SRA Reading Mastery",
+    option5: "Voyager Passport",
+    correctAnswer: 1,
+    explanation: "Success for All was essentially built on Direct Instruction. DI was the only one to also have been proven in the 1960's Project Follow Through. ",
+    explanation2: "Both continue to work strongly for at-risk children today.",
+    videoUrl: "",
+    videoId: "",
+    image: "",
+    imageUrl: "",
+    imageAltText: "",
+    podcastEpisode: {
+        podcastStartTime: 0,
+        description: "",
+        EpisodeUrl: "",
+        audioUrl: "",
+        title: "Episode Title"
+    },
+    podcastEpisode2: {
+        podcastStartTime: 0,
+        description: "",
+        title: "",
+        EpisodeUrl: "",
+        audioUrl: ""
+    },
+    cautionLevel: "",
+    caution: "",
+    citations: [],
+    ref1: "",
+    ref2: "",
+    resources: [],
+    closingText: "",
+    closingText2: "",
+    modal: "",
+    status: "pending",
+    id: "3kjWPhc3tXh0v5pLVZm4",
+    timestamp: {
+        seconds: 1741094726,
+        nanoseconds: 725000000
+    },
+    originalId: "3kjWPhc3tXh0v5pLVZm4",
+    userEmail: "ed.jones@gmail.com",
+    isAnonymous: false,
+    submittedAt: {
+        seconds: 1741094726,
+        nanoseconds: 725000000
+    },
+    userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+    correctAnswers: [
+        1,
+        3
+    ]
 },
 {
     title: "Learning Science",
