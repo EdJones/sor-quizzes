@@ -227,6 +227,11 @@ const fetchUserQuizItems = async () => {
 // Navigation handlers
 const handleEditItem = async (itemId) => {
     try {
+        // Wait for auth state to be initialized
+        if (authStore.loading) {
+            await authStore.init();
+        }
+
         // Check if user can edit
         if (!authStore.canEdit) {
             // Redirect to login with return URL
