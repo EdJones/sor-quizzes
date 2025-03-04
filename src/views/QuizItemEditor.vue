@@ -559,11 +559,10 @@ export default {
     const route = useRoute();
     const router = useRouter();
 
-    onMounted(async () => {
+    // Function to handle item loading
+    const loadItem = async (itemId) => {
       try {
-        // Get the ID from the route
-        const itemId = route.params.id;
-        console.log('Looking for item:', itemId);
+        console.log('Loading item:', itemId);
 
         // Check if this is a new item
         if (itemId === 'new' || route.query.new === 'true') {
@@ -601,40 +600,41 @@ export default {
           if (draftItem) {
             console.log('Found draft item:', draftItem.id);
             store.updateDraftQuizEntry(draftItem);
-          } else {
-            console.warn('Item not found:', itemId);
-            // Show error message without redirecting
+            return;
+          }
+
+          // If we get here, the item was not found in either permanent or draft items
+          console.warn('Item not found:', itemId);
+          store.saveStatus = {
+            show: true,
+            type: 'error',
+            message: `Quiz item ${itemId} was not found in either permanent or draft items. It may have been deleted or moved. You can create a new item or return to the quiz list.`
+          };
+
+          // Initialize a new entry while keeping the ID for reference
+          store.resetDraftQuizEntry();
+
+          // Add buttons for user actions
+          setTimeout(() => {
             store.saveStatus = {
+              ...store.saveStatus,
               show: true,
               type: 'error',
-              message: `Quiz item ${itemId} was not found in either permanent or draft items. It may have been deleted or moved. You can create a new item or return to the quiz list.`
-            };
-
-            // Initialize a new entry while keeping the ID for reference
-            store.resetDraftQuizEntry();
-
-            // Add buttons for user actions
-            setTimeout(() => {
-              store.saveStatus = {
-                ...store.saveStatus,
-                show: true,
-                type: 'error',
-                message: `
-                  <div class="flex flex-col gap-4">
-                    <p>Quiz item ${itemId} was not found. Would you like to:</p>
-                    <div class="flex gap-4">
-                      <button @click="$router.push('/')" class="px-4 py-2 bg-gray-600 text-white rounded">
-                        Return to Quiz List
-                      </button>
-                      <button @click="$router.push('/edit-item/new')" class="px-4 py-2 bg-blue-600 text-white rounded">
-                        Create New Item
-                      </button>
-                    </div>
+              message: `
+                <div class="flex flex-col gap-4">
+                  <p>Quiz item ${itemId} was not found. Would you like to:</p>
+                  <div class="flex gap-4">
+                    <button @click="$router.push('/')" class="px-4 py-2 bg-gray-600 text-white rounded">
+                      Return to Quiz List
+                    </button>
+                    <button @click="$router.push('/edit-item/new')" class="px-4 py-2 bg-blue-600 text-white rounded">
+                      Create New Item
+                    </button>
                   </div>
-                `
-              };
-            }, 100);
-          }
+                </div>
+              `
+            };
+          }, 100);
         }
       } catch (error) {
         console.error('Error in QuizItemEditor setup:', error);
@@ -644,6 +644,22 @@ export default {
           message: 'Error loading quiz item. Please try again or return to the quiz list.'
         };
       }
+    };
+
+    // Watch for route changes
+    watch(
+      () => route.params.id,
+      async (newId, oldId) => {
+        if (newId !== oldId) {
+          console.log('Route changed from', oldId, 'to', newId);
+          await loadItem(newId);
+        }
+      }
+    );
+
+    // Initial load
+    onMounted(async () => {
+      await loadItem(route.params.id);
     });
 
     return {
