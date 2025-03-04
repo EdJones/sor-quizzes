@@ -70,7 +70,7 @@
           <span v-else>Copied!</span>
         </button>
       </div>
-      <VueJsonPretty :data="newEntry" :deep="2" :showLength="true" :showDoubleQuotes="true" :showLine="true"
+      <VueJsonPretty :data="newEntry" :deep="2" :showLength="true" :showDoubleQuotes="false" :showLine="true"
         :selectableType="'single'" />
     </div>
 
@@ -914,7 +914,9 @@ export default {
     },
     async copyToClipboard() {
       try {
-        const jsonString = JSON.stringify(this.newEntry, null, 2);
+        // Convert to string with custom replacer to remove property quotes
+        const jsonString = JSON.stringify(this.newEntry, null, 2)
+          .replace(/"(\w+)":/g, '$1:'); // Remove quotes around property names
         await navigator.clipboard.writeText(jsonString);
         this.copySuccess = true;
         console.log('Copied to clipboard:', jsonString); // Debug log
