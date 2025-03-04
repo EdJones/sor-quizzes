@@ -130,51 +130,28 @@ const authStore = useAuthStore();
 const userQuizItems = ref([]);
 const isLoading = ref(false);
 
-// Computed stats
-const publishedCount = computed(() =>
-    userQuizItems.value.filter(item => getItemStatus(item) === 'published').length
-);
-
-const draftCount = computed(() =>
-    userQuizItems.value.filter(item => getItemStatus(item) === 'draft').length
-);
-
 // Add this computed property to find published items by email
-const publishedItems = computed(() => {
-    return userQuizItems.value.filter(item =>
-        item.userEmail === authStore.user?.email
+const publishedItemTitles = computed(() => {
+    // Create a Set of published item titles for O(1) lookup
+    return new Set(
+        quizEntries
+            .filter(qi => qi.userEmail === authStore.user?.email)
+            .map(qi => qi.title)
     );
 });
 
-// Modify the existing getItemStatus function to use userEmail
+// Computed stats using the cached published items
+const publishedCount = computed(() =>
+    userQuizItems.value.filter(item => publishedItemTitles.value.has(item.title)).length
+);
+
+const draftCount = computed(() =>
+    userQuizItems.value.filter(item => !publishedItemTitles.value.has(item.title)).length
+);
+
+// Modify getItemStatus to use the cached set
 const getItemStatus = (item) => {
-    console.log('Checking item:', {
-        itemTitle: item.title,
-        itemEmail: item.userEmail,
-        authEmail: authStore.user?.email
-    });
-
-    // First check if it exists in quiz-items.js
-    const matchingItems = quizEntries.filter(qi => {
-        const isMatch = qi.userEmail === authStore.user?.email && qi.title === item.title;
-        console.log('Comparing with quiz entry:', {
-            qiTitle: qi.title,
-            qiEmail: qi.userEmail,
-            isMatch
-        });
-        return isMatch;
-    });
-
-    console.log(`Found ${matchingItems.length} matches`);
-
-    // If found in quiz-items.js, it's published
-    if (matchingItems.length > 0) {
-        console.log('Marking as published');
-        return 'published';
-    }
-
-    console.log('Marking as draft');
-    return 'draft';
+    return publishedItemTitles.value.has(item.title) ? 'published' : 'draft';
 };
 
 // Fetch user's quiz items
@@ -248,8 +225,33 @@ const fetchUserQuizItems = async () => {
 };
 
 // Navigation handlers
-const handleEditItem = (itemId) => {
-    router.push(`/edit-item/${itemId}`);
+const handleEditItem = async (itemId) => {
+    try {
+        // Wait for auth state to be initialized
+        if (authStore.loading) {
+            await authStore.init();
+        }
+
+        // Check if user can edit
+        if (!authStore.canEdit) {
+            // Redirect to login with return URL
+            await router.push({
+                path: '/login',
+                query: { redirect: `/edit-item/${itemId}` }
+            });
+            emit('close');
+            return;
+        }
+
+        // User can edit, proceed with navigation
+        emit('close');
+        await router.push({
+            name: 'edit-item',
+            params: { id: itemId }
+        });
+    } catch (error) {
+        console.error('Error navigating to edit page:', error);
+    }
 };
 
 const handleNewContribution = () => {
