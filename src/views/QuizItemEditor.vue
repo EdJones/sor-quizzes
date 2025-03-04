@@ -560,40 +560,89 @@ export default {
     const router = useRouter();
 
     onMounted(async () => {
-      await store.fetchDraftQuizItems();
+      try {
+        // Get the ID from the route
+        const itemId = route.params.id;
+        console.log('Looking for item:', itemId);
 
-      // Get the ID from the route
-      const itemId = route.params.id;
+        // Check if this is a new item
+        if (itemId === 'new' || route.query.new === 'true') {
+          store.resetDraftQuizEntry();
+          return;
+        }
 
-      // Check if this is a new item
-      if (itemId === 'new' || route.query.new === 'true') {
-        store.resetDraftQuizEntry();
-        return;
-      }
-
-      if (itemId) {
-        // First check if it's a draft item
-        const draftItem = store.draftQuizItems
-          .find(item => item.id === itemId);
-
-        if (draftItem) {
-          store.updateDraftQuizEntry(draftItem);
-        } else {
-          // Check if it's a permanent quiz item
+        if (itemId) {
+          // First check if it's a permanent quiz item
           const permanentItem = quizEntries.find(item =>
             item.id.toString() === itemId.toString()
           );
+
           if (permanentItem) {
+            console.log('Found permanent item:', permanentItem.id);
             // Create a copy of the permanent item for editing
             const copyItem = { ...permanentItem };
             copyItem.originalId = copyItem.id;
             copyItem.id = null;
             store.updateDraftQuizEntry(copyItem);
+            return;
+          }
+
+          // If not found in permanent items, fetch and check draft items
+          console.log('Fetching draft items...');
+          await store.fetchDraftQuizItems();
+
+          // Log all draft items for debugging
+          const draftIds = store.draftQuizItems.map(d => d.id);
+          console.log('Available drafts:', draftIds);
+
+          // Check if it's a draft item
+          const draftItem = store.draftQuizItems.find(item => item.id === itemId);
+
+          if (draftItem) {
+            console.log('Found draft item:', draftItem.id);
+            store.updateDraftQuizEntry(draftItem);
           } else {
-            // Item not found, redirect to home
-            router.push('/');
+            console.warn('Item not found:', itemId);
+            // Show error message without redirecting
+            store.saveStatus = {
+              show: true,
+              type: 'error',
+              message: `Quiz item ${itemId} was not found in either permanent or draft items. It may have been deleted or moved. You can create a new item or return to the quiz list.`
+            };
+
+            // Initialize a new entry while keeping the ID for reference
+            store.resetDraftQuizEntry();
+
+            // Add buttons for user actions
+            setTimeout(() => {
+              store.saveStatus = {
+                ...store.saveStatus,
+                show: true,
+                type: 'error',
+                message: `
+                  <div class="flex flex-col gap-4">
+                    <p>Quiz item ${itemId} was not found. Would you like to:</p>
+                    <div class="flex gap-4">
+                      <button @click="$router.push('/')" class="px-4 py-2 bg-gray-600 text-white rounded">
+                        Return to Quiz List
+                      </button>
+                      <button @click="$router.push('/edit-item/new')" class="px-4 py-2 bg-blue-600 text-white rounded">
+                        Create New Item
+                      </button>
+                    </div>
+                  </div>
+                `
+              };
+            }, 100);
           }
         }
+      } catch (error) {
+        console.error('Error in QuizItemEditor setup:', error);
+        store.saveStatus = {
+          show: true,
+          type: 'error',
+          message: 'Error loading quiz item. Please try again or return to the quiz list.'
+        };
       }
     });
 
@@ -1276,7 +1325,6 @@ details[open] .form-section {
 
 .github-button:hover {
   background-color: #2c974b;
-  transform: translateY(-1px);
 }
 
 .preview-controls-text {

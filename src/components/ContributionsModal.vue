@@ -227,13 +227,25 @@ const fetchUserQuizItems = async () => {
 // Navigation handlers
 const handleEditItem = async (itemId) => {
     try {
+        console.log('Handling edit for item:', itemId);
+
         // Wait for auth state to be initialized
         if (authStore.loading) {
+            console.log('Waiting for auth initialization...');
             await authStore.init();
         }
 
+        console.log('Auth state:', {
+            isAuthenticated: authStore.isAuthenticated,
+            canEdit: authStore.canEdit,
+            isAnonymous: authStore.isAnonymous,
+            user: authStore.user?.email,
+            currentRoute: router.currentRoute.value.path
+        });
+
         // Check if user can edit
         if (!authStore.canEdit) {
+            console.log('User cannot edit, redirecting to login');
             // Redirect to login with return URL
             await router.push({
                 path: '/login',
@@ -244,13 +256,36 @@ const handleEditItem = async (itemId) => {
         }
 
         // User can edit, proceed with navigation
+        console.log('User can edit, proceeding with navigation');
+
+        // First close the modal
         emit('close');
-        await router.push({
-            name: 'edit-item',
-            params: { id: itemId }
-        });
+
+        // Then navigate using name and wait for it to complete
+        try {
+            await router.push({
+                name: 'edit-item',
+                params: { id: itemId },
+                // Force navigation even if we're already on a similar path
+                replace: false,
+                // Add a timestamp to force a new navigation
+                query: { _t: Date.now() }
+            });
+
+            // Double check that we ended up where we expected
+            const expectedPath = `/edit-item/${itemId}`;
+            if (router.currentRoute.value.path !== expectedPath) {
+                console.warn('Navigation may have been intercepted, retrying with path...');
+                await router.push(expectedPath);
+            }
+
+            console.log('Navigation completed to:', router.currentRoute.value.path);
+        } catch (navError) {
+            console.error('Navigation error:', navError);
+            throw navError;
+        }
     } catch (error) {
-        console.error('Error navigating to edit page:', error);
+        console.error('Error in handleEditItem:', error);
     }
 };
 

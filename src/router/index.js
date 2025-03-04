@@ -9,19 +9,24 @@ import QuizItemEditor from '../views/QuizItemEditor.vue';
 
 const routes = [
   {
-    path: '/',
-    name: 'Home',
-    component: Home
-  },
-  {
     path: '/login',
     name: 'Login',
     component: LoginForm
   },
   {
-    path: '/new-item',
-    name: 'NewItem',
-    component: NewItem
+    path: '/edit-item/:id',
+    name: 'edit-item',
+    component: QuizItemEditor,
+    beforeEnter: requireAuth,
+    props: route => ({
+      itemId: route.params.id === 'new' ? null : route.params.id
+    })
+  },
+  {
+    path: '/edit-item/new',
+    name: 'NewQuizItem',
+    component: QuizItemEditor,
+    beforeEnter: requireAuth
   },
   {
     path: '/quiz/:id',
@@ -39,21 +44,16 @@ const routes = [
     component: QuizSetView
   },
   {
-    path: '/edit-item/new',
-    name: 'NewQuizItem',
-    component: QuizItemEditor,
-    beforeEnter: requireAuth
+    path: '/new-item',
+    name: 'NewItem',
+    component: NewItem
   },
   {
-    path: '/edit-item/:id',
-    name: 'edit-item',
-    component: QuizItemEditor,
-    beforeEnter: requireAuth,
-    props: route => ({
-      itemId: route.params.id === 'new' ? null : route.params.id
-    })
+    path: '/',
+    name: 'Home',
+    component: Home
   },
-  // Catch all route for 404
+  // Catch all route for 404 - must be last
   {
     path: '/:pathMatch(.*)*',
     redirect: '/'
@@ -63,6 +63,35 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes
+});
+
+// Add navigation debugging
+router.beforeEach((to, from, next) => {
+  console.log('Global navigation guard:', {
+    from: from.fullPath,
+    to: to.fullPath,
+    timestamp: Date.now()
+  });
+  next();
+});
+
+// Prevent immediate redirects to home
+router.beforeEach((to, from, next) => {
+  // If we're navigating from a protected route to home without user interaction
+  if (from.matched.some(record => record.beforeEnter === requireAuth) &&
+    to.path === '/' &&
+    // Check if this is happening right after a successful navigation
+    Date.now() - (window._lastSuccessfulNav || 0) < 1000) {
+    console.log('Preventing automatic redirect to home');
+    return next(false);
+  }
+  next();
+});
+
+// Track successful navigations
+router.afterEach((to) => {
+  window._lastSuccessfulNav = Date.now();
+  console.log('Navigation completed successfully to:', to.fullPath);
 });
 
 export default router;

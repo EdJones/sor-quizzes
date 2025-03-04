@@ -9,7 +9,8 @@ import {
     setDoc,
     query,
     where,
-    getDocs
+    getDocs,
+    or
 } from 'firebase/firestore';
 import { useAuthStore } from './authStore';
 import { useProgressStore } from './progressStore';
@@ -284,9 +285,14 @@ export const quizStore = defineStore('quiz', {
                 console.log('Fetching draft quiz items...');
                 const draftsRef = collection(db, 'quizEntries');
                 // Log the query parameters
-                console.log('Querying for status == draft');
+                console.log('Querying for status == draft or pending');
 
-                const q = query(draftsRef, where('status', '==', 'draft'));
+                const q = query(draftsRef,
+                    or(
+                        where('status', '==', 'draft'),
+                        where('status', '==', 'pending')
+                    )
+                );
                 const querySnapshot = await getDocs(q);
 
                 // Log the raw results
@@ -300,7 +306,7 @@ export const quizStore = defineStore('quiz', {
                     ...doc.data()
                 }));
 
-                console.log('Fetched draft items:', this.draftQuizItems.length);
+                console.log('Fetched draft/pending items:', this.draftQuizItems.length);
                 return this.draftQuizItems;
             } catch (error) {
                 console.error('Error fetching draft items:', error);
