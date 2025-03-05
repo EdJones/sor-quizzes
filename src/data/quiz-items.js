@@ -1674,6 +1674,65 @@ export const quizEntries = [{
     ]
 },
 {
+    title: "Nonsense Word Fluency",
+    subtitle: "",
+    id: 45,
+    Question: "Kids whould recieve how much instruction in nonsense word fluency?",
+    questionP2: "More question",
+    answer_type: "mc",
+    option1: "0-1 hour",
+    option2: "1-5 hours",
+    option3: "5-10 hours",
+    option4: "> 10hours",
+    option5: "",
+    correctAnswer: 1,
+    explanation: "Teachers should not teach nonsense word fluency.",
+    explanation2: "While NWF assessments are a crucial part of diagnosing students' word-level skills, instruction in nonsense words is an improper use of time. Plenty of unfamiliar real words can be used to build students' orthographic mapping skills and memories. Use them instead.",
+    videoUrl: "",
+    videoId: "",
+    image: "",
+    imageUrl: "",
+    imageAltText: "",
+    podcastEpisode: {
+        description: "",
+        audioUrl: "",
+        EpisodeUrl: "",
+        title: "Episode Title",
+        podcastStartTime: 0
+    },
+    podcastEpisode2: {
+        title: "",
+        EpisodeUrl: "",
+        podcastStartTime: 0,
+        audioUrl: "",
+        description: ""
+    },
+    cautionLevel: "",
+    caution: "",
+    citations: [],
+    ref1: "",
+    ref2: "",
+    resources: [],
+    closingText: "",
+    closingText2: "",
+    modal: "",
+    status: "draft",
+    id: "sLizO23Tp8M4khRXLb3V",
+    isAnonymous: false,
+    userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+    correctAnswers: [1],
+    submittedAt: {
+        seconds: 1741170304,
+        nanoseconds: 695000000
+    },
+    userEmail: "ed.jones@gmail.com",
+    timestamp: {
+        seconds: 1741170304,
+        nanoseconds: 767000000
+    },
+
+},
+{
     title: "Learning Science",
     subtitle: "",
     id: 2000, // New ID for the new quiz entry
