@@ -1677,13 +1677,13 @@ export const quizEntries = [{
     title: "Nonsense Word Fluency",
     subtitle: "",
     id: 45,
-    Question: "Kids whould recieve how much instruction in nonsense word fluency?",
-    questionP2: "More question",
+    Question: "Kids should receive how much instruction in nonsense word fluency?",
+    questionP2: "",
     answer_type: "mc",
     option1: "0-1 hour",
     option2: "1-5 hours",
     option3: "5-10 hours",
-    option4: "> 10hours",
+    option4: "> 10 hours",
     option5: "",
     correctAnswer: 1,
     explanation: "Teachers should not teach nonsense word fluency.",
@@ -1697,7 +1697,7 @@ export const quizEntries = [{
         description: "",
         audioUrl: "",
         EpisodeUrl: "",
-        title: "Episode Title",
+        title: "",
         podcastStartTime: 0
     },
     podcastEpisode2: {
@@ -1712,12 +1712,19 @@ export const quizEntries = [{
     citations: [],
     ref1: "",
     ref2: "",
-    resources: [],
+    resources: [
+        {
+            title: "What Doesn't Belong Here? On Teaching Nonsense Words",
+            author: "Tim Shanahan",
+            url: "https://www.shanahanonliteracy.com/blog/what-doesnt-belong-here-on-teaching-nonsense-words",
+            description: ""
+        }
+    ],
     closingText: "",
     closingText2: "",
     modal: "",
-    status: "draft",
-    id: "sLizO23Tp8M4khRXLb3V",
+    status: "pending",
+    userEmail: "ed.jones@gmail.com",
     isAnonymous: false,
     userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
     correctAnswers: [1],
@@ -1725,12 +1732,10 @@ export const quizEntries = [{
         seconds: 1741170304,
         nanoseconds: 695000000
     },
-    userEmail: "ed.jones@gmail.com",
     timestamp: {
         seconds: 1741170304,
         nanoseconds: 767000000
-    },
-
+    }
 },
 {
     title: "Learning Science",
