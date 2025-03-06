@@ -15,7 +15,7 @@
       <div v-if="submitStatus.type === 'success' && submittedEntry" class="submitted-preview mt-4">
         <h3>Your submitted quiz item:</h3>
         <QuizItem :currentQuizItem="submittedEntry" :itemNum="0" :reviewMode="true" :basicMode="false"
-          :userAnswer="submittedEntry.correctAnswer" />
+          :userAnswer="submittedEntry.answer_type === 'ms' ? submittedEntry.correctAnswers : submittedEntry.correctAnswer" />
       </div>
     </div>
 
@@ -773,12 +773,29 @@ export default {
         // Submit for review
         await this.store.submitForReview(this.store.draftQuizEntry.id);
 
-        this.submittedEntry = { ...this.newEntry };
+        // Make a deep copy of the current entry
+        this.submittedEntry = JSON.parse(JSON.stringify(this.newEntry));
+
+        // Initialize store state for the submitted preview
+        if (this.submittedEntry.answer_type === 'ms') {
+          this.store.simpleAnswers = {
+            0: this.submittedEntry.correctAnswers // For multiple select questions
+          };
+        } else {
+          this.store.simpleAnswers = {
+            0: this.submittedEntry.correctAnswer // For multiple choice questions
+          };
+        }
+
+        // Show success message and preview
         this.submitStatus = {
           show: true,
           type: 'success',
           message: 'Quiz entry submitted successfully!'
         };
+
+        // Force a re-render of the QuizItem component
+        await this.$nextTick();
       } catch (e) {
         this.submitStatus = {
           show: true,
