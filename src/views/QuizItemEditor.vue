@@ -162,7 +162,6 @@
                   <div class="flex items-center gap-2">
                     <input type="text" :id="'option' + n" v-model="newEntry['option' + n]"
                       :class="['form-input flex-1', { 'invalid-field': invalidFields.has('option' + n) }]"
-                      :data-error="getFieldError('option' + n)" :placeholder="newEntry['option' + n]"
                       @focus="handleFocus($event, 'option' + n)" @blur="handleBlur($event, 'option' + n)" />
 
                     <!-- Single correct answer for MC -->
@@ -170,7 +169,6 @@
                       <input type="radio" :value="n" v-model="newEntry.correctAnswer" :name="'correct-answer'"
                         class="h-4 w-4 text-blue-600 focus:ring-blue-500 dark:bg-gray-700" />
                       <label :for="'option' + n" class="text-sm text-gray-600 dark:text-gray-400">
-                        Correct
                       </label>
                     </template>
 
@@ -179,7 +177,6 @@
                       <input type="checkbox" :value="n" v-model="newEntry.correctAnswers"
                         class="h-4 w-4 text-blue-600 focus:ring-blue-500 dark:bg-gray-700" />
                       <label :for="'option' + n" class="text-sm text-gray-600 dark:text-gray-400">
-                        Correct
                       </label>
                     </template>
                   </div>
@@ -1578,32 +1575,78 @@ details[open] .form-section {
 
 .status-message {
   margin: 1rem 0;
-  padding: 1rem;
-  border-radius: 4px;
+  padding: 1.5rem;
+  border-radius: 8px;
   text-align: center;
-  font-weight: bold;
+  font-weight: 500;
+  background: rgba(31, 41, 55, 0.8);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .status-message.success {
-  background-color: #4CAF50;
-  color: white;
+  background: rgba(31, 41, 55, 0.8);
+  border-color: #02b87d;
+  box-shadow: 0 0 20px rgba(2, 184, 125, 0.2);
 }
 
 .status-message.error {
-  background-color: #f44336;
-  color: white;
+  background: rgba(31, 41, 55, 0.8);
+  border-color: #ef4444;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
 }
 
 .submitted-preview {
   margin-top: 2rem;
-  padding: .2rem;
-  background-color: #f5f5f5;
-  border-radius: 4px;
+  padding: 1.5rem;
+  background: rgba(31, 41, 55, 0.8);
+  backdrop-filter: blur(10px);
+  border: 2px solid #02b87d;
+  box-shadow: 0 0 20px rgba(2, 184, 125, 0.2);
+  border-radius: 8px;
 }
 
 .submitted-preview h3 {
   margin-bottom: 1rem;
-  color: #333;
+  color: #02b87d;
+  font-weight: 500;
+  font-size: 1.2rem;
+}
+
+.submitted-preview :deep(.quiz-item) {
+  background: #1f2937;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.submitted-preview :deep(.question-text),
+.submitted-preview :deep(.answer),
+.submitted-preview :deep(.explanation),
+.submitted-preview :deep(.list-item-right) {
+  color: #fff !important;
+  opacity: 0.9;
+}
+
+.submitted-preview :deep(.quiz-item .answer) {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 0.5rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.submitted-preview :deep(.quiz-item .answer:hover) {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.submitted-preview :deep(.quiz-item .answer.selected) {
+  background: rgba(2, 184, 125, 0.2);
+  border-color: rgba(2, 184, 125, 0.4);
 }
 
 .explanation-toggles {
