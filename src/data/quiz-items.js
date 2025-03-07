@@ -1738,10 +1738,10 @@ export const quizEntries = [{
     }
 },
 {
-    title: "Rhyming and Syllable instruction",
-    subtitle: "",
+    title: "Phonological Awareness",
+    subtitle: "Rhyming and Syllable instruction",
     id: 46,
-    Question: "T/F: Rhyming and syllable instruction are a critical part of Kindergarten",
+    Question: "T/F: Rhyming and syllable segmentation are a critical part of Kindergarten",
     questionP2: "",
     answer_type: "mc",
     option1: "True",
@@ -1794,7 +1794,6 @@ export const quizEntries = [{
     ],
     closingText: "If you can help us add the research to this section, we'd be very appreciative.",
     closingText2: "",
-    status: "draft",
     id: "GZp2cdkYhuskL28ENRbb",
     originalId: "K9G4hnDT4RyVxwE9c7T8"
 },
