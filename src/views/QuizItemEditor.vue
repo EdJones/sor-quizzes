@@ -836,8 +836,8 @@ export default {
         event.preventDefault();
       }
 
-      // Show the version info modal
-      this.$refs.versionInfoModal.show();
+      // Show the version info modal with the current quiz item ID
+      this.$refs.versionInfoModal.show(this.store.draftQuizEntry.id);
     },
     async handleSaveDraftWithVersion(versionMessage) {
       try {

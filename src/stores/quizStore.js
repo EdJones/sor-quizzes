@@ -753,7 +753,7 @@ export const quizStore = defineStore('quiz', {
             }
 
             const editRecord = {
-                timestamp: new Date(),
+                timestamp: serverTimestamp(),
                 userId: auth.user?.uid || 'anonymous',
                 userEmail: auth.user?.email || 'anonymous',
                 quizItemId: this.draftQuizEntry.id,

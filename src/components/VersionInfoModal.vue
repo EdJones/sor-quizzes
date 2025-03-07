@@ -21,6 +21,10 @@
             </div>
 
             <div class="flex justify-end gap-4">
+                <button @click="showVersionHistory = true"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
+                    View History
+                </button>
                 <button @click="handleClose"
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
                     Cancel
@@ -33,15 +37,22 @@
             </div>
         </div>
     </div>
+
+    <!-- Version History Modal -->
+    <VersionHistoryModal v-if="quizItemId" :show="showVersionHistory" :quizItemId="quizItemId"
+        @close="showVersionHistory = false" />
 </template>
 
 <script setup>
 import { ref, watch } from 'vue';
+import VersionHistoryModal from './VersionHistoryModal.vue';
 
 const emit = defineEmits(['close', 'save']);
 
 const message = ref('');
 const isVisible = ref(false);
+const showVersionHistory = ref(false);
+const quizItemId = ref('');
 
 const handleClose = () => {
     isVisible.value = false;
@@ -57,8 +68,9 @@ const handleSave = () => {
     }
 };
 
-const show = () => {
+const show = (id) => {
     isVisible.value = true;
+    quizItemId.value = id;
 };
 
 defineExpose({

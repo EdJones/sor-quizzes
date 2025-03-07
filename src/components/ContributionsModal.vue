@@ -75,6 +75,14 @@
                             ]">
                                 {{ getItemStatus(item) === 'published' ? 'Published' : 'Draft' }}
                             </span>
+                            <button @click="showVersionHistory(item.id)"
+                                class="p-1 text-gray-500 hover:text-purple-500 dark:text-gray-400 dark:hover:text-purple-400"
+                                title="View Version History">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </button>
                             <button @click="handleEditItem(item.id)"
                                 class="p-1 text-gray-500 hover:text-purple-500 dark:text-gray-400 dark:hover:text-purple-400">
                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -106,6 +114,10 @@
             </div>
         </div>
     </div>
+
+    <!-- Version History Modal -->
+    <VersionHistoryModal v-if="selectedQuizItemId" :show="showVersionHistoryModal" :quizItemId="selectedQuizItemId"
+        @close="showVersionHistoryModal = false" />
 </template>
 
 <script setup>
@@ -115,6 +127,7 @@ import { collection, query, where, getDocs, or } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuthStore } from '../stores/authStore';
 import { quizEntries } from '../data/quiz-items';
+import VersionHistoryModal from './VersionHistoryModal.vue';
 
 const props = defineProps({
     show: {
@@ -294,6 +307,16 @@ const handleNewContribution = () => {
     emit('close');
     // Then navigate
     router.push({ name: 'NewQuizItem' });
+};
+
+const showVersionHistoryModal = ref(false);
+const selectedQuizItemId = ref('');
+
+const showVersionHistory = (itemId) => {
+    if (itemId) {
+        selectedQuizItemId.value = itemId;
+        showVersionHistoryModal.value = true;
+    }
 };
 
 onMounted(() => {
