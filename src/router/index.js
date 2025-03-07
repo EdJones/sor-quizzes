@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { requireAuth } from './guards';
 import LoginForm from '../components/auth/LoginForm.vue';
 import Home from '../components/Home.vue';
-import NewItem from '../components/NewItem.vue';
 import GitHubIssues from '../components/GitHubIssues.vue';
 import QuizSetView from '../views/QuizSetView.vue';
 import QuizItemEditor from '../views/QuizItemEditor.vue';
@@ -42,11 +41,6 @@ const routes = [
     path: '/quizSetView',
     name: 'QuizSetView',
     component: QuizSetView
-  },
-  {
-    path: '/new-item',
-    name: 'NewItem',
-    component: NewItem
   },
   {
     path: '/',

@@ -98,7 +98,7 @@
     <button class="bg-stone-400 h-10 mt-4 text-amber-400" @click="showOriginalView">Submit thoughts & return to
       Quizzes</button>
     <div class="router-link-container">
-      <router-link to="/new-item" class="button-75">Suggest a New Quiz Entry</router-link>
+      <router-link to="/edit-item/new" class="button-75">Suggest a New Quiz Entry</router-link>
     </div>
   </div>
   <div v-else>
