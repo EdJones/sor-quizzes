@@ -1,9 +1,9 @@
 <template>
-    <div v-show="show" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[9999] p-4"
-        @click.self="$emit('close')">
+    <div v-show="isVisible" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[9999] p-4"
+        @click.self="handleClose">
         <div
             class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-lg w-full border border-gray-200 dark:border-gray-700">
-            <button @click="$emit('close')"
+            <button @click="handleClose"
                 class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white text-xl transition-colors"
                 aria-label="Close">
                 ×
@@ -20,8 +20,8 @@
                     rows="4" placeholder="Describe your changes..."></textarea>
             </div>
 
-            <div class="flex justify-end gap-3">
-                <button @click="$emit('close')"
+            <div class="flex justify-end gap-4">
+                <button @click="handleClose"
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
                     Cancel
                 </button>
@@ -38,30 +38,32 @@
 <script setup>
 import { ref, watch } from 'vue';
 
-const props = defineProps({
-    show: {
-        type: Boolean,
-        required: true
-    }
-});
-
 const emit = defineEmits(['close', 'save']);
 
 const message = ref('');
+const isVisible = ref(false);
 
-// Reset message when modal is closed
-watch(() => props.show, (newVal) => {
-    if (!newVal) {
-        message.value = '';
-    }
-});
+const handleClose = () => {
+    isVisible.value = false;
+    message.value = '';
+    emit('close');
+};
 
 const handleSave = () => {
     if (message.value.trim()) {
         emit('save', message.value.trim());
         message.value = '';
+        isVisible.value = false;
     }
 };
+
+const show = () => {
+    isVisible.value = true;
+};
+
+defineExpose({
+    show
+});
 </script>
 
 <style scoped>

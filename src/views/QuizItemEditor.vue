@@ -15,7 +15,7 @@
       <div v-if="submitStatus.type === 'success' && submittedEntry" class="submitted-preview mt-4">
         <h3>Your submitted quiz item:</h3>
         <QuizItem :currentQuizItem="submittedEntry" :itemNum="0" :reviewMode="true" :basicMode="false"
-          :userAnswer="submittedEntry.correctAnswer" />
+          :userAnswer="submittedEntry.correctAnswer" :debug="false" />
       </div>
     </div>
 
@@ -77,7 +77,7 @@
     <div v-if="previewMode">
       <div class="preview-container">
         <QuizItem :currentQuizItem="newEntry" :itemNum="0" :reviewMode="true" :basicMode="false" :previewMode="true"
-          :userAnswer="newEntry.correctAnswer" />
+          :userAnswer="newEntry.correctAnswer" :debug="false" />
       </div>
     </div>
 
@@ -511,13 +511,6 @@
             </svg>
             Save Draft
           </button>
-          <button type="button" @click="showVersionInfoModal = true"
-            class="px-6 py-2 bg-violet-500 hover:bg-violet-600 text-white rounded-lg flex items-center transition-colors border-2 border-violet-400">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Test Modal
-          </button>
         </div>
         <button type="submit" :class="[
           'submit-btn',
@@ -539,8 +532,7 @@
     <ProgressSteps :currentStep="currentStep" />
 
     <!-- Keep VersionInfoModal here, outside of any v-if conditions -->
-    <VersionInfoModal :show="showVersionInfoModal" @close="showVersionInfoModal = false"
-      @save="handleSaveDraftWithVersion" />
+    <VersionInfoModal @save="handleSaveDraftWithVersion" ref="versionInfoModal" />
   </div>
 </template>
 
@@ -844,9 +836,8 @@ export default {
         event.preventDefault();
       }
 
-      // Simply show the modal
-      this.showVersionInfoModal = true;
-      console.log('Modal should be visible now:', this.showVersionInfoModal);
+      // Show the version info modal
+      this.$refs.versionInfoModal.show();
     },
     async handleSaveDraftWithVersion(versionMessage) {
       try {
@@ -873,9 +864,6 @@ export default {
           type: 'error',
           message: error.message || 'Error saving draft'
         };
-      } finally {
-        // Close the modal
-        this.showVersionInfoModal = false;
       }
     },
     returnToQuizzes() {
