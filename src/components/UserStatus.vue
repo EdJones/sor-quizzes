@@ -93,7 +93,6 @@
                 </div>
                 <!-- Contributor Mode Toggle -->
 
-
                 <!-- Login/Sign Out Buttons -->
                 <router-link v-if="authStore.user.isAnonymous" to="/login"
                     class="text-blue-500 hover:text-blue-600 text-xs transition-colors">
@@ -152,6 +151,11 @@ export default {
         const contributorMode = ref(false);
         const hasContributed = ref(false);
         const userQuizItems = ref([]);
+        const contributionStats = ref({
+            total: 0,
+            published: 0,
+            draft: 0
+        });
 
         const fetchContributorStatus = async () => {
             if (!authStore.user || authStore.user.isAnonymous) return;
@@ -237,6 +241,26 @@ export default {
             }
         });
 
+        // Watch for changes in userQuizItems and update stats
+        watch([userQuizItems, () => authStore.user?.email], () => {
+            const published = quizEntries.filter(item =>
+                item.userEmail === authStore.user?.email
+            ).length;
+
+            const draft = userQuizItems.value.filter(item =>
+                !quizEntries.some(qi =>
+                    qi.userEmail === authStore.user?.email &&
+                    qi.title === item.title
+                )
+            ).length;
+
+            contributionStats.value = {
+                total: published + draft,
+                published,
+                draft
+            };
+        });
+
         const displayName = computed(() => {
             if (authStore.user.isAnonymous) return 'Anonymous User';
             if (!authStore.user.email) return 'Signed In';
@@ -263,25 +287,6 @@ export default {
                 console.error('Sign out error:', error);
             }
         };
-
-        const contributionStats = computed(() => {
-            const published = quizEntries.filter(item =>
-                item.userEmail === authStore.user?.email
-            ).length;
-
-            const draft = userQuizItems.value.filter(item =>
-                !quizEntries.some(qi =>
-                    qi.userEmail === authStore.user?.email &&
-                    qi.title === item.title
-                )
-            ).length;
-
-            return {
-                total: published + draft,
-                published,
-                draft
-            };
-        });
 
         return {
             authStore,
