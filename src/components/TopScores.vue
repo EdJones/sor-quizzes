@@ -28,44 +28,65 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { auth } from '../firebase';
+import { useAuthStore } from '../stores/authStore';
 
 const topScores = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
+const authStore = useAuthStore();
 
 const fetchTopScores = async () => {
     try {
         isLoading.value = true;
         error.value = null;
 
-        // Query all quiz attempts, ordered by timestamp
+        // Query both userProgress and quizAttempts collections
+        const progressRef = collection(db, 'userProgress');
         const attemptsRef = collection(db, 'quizAttempts');
-        const q = query(attemptsRef, orderBy('completedAt', 'desc'));
-        const querySnapshot = await getDocs(q);
 
-        console.log('Current user ID:', auth.currentUser?.uid);
-        console.log('Total attempts:', querySnapshot.size);
+        const [progressSnapshot, attemptsSnapshot] = await Promise.all([
+            getDocs(progressRef),
+            getDocs(attemptsRef)
+        ]);
 
-        // Aggregate scores by user, counting all correct answers
+        console.log('Current user:', {
+            uid: authStore.user?.uid,
+            email: authStore.user?.email,
+            isAnonymous: authStore.user?.isAnonymous
+        });
+        console.log('Total progress docs:', progressSnapshot.size);
+        console.log('Total attempt docs:', attemptsSnapshot.size);
+
+        // Aggregate scores by user
         const userScores = new Map();
 
-        querySnapshot.docs.forEach(doc => {
+        // Process progress documents
+        progressSnapshot.docs.forEach(doc => {
             const data = doc.data();
-            const userId = data.userId;
+            // Use userId from the data first, then fall back to extracting from doc ID
+            const userId = data.userId || doc.id.split('_')[0];
             const userEmail = data.userEmail || 'Anonymous';
-            const score = data.score || 0;
-            const isCurrentUser = userId === auth.currentUser?.uid;
+            const isCurrentUser = userId === authStore.user?.uid;
 
-            console.log('Attempt:', {
+            console.log('Processing progress doc:', {
+                docId: doc.id,
                 userId,
                 userEmail,
-                score,
-                completedAt: data.completedAt?.toDate(),
-                isCurrentUser
+                data,
+                lastUpdated: data.lastUpdated?.toDate(),
+                isCurrentUser,
+                currentUserEmail: authStore.user?.email,
+                totalCorrect: data.totalCorrect,
+                userAnswers: data.userAnswers?.filter(a => a.correct)?.length
             });
+
+            if (!userId) {
+                console.warn('Progress document missing userId:', doc.id);
+                return;
+            }
 
             if (!userScores.has(userId)) {
                 userScores.set(userId, {
@@ -77,11 +98,77 @@ const fetchTopScores = async () => {
             }
 
             const userScore = userScores.get(userId);
-            userScore.totalScore += score;
-            userScore.quizCount++;
+
+            // Count correct answers from userAnswers or totalCorrect
+            if (data.userAnswers) {
+                const correctAnswers = data.userAnswers.filter(answer => answer.correct).length;
+                console.log('Adding correct answers from userAnswers:', correctAnswers);
+                userScore.totalScore += correctAnswers;
+            } else if (data.totalCorrect) {
+                console.log('Adding totalCorrect:', data.totalCorrect);
+                userScore.totalScore += data.totalCorrect;
+            }
+
+            // Only increment quiz count if this is a completed quiz
+            if (data.complete || data.totalCorrect > 0) {
+                userScore.quizCount++;
+                console.log('Incremented quiz count for user:', userId, 'New count:', userScore.quizCount);
+            }
         });
 
-        console.log('Aggregated scores:', Array.from(userScores.values()));
+        // Process attempt documents
+        attemptsSnapshot.docs.forEach(doc => {
+            const data = doc.data();
+            // For attempt documents, use the userId from the data
+            const userId = data.userId;
+            const userEmail = data.userEmail || 'Anonymous';
+            const isCurrentUser = userId === authStore.user?.uid;
+
+            console.log('Processing attempt doc:', {
+                docId: doc.id,
+                userId,
+                userEmail,
+                data,
+                lastUpdated: data.lastUpdated?.toDate(),
+                isCurrentUser,
+                currentUserEmail: authStore.user?.email,
+                score: data.score,
+                totalQuestions: data.totalQuestions
+            });
+
+            if (!userId) {
+                console.warn('Attempt document missing userId:', doc.id);
+                return;
+            }
+
+            if (!userScores.has(userId)) {
+                userScores.set(userId, {
+                    displayName: userEmail === 'Anonymous' ? 'Anonymous' : userEmail.split('@')[0],
+                    totalScore: 0,
+                    quizCount: 0,
+                    isCurrentUser
+                });
+            }
+
+            const userScore = userScores.get(userId);
+
+            // Add score from attempt
+            if (data.score) {
+                console.log('Adding score from attempt:', data.score);
+                userScore.totalScore += data.score;
+            }
+
+            // Increment quiz count for completed attempts
+            if (data.completedAt) {
+                userScore.quizCount++;
+                console.log('Incremented quiz count for user:', userId, 'New count:', userScore.quizCount);
+            }
+        });
+
+        console.log('Final user scores before filtering:', Array.from(userScores.entries()).map(([userId, score]) => ({
+            userId,
+            ...score
+        })));
 
         // Convert to array and sort by total score
         let scores = Array.from(userScores.values())

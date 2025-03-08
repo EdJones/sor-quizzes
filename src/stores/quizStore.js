@@ -222,9 +222,14 @@ export const quizStore = defineStore('quiz', {
                     userAnswers: this.userAnswers
                 });
 
+                // Create a consistent document ID
+                const attemptId = `${auth.currentUser.uid}_${this.currentQuizId}_${Date.now()}`;
+                const attemptRef = doc(db, 'quizAttempts', attemptId);
+
                 // Add quiz attempt to Firestore
-                const quizAttemptRef = await addDoc(collection(db, 'quizAttempts'), {
+                await setDoc(attemptRef, {
                     userId: auth.currentUser.uid,
+                    userEmail: auth.currentUser.email || 'Anonymous',
                     quizId: this.currentQuizId,
                     quizStarted: serverTimestamp(),
                     completedAt: serverTimestamp(),
@@ -234,7 +239,7 @@ export const quizStore = defineStore('quiz', {
                     isAnonymous: auth.currentUser.isAnonymous
                 });
 
-                console.log('Quiz attempt recorded:', quizAttemptRef.id);
+                console.log('Quiz attempt recorded:', attemptRef.id);
 
                 // Save final progress using the original system
                 const progressStore = useProgressStore();
