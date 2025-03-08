@@ -25,8 +25,9 @@
       <!-- ... true/false content ... -->
     </div>
 
-    <div v-else-if="quizItem.answer_type == 'short_answer'">
-      <!-- ... short answer content ... -->
+    <div v-else-if="quizItem.answer_type == 'short_answer'" class="text-gray-900 dark:text-white">
+      <ShortAnswer v-model:userAnswer="userAnswer" @answer-selected="handleAnswerSelected" :quizItem="quizItem"
+        :reviewMode="reviewMode" />
     </div>
 
     <!-- Sortable list -->
@@ -56,6 +57,7 @@ import MultipleSelect from './MultipleSelect.vue';
 import LiteYouTubeEmbed from 'vue-lite-youtube-embed';
 import Explanation from './Explanation.vue';
 import SortableList from './SortableList.vue';
+import ShortAnswer from './ShortAnswer.vue';
 import { ref } from 'vue';
 
 export default {
@@ -66,6 +68,7 @@ export default {
     Explanation,
     LiteYouTubeEmbed,
     SortableList,
+    ShortAnswer,
   },
   props: {
     currentQuizItem: {
