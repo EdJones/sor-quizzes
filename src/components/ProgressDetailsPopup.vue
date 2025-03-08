@@ -125,6 +125,16 @@ import { db, auth } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useAuthStore } from '../stores/authStore';
 
+// Create a mapping of quiz set names to their IDs
+const QUIZ_ID_MAPPING = {
+    'general': 1,
+    'expert': 2,
+    'New Items': 3,
+    'kinder-first': 4,
+    'admin': 5,
+    'Why Care?': 6
+};
+
 export default {
     name: 'ProgressDetailsPopup',
     props: {
@@ -145,18 +155,8 @@ export default {
                 // Pre-fetch all quiz set progress at once
                 for (const set of quizSets.filter(s => !s.inProgress)) {
                     try {
-                        let quizId;
-                        const setName = set.setName.toLowerCase().replace('?', '').trim();
-                        switch (setName) {
-                            case 'expert': quizId = 1; break;
-                            case 'general': quizId = 2; break;
-                            case 'kinder-first': quizId = 3; break;
-                            case 'admin': quizId = 4; break;
-                            case 'why care': quizId = 6; break;
-                            default:
-                                console.log('Unknown quiz set:', set.setName);
-                                continue;
-                        }
+                        // Get the quiz ID from the mapping
+                        const quizId = QUIZ_ID_MAPPING[set.setName];
 
                         console.log('Fetching progress for quiz:', {
                             setName: set.setName,
@@ -235,19 +235,8 @@ export default {
             missedItems.value = [];
 
             try {
-                // Get the quiz ID based on the quiz set name
-                let quizId;
-                const setName = quizSet.setName.toLowerCase().replace('?', '').trim();
-                switch (setName) {
-                    case 'expert': quizId = 1; break;
-                    case 'general': quizId = 2; break;
-                    case 'kinder-first': quizId = 3; break;
-                    case 'admin': quizId = 4; break;
-                    case 'why care': quizId = 6; break;
-                    default:
-                        console.log('Unknown quiz set:', quizSet.setName);
-                        return;
-                }
+                // Get the quiz ID from the mapping
+                const quizId = QUIZ_ID_MAPPING[quizSet.setName];
 
                 // Get the user's progress for this quiz
                 const progressRef = doc(db, 'userProgress', `${auth.currentUser.uid}_${quizId}`);
@@ -347,18 +336,6 @@ export default {
             } catch (error) {
                 console.error('Error checking completed quizzes:', error);
                 return 0;
-            }
-        },
-        getQuizId(setName) {
-            switch (setName.toLowerCase()) {
-                case 'expert': return 1;
-                case 'general': return 2;
-                case 'kinder-first': return 3;
-                case 'admin': return 4;
-                case 'why care?': return 5;
-                default:
-                    console.log('Unknown quiz set:', setName);
-                    return null;
             }
         }
     }
