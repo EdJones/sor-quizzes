@@ -146,17 +146,32 @@ export default {
                 for (const set of quizSets.filter(s => !s.inProgress)) {
                     try {
                         let quizId;
-                        switch (set.setName.toLowerCase()) {
+                        const setName = set.setName.toLowerCase().replace('?', '').trim();
+                        switch (setName) {
                             case 'expert': quizId = 1; break;
                             case 'general': quizId = 2; break;
                             case 'kinder-first': quizId = 3; break;
                             case 'admin': quizId = 4; break;
-                            case 'why care?': quizId = 5; break;
-                            default: continue;
+                            case 'why care': quizId = 6; break;
+                            default:
+                                console.log('Unknown quiz set:', set.setName);
+                                continue;
                         }
+
+                        console.log('Fetching progress for quiz:', {
+                            setName: set.setName,
+                            quizId,
+                            userId: auth.currentUser?.uid
+                        });
 
                         const progressRef = doc(db, 'userProgress', `${auth.currentUser.uid}_${quizId}`);
                         const progressDoc = await getDoc(progressRef);
+
+                        console.log('Progress doc for quiz:', {
+                            setName: set.setName,
+                            exists: progressDoc.exists(),
+                            data: progressDoc.data()
+                        });
 
                         if (progressDoc.exists()) {
                             const data = progressDoc.data();
@@ -166,12 +181,20 @@ export default {
                                 ? (correctAnswers / totalQuestions) * 100
                                 : 0;
 
+                            console.log('Calculated progress:', {
+                                setName: set.setName,
+                                correctAnswers,
+                                totalQuestions,
+                                percentage: Math.round(percentage)
+                            });
+
                             quizSetProgress.value.set(set.setName, {
                                 correct: correctAnswers,
                                 total: totalQuestions,
                                 percentage: Math.round(percentage)
                             });
                         } else {
+                            console.log('No progress found for quiz:', set.setName);
                             quizSetProgress.value.set(set.setName, {
                                 correct: 0,
                                 total: set.items.length,
@@ -214,12 +237,13 @@ export default {
             try {
                 // Get the quiz ID based on the quiz set name
                 let quizId;
-                switch (quizSet.setName.toLowerCase()) {
+                const setName = quizSet.setName.toLowerCase().replace('?', '').trim();
+                switch (setName) {
                     case 'expert': quizId = 1; break;
                     case 'general': quizId = 2; break;
                     case 'kinder-first': quizId = 3; break;
                     case 'admin': quizId = 4; break;
-                    case 'why care?': quizId = 5; break;
+                    case 'why care': quizId = 6; break;
                     default:
                         console.log('Unknown quiz set:', quizSet.setName);
                         return;

@@ -112,7 +112,7 @@
   </div>
 
   <!-- Add the progress popup component -->
-  <ProgressDetailsPopup ref="progressPopup" />
+  <ProgressDetailsPopup ref="progressPopup" :show="showProgressPopup" @close="showProgressPopup = false" />
 </template>
 <script>
 import QuizItem from './QuizItem.vue';
@@ -122,6 +122,7 @@ import { quizStore } from '../stores/quizStore'; // Import the store
 import { ref, onMounted, watch } from 'vue'
 import { useProgressStore } from '../stores/progressStore';
 import ProgressDetailsPopup from './ProgressDetailsPopup.vue';
+import { auth } from '../firebase';  // Add this import
 
 export default {
   name: 'Quiz',
@@ -144,6 +145,7 @@ export default {
     const store = quizStore();
     const progressStore = useProgressStore();
     const progressPopup = ref(null);
+    const showProgressPopup = ref(false);
 
     onMounted(() => {
       store.setCurrentQuiz(props.selectedQuiz);
@@ -152,14 +154,15 @@ export default {
     // Add method to show progress
     const showProgress = () => {
       console.log('Showing progress popup for quiz:', props.selectedQuiz);
-      progressPopup.value?.togglePopup(props.selectedQuiz);
+      showProgressPopup.value = true;
     };
 
     return {
       store,
       progressStore,
       progressPopup,
-      showProgress
+      showProgress,
+      showProgressPopup
     }
   },
   data() {
@@ -533,6 +536,13 @@ export default {
         const score = this.numCorrect();
         const total = this.quizItems.length;
 
+        console.log('Starting quizDone:', {
+          score,
+          total,
+          quizId: this.selectedQuiz,
+          userId: auth.currentUser?.uid
+        });
+
         // Validate the values before sending
         if (typeof score !== 'number' || typeof total !== 'number') {
           console.error('Invalid score or total:', { score, total });
@@ -546,6 +556,20 @@ export default {
           totalQuestions: total
         });
         console.log('Quiz attempt recorded successfully');
+
+        // Save final progress using the progress store
+        const progressData = {
+          complete: true,
+          userAnswers: this.store.userAnswers,
+          incorrectQuestions: this.store.incorrectQuestions,
+          totalCorrect: score,
+          totalQuestions: total,
+          timestamp: new Date()
+        };
+
+        console.log('Saving progress data:', progressData);
+        await this.progressStore.saveQuizProgress(this.selectedQuiz, progressData);
+        console.log('Progress saved successfully');
 
         // Update the quiz state
         this.quizState = 'end';
@@ -598,10 +622,6 @@ export default {
       console.log("Emitting change-view event");
       this.$emit('change-view', { showQuizzes: true }); // Emit an event with the new state
       console.log("Event emitted");
-    },
-    showProgress() {
-      console.log('Showing progress popup for quiz:', this.selectedQuiz);
-      this.progressPopup.value?.togglePopup(this.selectedQuiz);
     }
   },
   created() {
