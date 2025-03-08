@@ -15,7 +15,10 @@
           Science of Reading Quizzes
         </h1>
       </div>
-      <UserStatus />
+      <div class="flex items-center gap-4">
+        <TopScores />
+        <UserStatus />
+      </div>
     </header>
 
     <!-- Help Modal -->
@@ -63,6 +66,7 @@
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue';
 import UserStatus from './components/UserStatus.vue';
+import TopScores from './components/TopScores.vue';
 import logo from './assets/sor-quizzes-logo.png';
 import { useAuthStore } from './stores/authStore';
 import { useProgressStore } from './stores/progressStore';
