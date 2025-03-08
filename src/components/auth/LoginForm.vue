@@ -1,18 +1,18 @@
 <template>
   <div class="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
-    <h2 class="text-2xl font-bold mb-6 text-center">{{ isRegister ? 'Register' : 'Login' }}</h2>
+    <h2 class="text-2xl font-bold mb-6 text-center text-gray-900">{{ isRegister ? 'Register' : 'Login' }}</h2>
 
     <form @submit.prevent="handleSubmit" class="space-y-4">
       <div>
         <label class="block text-sm font-medium text-gray-700">Email</label>
         <input type="email" v-model="email" required
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+          class="mt-1 block w-full rounded-md border-gray-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900" />
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700">Password</label>
         <input type="password" v-model="password" required
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+          class="mt-1 block w-full rounded-md border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900" />
       </div>
 
       <div v-if="error" class="text-red-500 text-sm">{{ error }}</div>
