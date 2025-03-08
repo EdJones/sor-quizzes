@@ -10,6 +10,7 @@
         <div v-if="isLoading" class="text-gray-400 text-xs">Loading...</div>
         <div v-else-if="error" class="text-red-400 text-xs">{{ error }}</div>
         <div v-else class="space-y-1">
+            <!-- Top 5 scores -->
             <div v-for="(score, index) in topScores" :key="index"
                 class="flex items-center justify-between text-gray-300 dark:text-gray-400"
                 :class="{ 'font-bold': score.isCurrentUser }">
@@ -22,18 +23,36 @@
                     <span class="text-xs text-gray-500">({{ score.totalScore }}/{{ totalAvailableQuestions }})</span>
                 </div>
             </div>
+
+            <!-- Divider line -->
+            <div v-if="edJonesScore" class="border-t border-gray-700 my-1 pt-1"></div>
+
+            <!-- Ed Jones score -->
+            <div v-if="edJonesScore"
+                class="flex items-center justify-between text-gray-300 dark:text-gray-400 font-bold">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs w-4">{{ edJonesRank }}</span>
+                    <span class="truncate max-w-[120px]">ed.jones</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-yellow-400">{{ edJonesScore.totalScore }}</span>
+                    <span class="text-xs text-gray-500">({{ edJonesScore.totalScore }}/{{ totalAvailableQuestions
+                    }})</span>
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuthStore } from '../stores/authStore';
 import { quizSets } from '../data/quizSets';
 
 const topScores = ref([]);
+const allScores = ref([]); // Store all scores to find Ed Jones' rank
 const isLoading = ref(true);
 const error = ref(null);
 const authStore = useAuthStore();
@@ -44,6 +63,24 @@ const formatDisplayName = (email) => {
     if (!email || email === 'Anonymous') return 'Anonymous';
     return email.split('@')[0];
 };
+
+// Find Ed Jones' score
+const edJonesScore = computed(() => {
+    return allScores.value.find(score =>
+        score.displayName === 'ed.jones' ||
+        score.email === 'ed.jones@gmail.com'
+    );
+});
+
+// Calculate Ed Jones' rank
+const edJonesRank = computed(() => {
+    if (!edJonesScore.value) return '';
+    const rank = allScores.value.findIndex(score =>
+        score.displayName === 'ed.jones' ||
+        score.email === 'ed.jones@gmail.com'
+    ) + 1;
+    return rank;
+});
 
 // Calculate total questions from all published quiz sets
 const calculateTotalQuestions = () => {
@@ -94,6 +131,7 @@ const fetchTopScores = async () => {
             const userId = data.userId || doc.id.split('_')[0];
             const quizId = data.quizId || doc.id.split('_')[1];
             const timestamp = data.lastUpdated?.toDate() || data.timestamp || new Date(0);
+            const userEmail = data.userEmail || 'Anonymous';
 
             if (!userId || !quizId) return;
 
@@ -104,7 +142,7 @@ const fetchTopScores = async () => {
                     userId,
                     quizId,
                     timestamp,
-                    userEmail: data.userEmail || 'Anonymous',
+                    userEmail,
                     totalCorrect: data.totalCorrect || 0,
                     isComplete: data.complete || false
                 });
@@ -117,6 +155,7 @@ const fetchTopScores = async () => {
             const userId = data.userId;
             const quizId = data.quizId;
             const timestamp = data.completedAt?.toDate() || data.timestamp || new Date(0);
+            const userEmail = data.userEmail || 'Anonymous';
 
             if (!userId || !quizId) return;
 
@@ -127,7 +166,7 @@ const fetchTopScores = async () => {
                     userId,
                     quizId,
                     timestamp,
-                    userEmail: data.userEmail || 'Anonymous',
+                    userEmail,
                     totalCorrect: data.score || 0,
                     isComplete: true
                 });
@@ -138,13 +177,16 @@ const fetchTopScores = async () => {
         userQuizAttempts.forEach((attempt, key) => {
             const userId = attempt.userId;
             const isCurrentUser = userId === authStore.user?.uid;
+            const isEdJones = attempt.userEmail === 'ed.jones@gmail.com';
 
             if (!userScores.has(userId)) {
                 userScores.set(userId, {
                     displayName: formatDisplayName(attempt.userEmail),
+                    email: attempt.userEmail,
                     totalScore: 0,
                     quizCount: 0,
                     isCurrentUser,
+                    isEdJones,
                     userId,
                     quizzes: new Set()
                 });
@@ -168,21 +210,46 @@ const fetchTopScores = async () => {
             console.log('Adding current user to scores list:', authStore.user.uid);
             userScores.set(authStore.user.uid, {
                 displayName: formatDisplayName(authStore.user.email),
+                email: authStore.user.email,
                 totalScore: 0,
                 quizCount: 0,
                 isCurrentUser: true,
+                isEdJones: authStore.user.email === 'ed.jones@gmail.com',
                 userId: authStore.user.uid,
+                quizzes: new Set()
+            });
+        }
+
+        // Special handling for Ed Jones if not already in the list
+        const hasEdJones = Array.from(userScores.values()).some(
+            score => score.email === 'ed.jones@gmail.com' || score.displayName === 'ed.jones'
+        );
+
+        if (!hasEdJones) {
+            // Create a placeholder for Ed Jones with zero score
+            userScores.set('ed_jones_placeholder', {
+                displayName: 'ed.jones',
+                email: 'ed.jones@gmail.com',
+                totalScore: 0,
+                quizCount: 0,
+                isCurrentUser: authStore.user?.email === 'ed.jones@gmail.com',
+                isEdJones: true,
+                userId: 'ed_jones_placeholder',
                 quizzes: new Set()
             });
         }
 
         // Convert to array and sort by total score
         let scores = Array.from(userScores.values())
-            .filter(score => score.quizCount >= 1 || score.isCurrentUser) // Include current user even if they haven't completed quizzes
+            .filter(score => score.quizCount >= 1 || score.isCurrentUser || score.isEdJones)
             .sort((a, b) => b.totalScore - a.totalScore);
 
         console.log('Final sorted scores:', scores);
 
+        // Store all scores for rank calculation
+        allScores.value = scores;
+
+        // Only show top 5 in the list
         topScores.value = scores.slice(0, 5);
     } catch (err) {
         console.error('Error fetching top scores:', err);
