@@ -281,32 +281,181 @@ export const useScoreStore = defineStore('scores', {
 
             try {
                 // Calculate total available questions
-                this.calculateTotalQuestions();
+                this.totalAvailableQuestions = this.calculateTotalQuestions();
 
-                // Try to fetch from Firestore first
-                const scoresLoaded = await this.fetchTopScoresFromFirestore();
+                // First get existing scores from Firestore
+                const topScoresRef = doc(db, 'topScores', 'latest');
+                const topScoresDoc = await getDoc(topScoresRef);
 
-                // If no scores in Firestore, calculate them
-                if (!scoresLoaded) {
-                    // Implement score calculation logic here if needed
-                    console.log('No scores in Firestore, would calculate them here');
+                let existingScores = [];
+                if (topScoresDoc.exists()) {
+                    const data = topScoresDoc.data();
+                    existingScores = data.scores || [];
+                    console.log('Existing scores from Firestore:', existingScores);
+                }
+
+                // Then fetch from userProgress
+                const progressRef = collection(db, 'userProgress');
+                const progressSnapshot = await getDocs(progressRef);
+
+                console.log(`Found ${progressSnapshot.docs.length} documents in userProgress`);
+
+                // First get all user documents to have email data ready
+                const userDocs = await Promise.all(
+                    [...new Set(progressSnapshot.docs.map(doc => doc.id.split('_')[0]))].map(async userId => {
+                        const userDoc = await getDoc(doc(db, 'users', userId));
+                        return {
+                            userId,
+                            data: userDoc.exists() ? userDoc.data() : null
+                        };
+                    })
+                );
+
+                // Create a map of user data
+                const userDataMap = new Map(userDocs.map(doc => [doc.userId, doc.data]));
+                console.log('User data map:', Object.fromEntries(userDataMap));
+
+                // Group progress by base user ID (removing suffixes) to aggregate scores
+                const userProgressMap = new Map();
+
+                progressSnapshot.docs.forEach(doc => {
+                    const progressData = doc.data();
+                    // Extract base user ID by removing the suffix
+                    const baseUserId = doc.id.split('_')[0];
+                    const userData = userDataMap.get(baseUserId);
+
+                    console.log(`Processing progress for base user ${baseUserId}:`, progressData);
+
+                    // Get the current aggregated data or create new
+                    const currentData = userProgressMap.get(baseUserId) || {
+                        userId: baseUserId,
+                        totalCorrect: 0,
+                        totalAnswered: 0,
+                        email: userData?.email,
+                        lastUpdated: null,
+                        quizAttempts: new Set() // Track unique quiz attempts
+                    };
+
+                    // Get quiz ID to track unique attempts
+                    const quizId = progressData.quizId;
+
+                    // Add this document's scores to the total if it's a completed quiz
+                    const correctItems = Number(progressData.totalCorrect || progressData.correctItems || 0);
+                    const completedQuizzes = Number(progressData.totalAnswered || progressData.completedQuizzes || 0);
+                    const isCompleted = completedQuizzes > 0 || progressData.complete;
+
+                    if (isCompleted && quizId && !currentData.quizAttempts.has(quizId)) {
+                        // Add scores from this new quiz attempt
+                        currentData.totalCorrect += correctItems;
+                        currentData.totalAnswered += 1; // Count each completed quiz as 1
+                        currentData.quizAttempts.add(quizId);
+
+                        // Update lastUpdated if this document is more recent
+                        const docDate = progressData.lastUpdated || progressData.timestamp;
+                        if (docDate && (!currentData.lastUpdated || docDate > currentData.lastUpdated)) {
+                            currentData.lastUpdated = docDate;
+                        }
+
+                        userProgressMap.set(baseUserId, currentData);
+                        console.log(`Updated progress for ${baseUserId}:`, {
+                            ...currentData,
+                            quizAttempts: Array.from(currentData.quizAttempts)
+                        });
+                    }
+                });
+
+                const progressArray = Array.from(userProgressMap.values())
+                    .map(data => ({
+                        ...data,
+                        quizAttempts: Array.from(data.quizAttempts)
+                    }));
+                console.log('Aggregated user progress by base ID:', progressArray);
+
+                // Get the auth store to access current user
+                const authStore = useAuthStore();
+
+                // Convert progress data to score format
+                const progressScores = progressArray
+                    .filter(progress => progress.totalAnswered > 0 && progress.totalCorrect > 0)
+                    .map(progress => {
+                        const userData = userDataMap.get(progress.userId);
+                        let email = progress.email || userData?.email;
+                        let displayName = null;
+
+                        // Try to get display name in order of preference:
+                        // 1. Username from user data
+                        // 2. Email username if available
+                        // 3. First 8 chars of user ID + "..."
+                        if (userData?.username) {
+                            displayName = userData.username;
+                        } else if (email && email !== 'Anonymous' && !email.includes('undefined')) {
+                            displayName = this.formatDisplayName(email);
+                        } else {
+                            displayName = `Anon_${progress.userId.substring(0, 6)}...`;
+                        }
+
+                        const scoreData = {
+                            userId: progress.userId,
+                            totalScore: progress.totalCorrect,
+                            quizCount: progress.totalAnswered,
+                            email: email || 'Anonymous',
+                            username: userData?.username || null,
+                            displayName,
+                            lastUpdated: progress.lastUpdated?.toDate() || new Date(),
+                            quizAttempts: progress.quizAttempts
+                        };
+
+                        console.log(`Created score data for ${progress.userId}:`, scoreData);
+                        return scoreData;
+                    });
+
+                console.log('Valid progress scores:', progressScores);
+
+                // Merge scores, preferring progress scores over existing ones
+                const mergedScores = [...existingScores];
+
+                progressScores.forEach(progressScore => {
+                    const existingIndex = mergedScores.findIndex(s => s.userId === progressScore.userId);
+                    if (existingIndex >= 0) {
+                        // Update existing score if progress score is higher
+                        if (progressScore.totalScore > mergedScores[existingIndex].totalScore) {
+                            mergedScores[existingIndex] = progressScore;
+                        }
+                    } else {
+                        // Add new score
+                        mergedScores.push(progressScore);
+                    }
+                });
+
+                // Filter and sort by total score, but keep anonymous users
+                const finalScores = mergedScores
+                    .filter(score => score.totalScore > 0) // Only filter out zero scores
+                    .sort((a, b) => b.totalScore - a.totalScore);
+
+                console.log('Final merged scores:', finalScores);
+
+                if (finalScores.length > 0) {
+                    // Update topScores document with merged scores
+                    await setDoc(topScoresRef, {
+                        scores: finalScores,
+                        totalAvailableQuestions: this.totalAvailableQuestions,
+                        lastUpdated: serverTimestamp()
+                    });
+
+                    // Update store state
+                    this.allScores = finalScores;
+                    this.topScores = finalScores.slice(0, 5);
+                    console.log('Updated store with top scores:', this.topScores);
+                } else {
+                    console.log('No valid scores found after merging');
+                    this.allScores = [];
+                    this.topScores = [];
                 }
 
                 this.isLoading = false;
             } catch (err) {
-                // Handle specific cross-origin errors
-                if (err.name === 'SecurityError' && err.message.includes('cross-origin')) {
-                    console.warn('Cross-origin security error detected in scoreStore:', err.message);
-                    this.error = 'Security restriction prevented loading scores';
-
-                    // Set empty scores to prevent further errors
-                    this.topScores = [];
-                    this.allScores = [];
-                } else {
-                    console.error('Error fetching top scores:', err);
-                    this.error = 'Failed to load top scores';
-                }
-
+                console.error('Error fetching top scores:', err);
+                this.error = 'Failed to load top scores';
                 this.isLoading = false;
             }
         }
