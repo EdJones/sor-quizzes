@@ -1,9 +1,10 @@
 <template>
   <div class="youtube-embed">
     <div class="video-container">
-      <iframe :src="embedUrl" frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen></iframe>
+      <iframe :src="embedUrl" frameborder="0" sandbox="allow-scripts allow-same-origin allow-presentation"
+        referrerpolicy="no-referrer" loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
+        @load="onIframeLoad" title="YouTube video player"></iframe>
     </div>
   </div>
 </template>
@@ -23,22 +24,39 @@ export default {
   },
   computed: {
     embedUrl() {
-      return `https://www.youtube.com/embed/${this.videoId}?rel=0&showinfo=0&autoplay=0&start=${this.startTime}`;
+      try {
+        return `https://www.youtube.com/embed/${this.videoId}?rel=0&showinfo=0&autoplay=0&start=${this.startTime}`;
+      } catch (error) {
+        console.error('Error creating YouTube embed URL:', error);
+        return '';
+      }
     }
   },
   methods: {
     onIframeLoad(event) {
-      console.log('Iframe loaded, dimensions:', {
-        width: event.target.offsetWidth,
-        height: event.target.offsetHeight
-      });
+      try {
+        console.log('Iframe loaded, dimensions:', {
+          width: event.target.offsetWidth,
+          height: event.target.offsetHeight
+        });
+      } catch (error) {
+        console.error('Error in iframe load handler:', error);
+      }
     }
   },
   mounted() {
-    console.log('YouTube component mounted, videoId:', this.videoId);
+    try {
+      console.log('YouTube component mounted, videoId:', this.videoId);
+    } catch (error) {
+      console.error('Error in YouTube component mount:', error);
+    }
   },
   updated() {
-    console.log('YouTube component updated, videoId:', this.videoId);
+    try {
+      console.log('YouTube component updated, videoId:', this.videoId);
+    } catch (error) {
+      console.error('Error in YouTube component update:', error);
+    }
   }
 }
 </script>

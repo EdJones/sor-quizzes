@@ -14,7 +14,7 @@
                 </div>
                 <div v-if="greenOutline[0]" class="p-0 m-0">
                     <Vue3Lottie autoplay loop mode="normal" :animationData="fireworksJSON" style="width: 70px"
-                        class="m-0 p-0">
+                        class="m-0 p-0" @error="handleLottieError">
                     </Vue3Lottie>
                 </div>
             </li>
@@ -27,7 +27,7 @@
                 <div class="list-item-right"> {{ quizItem.option2 }}</div>
                 <div v-if="greenOutline[1] && highlighted[2]" class="p-0">
                     <Vue3Lottie autoplay loop mode="normal" :animationData="fireworksJSON" style="width: 70px"
-                        class="m-0 p-0">
+                        class="m-0 p-0" @error="handleLottieError">
                     </Vue3Lottie>
                 </div>
             </li>
@@ -42,7 +42,7 @@
                 <div v-if="greenOutline[2] && highlighted[3]" class="">
                     <div class="bg-stone-400/25 ">
                         <Vue3Lottie autoplay loop mode="normal" :animationData="fireworksJSON" style="width: 70px"
-                            class="m-0 p-0 bg-white">
+                            class="m-0 p-0 bg-white" @error="handleLottieError">
                         </Vue3Lottie>
                     </div>
                 </div>
@@ -58,7 +58,7 @@
                 </div>
                 <div v-if="greenOutline[3] && highlighted[4]" class="p-0">
                     <Vue3Lottie autoplay loop mode="normal" :animationData="fireworksJSON" style="width: 70px"
-                        class="m-0 p-0">
+                        class="m-0 p-0" @error="handleLottieError">
                     </Vue3Lottie>
                 </div>
             </li>
@@ -71,7 +71,7 @@
                 <div class="list-item-right">{{ quizItem.option5 }}</div>
                 <div v-if="greenOutline[4] && highlighted[5]" class="p-0">
                     <Vue3Lottie autoplay loop mode="normal" :animationData="fireworksJSON" style="width: 70px"
-                        class="m-0 p-0">
+                        class="m-0 p-0" @error="handleLottieError">
                     </Vue3Lottie>
                 </div>
             </li>
@@ -84,7 +84,7 @@
                 <div class="list-item-right">{{ quizItem.option6 }}</div>
                 <div v-if="greenOutline[5] && highlighted[6]" class="p-0">
                     <Vue3Lottie autoplay loop mode="normal" :animationData="fireworksJSON" style="width: 70px"
-                        class="m-0 p-0">
+                        class="m-0 p-0" @error="handleLottieError">
                     </Vue3Lottie>
                 </div>
             </li>
@@ -96,6 +96,11 @@
 import OptionIcon from "./OptionIcon.vue";
 import fireworksJSON from '../lottie/fireworks.json'
 import { quizStore } from '../stores/quizStore';
+
+// Add error handling for Lottie animations
+const handleLottieError = (error) => {
+    console.error('Error with Lottie animation:', error);
+};
 
 export default {
     name: 'MultipleChoice',

@@ -1,6 +1,8 @@
 <template>
   <div class="video-container">
     <iframe :src="youtubeEmbedUrl" frameborder="0" allowfullscreen
+      sandbox="allow-scripts allow-same-origin allow-presentation" referrerpolicy="no-referrer" loading="lazy"
+      title="YouTube video player"
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
   </div>
 </template>
@@ -16,7 +18,12 @@ export default {
   },
   computed: {
     youtubeEmbedUrl() {
-      return `https://www.youtube.com/embed/${this.videoId}`
+      try {
+        return `https://www.youtube.com/embed/${this.videoId}`;
+      } catch (error) {
+        console.error('Error creating YouTube embed URL:', error);
+        return '';
+      }
     }
   }
 }
