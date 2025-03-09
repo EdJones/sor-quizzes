@@ -11,7 +11,7 @@
         <router-link to="/" class="flex items-center">
           <img :src="logo" alt="SOR Quizzes" class="h-7 md:h-8" />
         </router-link>
-        <h1 class="text-xxl font-semibold text-gray-200 hidden md:block">
+        <h1 class="text-xxl font-semibold text-gray-200 block">
           Science of Reading Quizzes
         </h1>
       </div>
