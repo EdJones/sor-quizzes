@@ -57,11 +57,14 @@ const hasValidEmail = (score) => {
 const displayName = (score) => {
     try {
         if (!score) return 'Anonymous';
+        if (score.username) {
+            return score.username;
+        }
         if (hasValidEmail(score)) {
             // Only show the part before the @ symbol
             return score.email.split('@')[0];
         }
-        return score.displayName || 'Anonymous'; // Otherwise show the display name
+        return score.displayName || 'Anonymous';
     } catch (error) {
         console.error('Error in displayName:', error, { score });
         return 'Anonymous';

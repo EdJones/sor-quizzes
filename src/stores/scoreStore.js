@@ -126,10 +126,9 @@ export const useScoreStore = defineStore('scores', {
 
         // Fetch top scores from Firestore
         async fetchTopScoresFromFirestore() {
+            this.isLoading = true;
+            this.error = null;
             try {
-                this.isLoading = true;
-                this.error = null;
-
                 // Get the top scores document from Firestore
                 const topScoresRef = doc(db, 'topScores', 'latest');
                 const topScoresDoc = await getDoc(topScoresRef);
@@ -141,30 +140,19 @@ export const useScoreStore = defineStore('scores', {
                     // Set the total available questions
                     this.totalAvailableQuestions = data.totalAvailableQuestions || this.calculateTotalQuestions();
 
-                    // Set the last updated timestamp
-                    this.lastUpdated = data.lastUpdated?.toDate() || new Date();
-
-                    // Process the scores
-                    const scores = data.scores || [];
-
-                    // Process each score to ensure email is properly handled
-                    const processedScores = scores.map(score => {
-                        // Ensure email is properly formatted
-                        const hasValidEmail = score.email &&
-                            score.email !== 'Anonymous' &&
-                            !score.email?.includes('undefined') &&
-                            score.email.includes('@');
-
-                        // If it has a valid email, use it for the display name
-                        if (hasValidEmail) {
-                            return {
-                                ...score,
-                                displayName: score.email // Use email as display name for consistency
-                            };
-                        }
-
-                        return score;
-                    });
+                    // Get all user documents for the scores to fetch usernames
+                    const processedScores = await Promise.all(
+                        (data.scores || []).map(async (score) => {
+                            if (score.userId) {
+                                const userDoc = await getDoc(doc(db, 'users', score.userId));
+                                return {
+                                    ...score,
+                                    username: userDoc.exists() ? userDoc.data().username : null
+                                };
+                            }
+                            return score;
+                        })
+                    );
 
                     // Store all scores
                     this.allScores = processedScores;
@@ -172,49 +160,16 @@ export const useScoreStore = defineStore('scores', {
                     // Only show top 5 in the list
                     this.topScores = processedScores.slice(0, 5);
 
-                    console.log('Top scores loaded from Firestore successfully');
-
-                    // If the current user is logged in, check if they're in the scores
-                    const authStore = useAuthStore();
-                    if (authStore.user?.uid) {
-                        const userScoreRef = doc(db, 'userScores', authStore.user.uid);
-                        const userScoreDoc = await getDoc(userScoreRef);
-
-                        if (userScoreDoc.exists()) {
-                            const userData = userScoreDoc.data();
-                            console.log('Current user score from Firestore:', userData);
-
-                            // Check if the user is already in the scores
-                            const userInScores = this.allScores.some(score => score.userId === authStore.user.uid);
-
-                            if (!userInScores) {
-                                // Add the current user to the scores
-                                const userScore = {
-                                    userId: authStore.user.uid,
-                                    displayName: userData.displayName || this.formatDisplayName(authStore.user.email),
-                                    email: userData.email || authStore.user.email,
-                                    totalScore: userData.totalScore || 0,
-                                    quizCount: userData.quizCount || 0,
-                                    isCurrentUser: true
-                                };
-
-                                this.allScores.push(userScore);
-
-                                // Re-sort the scores
-                                this.allScores.sort((a, b) => b.totalScore - a.totalScore);
-                            }
-                        }
-                    }
-
-                    return true;
+                    this.lastUpdated = data.lastUpdated?.toDate() || new Date();
+                    console.log('Processed scores:', this.topScores);
                 } else {
-                    console.log('No top scores document found in Firestore, will calculate scores');
-                    return false;
+                    console.log('No top scores document found in Firestore');
+                    this.topScores = [];
+                    this.allScores = [];
                 }
-            } catch (err) {
-                console.error('Error fetching top scores from Firestore:', err);
-                this.error = 'Failed to load scores';
-                return false;
+            } catch (error) {
+                console.error('Error fetching top scores:', error);
+                this.error = error.message;
             } finally {
                 this.isLoading = false;
             }
@@ -225,9 +180,9 @@ export const useScoreStore = defineStore('scores', {
             try {
                 console.log(`Checking if user ${userId} is now a top scorer with score ${score} on quiz ${quizId}`);
 
-                // First, get the current top scores
-                const topScoresRef = doc(db, 'topScores', 'latest');
-                const topScoresDoc = await getDoc(topScoresRef);
+                // Get the user's document to fetch the username
+                const userDoc = await getDoc(doc(db, 'users', userId));
+                const username = userDoc.exists() ? userDoc.data().username : null;
 
                 // Get the user's current score document
                 const userScoreRef = doc(db, 'userScores', userId);
@@ -235,17 +190,13 @@ export const useScoreStore = defineStore('scores', {
 
                 let userTotalScore = 0;
                 let userQuizCount = 0;
-                let displayName = 'Anonymous';
+                let displayName = username || this.formatDisplayName(userEmail);
 
                 // If user already has a score document, use that data
                 if (userScoreDoc.exists()) {
                     const userData = userScoreDoc.data();
                     userTotalScore = userData.totalScore || 0;
                     userQuizCount = userData.quizCount || 0;
-                    displayName = userData.displayName || this.formatDisplayName(userEmail);
-                } else {
-                    // Otherwise, format the display name from the email
-                    displayName = this.formatDisplayName(userEmail);
                 }
 
                 // Add the new score
@@ -256,60 +207,66 @@ export const useScoreStore = defineStore('scores', {
                 await setDoc(userScoreRef, {
                     userId,
                     displayName,
+                    username,
                     email: userEmail,
                     totalScore: userTotalScore,
                     quizCount: userQuizCount,
                     lastUpdated: serverTimestamp()
                 }, { merge: true });
 
-                // If we have top scores, check if the user is now a top scorer
+                // Get the current top scores document
+                const topScoresRef = doc(db, 'topScores', 'latest');
+                const topScoresDoc = await getDoc(topScoresRef);
+                const totalAvailableQs = this.calculateTotalQuestions();
+
+                let scores = [];
                 if (topScoresDoc.exists()) {
-                    const data = topScoresDoc.data();
-                    const scores = data.scores || [];
-                    const totalAvailableQs = data.totalAvailableQuestions || this.calculateTotalQuestions();
-
-                    // Find if the user is already in the scores
-                    const userScoreIndex = scores.findIndex(s => s.userId === userId);
-
-                    if (userScoreIndex >= 0) {
-                        // Update the user's score
-                        scores[userScoreIndex].totalScore = userTotalScore;
-                        scores[userScoreIndex].quizCount = userQuizCount;
-                        scores[userScoreIndex].displayName = displayName;
-                        scores[userScoreIndex].email = userEmail;
-                    } else {
-                        // Add the user to the scores
-                        scores.push({
-                            userId,
-                            displayName,
-                            email: userEmail,
-                            totalScore: userTotalScore,
-                            quizCount: userQuizCount,
-                            lastUpdated: new Date()
-                        });
-                    }
-
-                    // Sort the scores
-                    scores.sort((a, b) => b.totalScore - a.totalScore);
-
-                    // Save the updated scores
-                    await setDoc(topScoresRef, {
-                        scores,
-                        totalAvailableQuestions: totalAvailableQs,
-                        lastUpdated: serverTimestamp()
-                    });
-
-                    console.log('Top scores updated successfully after quiz completion');
-
-                    // Refresh the store's data
-                    await this.fetchTopScoresFromFirestore();
-
-                    return true;
-                } else {
-                    // If no top scores document exists yet, recalculate from scratch
-                    await this.fetchTopScores();
-                    return true;
+                    scores = topScoresDoc.data().scores || [];
                 }
+
+                // Find if the user is already in the scores
+                const userScoreIndex = scores.findIndex(s => s.userId === userId);
+
+                if (userScoreIndex >= 0) {
+                    // Update the user's score
+                    scores[userScoreIndex] = {
+                        ...scores[userScoreIndex],
+                        totalScore: userTotalScore,
+                        quizCount: userQuizCount,
+                        displayName,
+                        username,
+                        email: userEmail,
+                        lastUpdated: new Date()
+                    };
+                } else {
+                    // Add the user to the scores
+                    scores.push({
+                        userId,
+                        displayName,
+                        username,
+                        email: userEmail,
+                        totalScore: userTotalScore,
+                        quizCount: userQuizCount,
+                        lastUpdated: new Date()
+                    });
+                }
+
+                // Sort the scores
+                scores.sort((a, b) => b.totalScore - a.totalScore);
+
+                // Save the updated scores
+                await setDoc(topScoresRef, {
+                    scores,
+                    totalAvailableQuestions: totalAvailableQs,
+                    lastUpdated: serverTimestamp()
+                });
+
+                console.log('Top scores updated successfully after quiz completion');
+
+                // Refresh the store's data
+                await this.fetchTopScoresFromFirestore();
+
+                return true;
             } catch (err) {
                 console.error('Error checking and updating top scores:', err);
                 this.error = 'Failed to update scores';
