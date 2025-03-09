@@ -63,7 +63,7 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <h3 class="font-medium text-gray-900 dark:text-white">{{ item.title || 'Untitled Question'
-                                }}</h3>
+                            }}</h3>
                             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ item.Question }}</p>
                         </div>
                         <div class="flex items-center gap-2">
@@ -145,10 +145,12 @@ const isLoading = ref(false);
 
 // Add this computed property to find published items by email
 const publishedItemTitles = computed(() => {
+    if (!authStore.user?.email) return new Set();
+
     // Create a Set of published item titles for O(1) lookup
     return new Set(
         quizEntries
-            .filter(qi => qi.userEmail === authStore.user?.email)
+            .filter(qi => qi.userEmail === authStore.user.email)
             .map(qi => qi.title)
     );
 });

@@ -188,6 +188,8 @@ export default {
                 // Calculate stats
                 const entries = Array.from(uniqueEntries.values());
                 userQuizItems.value = entries;
+
+                // Update contribution stats
                 contributionStats.value = {
                     total: entries.length,
                     published: entries.filter(entry => !entry.isDraft).length,
@@ -201,7 +203,8 @@ export default {
                     email: authStore.user.email,
                     uid: authStore.user.uid,
                     stats: contributionStats.value,
-                    hasContributed: hasContributed.value
+                    hasContributed: hasContributed.value,
+                    entries: entries.length
                 });
             } catch (error) {
                 console.error('Error fetching contributor status:', error);
@@ -243,22 +246,41 @@ export default {
 
         // Watch for changes in userQuizItems and update stats
         watch([userQuizItems, () => authStore.user?.email], () => {
-            const published = quizEntries.filter(item =>
-                item.userEmail === authStore.user?.email
-            ).length;
+            if (!authStore.user?.email) return;
 
-            const draft = userQuizItems.value.filter(item =>
+            // Get published items by matching the full email
+            const publishedItems = quizEntries.filter(item =>
+                item.userEmail === authStore.user.email
+            );
+            const published = publishedItems.length;
+
+            console.log('Published items found:', {
+                email: authStore.user.email,
+                count: published,
+                items: publishedItems.map(item => item.title)
+            });
+
+            // Get draft items by checking if they're not in the published list
+            const draftItems = userQuizItems.value.filter(item =>
                 !quizEntries.some(qi =>
-                    qi.userEmail === authStore.user?.email &&
+                    qi.userEmail === authStore.user.email &&
                     qi.title === item.title
                 )
-            ).length;
+            );
+            const draft = draftItems.length;
+
+            console.log('Draft items found:', {
+                count: draft,
+                items: draftItems.map(item => item.title)
+            });
 
             contributionStats.value = {
                 total: published + draft,
                 published,
                 draft
             };
+
+            console.log('Updated contribution stats:', contributionStats.value);
         });
 
         const displayName = computed(() => {
