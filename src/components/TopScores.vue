@@ -222,6 +222,102 @@ const fetchTopScoresFromFirestore = async () => {
     }
 };
 
+// Check and update top scores when a quiz is completed
+const checkAndUpdateTopScores = async (userId, quizId, score, userEmail) => {
+    try {
+        console.log(`Checking if user ${userId} is now a top scorer with score ${score} on quiz ${quizId}`);
+
+        // First, get the current top scores
+        const topScoresRef = doc(db, 'topScores', 'latest');
+        const topScoresDoc = await getDoc(topScoresRef);
+
+        // Get the user's current score document
+        const userScoreRef = doc(db, 'userScores', userId);
+        const userScoreDoc = await getDoc(userScoreRef);
+
+        let userTotalScore = 0;
+        let userQuizCount = 0;
+        let displayName = 'Anonymous';
+
+        // If user already has a score document, use that data
+        if (userScoreDoc.exists()) {
+            const userData = userScoreDoc.data();
+            userTotalScore = userData.totalScore || 0;
+            userQuizCount = userData.quizCount || 0;
+            displayName = userData.displayName || formatDisplayName(userEmail);
+        } else {
+            // Otherwise, format the display name from the email
+            displayName = formatDisplayName(userEmail);
+        }
+
+        // Add the new score
+        userTotalScore += score;
+        userQuizCount += 1;
+
+        // Update the user's score document
+        await setDoc(userScoreRef, {
+            userId,
+            displayName,
+            email: userEmail,
+            totalScore: userTotalScore,
+            quizCount: userQuizCount,
+            lastUpdated: serverTimestamp()
+        }, { merge: true });
+
+        // If we have top scores, check if the user is now a top scorer
+        if (topScoresDoc.exists()) {
+            const data = topScoresDoc.data();
+            const scores = data.scores || [];
+            const totalAvailableQs = data.totalAvailableQuestions || calculateTotalQuestions();
+
+            // Find if the user is already in the scores
+            const userScoreIndex = scores.findIndex(s => s.userId === userId);
+
+            if (userScoreIndex >= 0) {
+                // Update the user's score
+                scores[userScoreIndex].totalScore = userTotalScore;
+                scores[userScoreIndex].quizCount = userQuizCount;
+                scores[userScoreIndex].displayName = displayName;
+                scores[userScoreIndex].email = userEmail;
+            } else {
+                // Add the user to the scores
+                scores.push({
+                    userId,
+                    displayName,
+                    email: userEmail,
+                    totalScore: userTotalScore,
+                    quizCount: userQuizCount,
+                    lastUpdated: new Date()
+                });
+            }
+
+            // Sort the scores
+            scores.sort((a, b) => b.totalScore - a.totalScore);
+
+            // Save the updated scores
+            await setDoc(topScoresRef, {
+                scores,
+                totalAvailableQuestions: totalAvailableQs,
+                lastUpdated: serverTimestamp()
+            });
+
+            console.log('Top scores updated successfully after quiz completion');
+
+            // Refresh the component's data
+            await fetchTopScoresFromFirestore();
+
+            return true;
+        } else {
+            // If no top scores document exists yet, recalculate from scratch
+            await fetchTopScores();
+            return true;
+        }
+    } catch (err) {
+        console.error('Error checking and updating top scores:', err);
+        return false;
+    }
+};
+
 const fetchTopScores = async () => {
     try {
         isLoading.value = true;
@@ -439,6 +535,11 @@ onMounted(() => {
 watch(() => authStore.user, () => {
     fetchTopScores();
 }, { deep: true });
+
+// Export the checkAndUpdateTopScores function so it can be called from other components
+defineExpose({
+    checkAndUpdateTopScores
+});
 </script>
 
 <style scoped>
