@@ -12,8 +12,7 @@
         <div v-else class="space-y-0.3">
             <!-- Top 5 scores -->
             <div v-for="(score, index) in scoreStore.topScores" :key="index"
-                class="flex items-center justify-between text-gray-300 dark:text-gray-400"
-                :class="{ 'font-bold': score.isCurrentUser }" style="gap: 0.5rem;">
+                class="flex items-center justify-between text-gray-300 dark:text-gray-400" style="gap: 0.5rem;">
                 <div class="flex items-center gap-1">
                     <span class="text-xs w-4">{{ index + 1 }}</span>
                     <span class="truncate max-w-[120px] ">
@@ -22,7 +21,7 @@
                 </div>
                 <div class="flex items-center gap-4">
                     <span class="text-xs ">{{ score.totalScore }}/{{ scoreStore.totalAvailableQuestions
-                        }}</span>
+                    }}</span>
                 </div>
             </div>
 
@@ -56,18 +55,18 @@ const hasValidEmail = (score) => {
 // Helper function to display the name or email
 const displayName = (score) => {
     try {
-        if (!score) return 'Anonymous';
+        if (!score) return 'Anon_user';
         if (score.username) {
             return score.username;
         }
-        if (hasValidEmail(score)) {
-            // Only show the part before the @ symbol
+        if (score.email && score.email !== 'Anonymous' && !score.email.includes('undefined') && score.email.includes('@')) {
             return score.email.split('@')[0];
         }
-        return score.displayName || 'Anonymous';
+        // Always generate Anon_ format for anonymous users, ignore stored displayName
+        return `Anon_${score.userId?.substring(0, 6) || 'user'}`;
     } catch (error) {
         console.error('Error in displayName:', error, { score });
-        return 'Anonymous';
+        return 'Anon_user';
     }
 };
 

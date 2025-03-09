@@ -48,15 +48,15 @@ export const useScoreStore = defineStore('scores', {
     actions: {
         // Format display name from email
         formatDisplayName(email) {
-            if (!email || email === 'Anonymous') return 'Anonymous';
+            if (!email || email === 'Anonymous') return 'Anon_user';
 
             // If it's a valid email, only show the part before the @ symbol
             if (email.includes('@') && !email.includes('undefined')) {
                 return email.split('@')[0];
             }
 
-            // Otherwise return the email as is
-            return email;
+            // Otherwise return the email as is, or Anon_user if it's Anonymous
+            return email === 'Anonymous' ? 'Anon_user' : email;
         },
 
         // Calculate total questions from all published quiz sets
@@ -145,12 +145,28 @@ export const useScoreStore = defineStore('scores', {
                         (data.scores || []).map(async (score) => {
                             if (score.userId) {
                                 const userDoc = await getDoc(doc(db, 'users', score.userId));
+                                const username = userDoc.exists() ? userDoc.data().username : null;
+
+                                // Format display name consistently
+                                let displayName;
+                                if (username) {
+                                    displayName = username;
+                                } else if (score.email && score.email !== 'Anonymous' && !score.email.includes('undefined') && score.email.includes('@')) {
+                                    displayName = this.formatDisplayName(score.email);
+                                } else {
+                                    displayName = `Anon_${score.userId.substring(0, 6)}...`;
+                                }
+
                                 return {
                                     ...score,
-                                    username: userDoc.exists() ? userDoc.data().username : null
+                                    username,
+                                    displayName
                                 };
                             }
-                            return score;
+                            return {
+                                ...score,
+                                displayName: score.userId ? `Anon_${score.userId.substring(0, 6)}...` : 'Anon_user'
+                            };
                         })
                     );
 
@@ -190,7 +206,16 @@ export const useScoreStore = defineStore('scores', {
 
                 let userTotalScore = 0;
                 let userQuizCount = 0;
-                let displayName = username || this.formatDisplayName(userEmail);
+                let displayName;
+
+                // Set display name with preference order: username > email > anonymous format
+                if (username) {
+                    displayName = username;
+                } else if (userEmail && userEmail !== 'Anonymous' && !userEmail.includes('undefined') && userEmail.includes('@')) {
+                    displayName = this.formatDisplayName(userEmail);
+                } else {
+                    displayName = `Anon_${userId.substring(0, 6)}...`;
+                }
 
                 // If user already has a score document, use that data
                 if (userScoreDoc.exists()) {
