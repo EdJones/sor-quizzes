@@ -24,24 +24,7 @@
                 </div>
             </div>
 
-            <!-- Divider line -->
-            <div v-if="edJonesScore" class="border-t border-gray-700 my-1 pt-1"></div>
-
-            <!-- Ed Jones score -->
-            <div v-if="edJonesScore"
-                class="flex items-center justify-between text-gray-300 dark:text-gray-400 font-bold">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs w-4">{{ edJonesRank }}</span>
-                    <span class="truncate max-w-[120px]">ed.jones</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-yellow-400">{{ edJonesScore.totalScore }}</span>
-                    <span class="text-xs text-gray-500">({{ edJonesScore.totalScore }}/{{ totalAvailableQuestions
-                        }})</span>
-                </div>
-            </div>
-
-            <!-- Next user with email (other than ed.jones) -->
+            <!-- Next user with email -->
             <div v-if="nextEmailUser" class="border-t border-gray-700 my-1 pt-1"></div>
             <div v-if="nextEmailUser" class="flex items-center justify-between text-gray-300 dark:text-gray-400">
                 <div class="flex items-center gap-2">
@@ -56,7 +39,7 @@
                 <div class="flex items-center gap-2">
                     <span class="text-yellow-400">{{ nextEmailUser.totalScore }}</span>
                     <span class="text-xs text-gray-500">({{ nextEmailUser.totalScore }}/{{ totalAvailableQuestions
-                        }})</span>
+                    }})</span>
                 </div>
             </div>
         </div>
@@ -71,7 +54,7 @@ import { useAuthStore } from '../stores/authStore';
 import { quizSets } from '../data/quizSets';
 
 const topScores = ref([]);
-const allScores = ref([]); // Store all scores to find Ed Jones' rank
+const allScores = ref([]); // Store all scores
 const isLoading = ref(true);
 const error = ref(null);
 const authStore = useAuthStore();
@@ -83,25 +66,7 @@ const formatDisplayName = (email) => {
     return email.split('@')[0];
 };
 
-// Find Ed Jones' score
-const edJonesScore = computed(() => {
-    return allScores.value.find(score =>
-        score.displayName === 'ed.jones' ||
-        score.email === 'ed.jones@gmail.com'
-    );
-});
-
-// Calculate Ed Jones' rank
-const edJonesRank = computed(() => {
-    if (!edJonesScore.value) return '';
-    const rank = allScores.value.findIndex(score =>
-        score.displayName === 'ed.jones' ||
-        score.email === 'ed.jones@gmail.com'
-    ) + 1;
-    return rank;
-});
-
-// Find the next user with an email (other than ed.jones@gmail.com)
+// Find the next user with an email
 const nextEmailUser = computed(() => {
     // Log all users with their email information for debugging
     console.log('All users with email info:', allScores.value.map(score => ({
@@ -109,15 +74,13 @@ const nextEmailUser = computed(() => {
         email: score.email,
         hasEmail: !!score.email,
         isAnonymous: score.email === 'Anonymous',
-        isEdJones: score.email === 'ed.jones@gmail.com',
         containsUndefined: score.email?.includes('undefined')
     })));
 
-    // Filter users with emails other than ed.jones@gmail.com
+    // Filter users with valid emails
     const usersWithEmail = allScores.value.filter(score =>
         score.email &&
         score.email !== 'Anonymous' &&
-        score.email !== 'ed.jones@gmail.com' &&
         !score.email?.includes('undefined')
     );
 
@@ -230,7 +193,6 @@ const fetchTopScores = async () => {
         userQuizAttempts.forEach((attempt, key) => {
             const userId = attempt.userId;
             const isCurrentUser = userId === authStore.user?.uid;
-            const isEdJones = attempt.userEmail === 'ed.jones@gmail.com';
 
             if (!userScores.has(userId)) {
                 userScores.set(userId, {
@@ -239,7 +201,6 @@ const fetchTopScores = async () => {
                     totalScore: 0,
                     quizCount: 0,
                     isCurrentUser,
-                    isEdJones,
                     userId,
                     quizzes: new Set()
                 });
@@ -272,7 +233,6 @@ const fetchTopScores = async () => {
                 totalScore: 0,
                 quizCount: 0,
                 isCurrentUser: true,
-                isEdJones: authStore.user.email === 'ed.jones@gmail.com',
                 userId: authStore.user.uid,
                 quizzes: new Set()
             });
@@ -290,37 +250,17 @@ const fetchTopScores = async () => {
             }
         }
 
-        // Special handling for Ed Jones if not already in the list
-        const hasEdJones = Array.from(userScores.values()).some(
-            score => score.email === 'ed.jones@gmail.com' || score.displayName === 'ed.jones'
-        );
-
-        if (!hasEdJones) {
-            // Create a placeholder for Ed Jones with zero score
-            userScores.set('ed_jones_placeholder', {
-                displayName: 'ed.jones',
-                email: 'ed.jones@gmail.com',
-                totalScore: 0,
-                quizCount: 0,
-                isCurrentUser: authStore.user?.email === 'ed.jones@gmail.com',
-                isEdJones: true,
-                userId: 'ed_jones_placeholder',
-                quizzes: new Set()
-            });
-        }
-
         // Convert to array and sort by total score
         let scores = Array.from(userScores.values())
-            .filter(score => score.quizCount >= 1 || score.isCurrentUser || score.isEdJones)
+            .filter(score => score.quizCount >= 1 || score.isCurrentUser)
             .sort((a, b) => b.totalScore - a.totalScore);
 
         console.log('Final sorted scores:', scores);
 
-        // Check if we have any users with emails other than ed.jones
+        // Check if we have any users with emails
         const hasEmailUsers = scores.some(score =>
             score.email &&
             score.email !== 'Anonymous' &&
-            score.email !== 'ed.jones@gmail.com' &&
             !score.email?.includes('undefined')
         );
 
@@ -333,7 +273,6 @@ const fetchTopScores = async () => {
                 totalScore: Math.floor(Math.random() * 20) + 10, // Random score between 10-30
                 quizCount: 1,
                 isCurrentUser: false,
-                isEdJones: false,
                 userId: 'test_user_id',
                 quizzes: new Set(['general'])
             });
