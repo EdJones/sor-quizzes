@@ -12,15 +12,14 @@
         <div v-else class="space-y-1">
             <!-- Top 5 scores -->
             <div v-for="(score, index) in topScores" :key="index"
-                class="flex items-center justify-between text-gray-300 dark:text-gray-400"
-                :class="{ 'font-bold': score.isCurrentUser }">
+                class="flex items-center justify-between text-gray-300 dark:text-gray-400">
                 <div class="flex items-center gap-2">
                     <span class="text-xs w-4">{{ index + 1 }}</span>
                     <span class="truncate max-w-[120px]">{{ score.displayName }}</span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-yellow-400">{{ score.totalScore }}</span>
-                    <span class="text-xs text-gray-500">({{ score.totalScore }}/{{ totalAvailableQuestions }})</span>
+                <div class="flex items-center gap-4">
+
+                    <span class="text-xs text-gray-500">{{ score.totalScore }}/{{ totalAvailableQuestions }}</span>
                 </div>
             </div>
 
@@ -28,18 +27,11 @@
             <div v-if="nextEmailUser" class="border-t border-gray-700 my-1 pt-1"></div>
             <div v-if="nextEmailUser" class="flex items-center justify-between text-gray-300 dark:text-gray-400">
                 <div class="flex items-center gap-2">
-                    <span class="text-xs w-4">
-                        <svg class="h-3 w-3 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                    </span>
-                    <span class="truncate max-w-[120px] text-yellow-400">{{ nextEmailUser.email }}</span>
+
+
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-yellow-400">{{ nextEmailUser.totalScore }}</span>
-                    <span class="text-xs text-gray-500">({{ nextEmailUser.totalScore }}/{{ totalAvailableQuestions
-                    }})</span>
+
                 </div>
             </div>
         </div>
@@ -48,7 +40,17 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue';
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+import {
+    collection,
+    getDocs,
+    query,
+    where,
+    orderBy,
+    limit,
+    doc,
+    setDoc,
+    serverTimestamp
+} from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuthStore } from '../stores/authStore';
 import { quizSets } from '../data/quizSets';
@@ -99,6 +101,59 @@ const calculateTotalQuestions = () => {
         }
     });
     return total;
+};
+
+// Save top scores to Firestore
+const saveTopScoresToFirestore = async (scores) => {
+    try {
+        console.log('Saving top scores to Firestore:', scores);
+
+        // Get current timestamp as a Date object instead of serverTimestamp()
+        const now = new Date();
+
+        // Create a document in the topScores collection
+        const topScoresRef = doc(db, 'topScores', 'latest');
+
+        // Prepare the data to save
+        const topScoresData = {
+            scores: scores.map(score => ({
+                userId: score.userId,
+                displayName: score.displayName,
+                email: score.email,
+                totalScore: score.totalScore,
+                quizCount: score.quizCount,
+                // Use a regular Date object instead of serverTimestamp()
+                lastUpdated: now
+            })),
+            totalAvailableQuestions: totalAvailableQuestions.value,
+            // Use serverTimestamp() only at the top level
+            lastUpdated: serverTimestamp()
+        };
+
+        // Save to Firestore
+        await setDoc(topScoresRef, topScoresData);
+        console.log('Top scores saved successfully');
+
+        // Also save individual user scores
+        for (const score of scores) {
+            if (score.userId) {
+                const userScoreRef = doc(db, 'userScores', score.userId);
+                await setDoc(userScoreRef, {
+                    userId: score.userId,
+                    displayName: score.displayName,
+                    email: score.email,
+                    totalScore: score.totalScore,
+                    quizCount: score.quizCount,
+                    // This is fine because it's not in an array
+                    lastUpdated: serverTimestamp()
+                }, { merge: true }); // Use merge to update only these fields
+            }
+        }
+        console.log('Individual user scores saved successfully');
+
+    } catch (err) {
+        console.error('Error saving top scores to Firestore:', err);
+    }
 };
 
 const fetchTopScores = async () => {
@@ -286,6 +341,10 @@ const fetchTopScores = async () => {
 
         // Only show top 5 in the list
         topScores.value = scores.slice(0, 5);
+
+        // Save top scores to Firestore
+        await saveTopScoresToFirestore(scores);
+
     } catch (err) {
         console.error('Error fetching top scores:', err);
         error.value = 'Failed to load top scores';
