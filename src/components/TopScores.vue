@@ -22,7 +22,7 @@
                 </div>
                 <div class="flex items-center gap-4">
                     <span class="text-xs text-gray-500">{{ score.totalScore }}/{{ scoreStore.totalAvailableQuestions
-                    }}</span>
+                        }}</span>
                 </div>
             </div>
 
@@ -37,13 +37,15 @@
                                 d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                     </span>
-                    <span class="truncate max-w-[120px] text-yellow-400">{{ scoreStore.nextEmailUser.email }}</span>
+                    <span class="truncate max-w-[120px] text-yellow-400">
+                        {{ scoreStore.nextEmailUser.email.split('@')[0] }}
+                    </span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="text-yellow-400">{{ scoreStore.nextEmailUser.totalScore }}</span>
                     <span class="text-xs text-gray-500">({{ scoreStore.nextEmailUser.totalScore }}/{{
                         scoreStore.totalAvailableQuestions
-                    }})</span>
+                        }})</span>
                 </div>
             </div>
         </div>
@@ -77,7 +79,8 @@ const displayName = (score) => {
     try {
         if (!score) return 'Anonymous';
         if (hasValidEmail(score)) {
-            return score.email; // Show the full email if it's valid
+            // Only show the part before the @ symbol
+            return score.email.split('@')[0];
         }
         return score.displayName || 'Anonymous'; // Otherwise show the display name
     } catch (error) {

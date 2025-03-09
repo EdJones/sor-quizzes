@@ -50,13 +50,13 @@ export const useScoreStore = defineStore('scores', {
         formatDisplayName(email) {
             if (!email || email === 'Anonymous') return 'Anonymous';
 
-            // If it's a valid email, show the full email
+            // If it's a valid email, only show the part before the @ symbol
             if (email.includes('@') && !email.includes('undefined')) {
-                return email; // Return the full email address
+                return email.split('@')[0];
             }
 
-            // Otherwise just return the part before the @ symbol
-            return email.split('@')[0];
+            // Otherwise return the email as is
+            return email;
         },
 
         // Calculate total questions from all published quiz sets
