@@ -29,6 +29,13 @@
                     <span class="text-gray-600">
                         {{ displayName }}
                     </span>
+                    <!-- Settings Gear Icon -->
+                    <svg @click="showUserProfile = true"
+                        class="h-4 w-4 text-gray-600 cursor-pointer hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 10c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-14c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8z" />
+                    </svg>
                     <!-- Contributor Badge -->
                     <button v-if="hasContributed" @click="showContributions = true"
                         class="ml-2 px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 rounded-full flex items-center gap-1 hover:bg-amber-200 dark:hover:bg-amber-800 transition-colors">
@@ -122,6 +129,9 @@
 
         <!-- Contributions Modal -->
         <ContributionsModal :show="showContributions" @close="showContributions = false" />
+
+        <!-- User Profile Modal -->
+        <UserProfileModal :show="showUserProfile" @close="showUserProfile = false" />
     </div>
 </template>
 
@@ -135,12 +145,14 @@ import ContributionsModal from './ContributionsModal.vue';
 import { doc, getDoc, query, collection, getDocs, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { quizEntries } from '../data/quiz-items';
+import UserProfileModal from './UserProfileModal.vue';
 
 export default {
     name: 'UserStatus',
     components: {
         ProgressDetailsPopup,
-        ContributionsModal
+        ContributionsModal,
+        UserProfileModal
     },
     setup() {
         const authStore = useAuthStore();
@@ -156,6 +168,7 @@ export default {
             published: 0,
             draft: 0
         });
+        const showUserProfile = ref(false);
 
         const fetchContributorStatus = async () => {
             if (!authStore.user || authStore.user.isAnonymous) return;
@@ -323,7 +336,8 @@ export default {
             toggleContributorMode,
             hasContributed,
             contributionStats,
-            userQuizItems
+            userQuizItems,
+            showUserProfile
         };
     }
 };

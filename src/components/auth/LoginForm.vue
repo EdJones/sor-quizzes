@@ -9,10 +9,16 @@
           class="mt-1 block w-full rounded-md border-gray-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900" />
       </div>
 
+
       <div>
         <label class="block text-sm font-medium text-gray-700">Password</label>
         <input type="password" v-model="password" required
           class="mt-1 block w-full rounded-md border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Username</label>
+        <input type="text" v-model="username" required
+          class="mt-1 block w-full rounded-md border-gray-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900" />
       </div>
 
       <div v-if="error" class="text-red-500 text-sm">{{ error }}</div>
@@ -53,6 +59,7 @@
 import { ref } from 'vue';
 import { useAuthStore } from '../../stores/authStore';
 import { useRouter } from 'vue-router';
+import { names } from '../../data/names';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -61,6 +68,14 @@ const email = ref('');
 const password = ref('');
 const error = ref('');
 const isRegister = ref(false);
+
+const generateUniqueUsername = () => {
+  const randomName = names[Math.floor(Math.random() * names.length)];
+  const randomNumber = Math.floor(Math.random() * 1000); // Random number between 0 and 999
+  return `${randomName}${randomNumber}`;
+};
+
+const username = ref(generateUniqueUsername());
 
 const handleSubmit = async () => {
   try {
