@@ -9,45 +9,24 @@
         </div>
         <div v-if="scoreStore.isLoading" class="text-gray-400 text-xs">Loading...</div>
         <div v-else-if="scoreStore.error" class="text-red-400 text-xs">{{ scoreStore.error }}</div>
-        <div v-else class="space-y-1">
+        <div v-else class="space-y-0.3">
             <!-- Top 5 scores -->
             <div v-for="(score, index) in scoreStore.topScores" :key="index"
                 class="flex items-center justify-between text-gray-300 dark:text-gray-400"
-                :class="{ 'font-bold': score.isCurrentUser }">
-                <div class="flex items-center gap-2">
+                :class="{ 'font-bold': score.isCurrentUser }" style="gap: 0.5rem;">
+                <div class="flex items-center gap-1">
                     <span class="text-xs w-4">{{ index + 1 }}</span>
-                    <span class="truncate max-w-[120px]" :class="{ 'text-yellow-400': hasValidEmail(score) }">
+                    <span class="truncate max-w-[120px] ">
                         {{ displayName(score) }}
                     </span>
                 </div>
                 <div class="flex items-center gap-4">
-                    <span class="text-xs text-gray-500">{{ score.totalScore }}/{{ scoreStore.totalAvailableQuestions
+                    <span class="text-xs ">{{ score.totalScore }}/{{ scoreStore.totalAvailableQuestions
                         }}</span>
                 </div>
             </div>
 
             <!-- Next user with email (not in top 5) -->
-            <div v-if="scoreStore.nextEmailUser" class="border-t border-gray-700 my-1 pt-1"></div>
-            <div v-if="scoreStore.nextEmailUser"
-                class="flex items-center justify-between text-gray-300 dark:text-gray-400">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs w-4">
-                        <svg class="h-3 w-3 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                    </span>
-                    <span class="truncate max-w-[120px] text-yellow-400">
-                        {{ scoreStore.nextEmailUser.email.split('@')[0] }}
-                    </span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-yellow-400">{{ scoreStore.nextEmailUser.totalScore }}</span>
-                    <span class="text-xs text-gray-500">({{ scoreStore.nextEmailUser.totalScore }}/{{
-                        scoreStore.totalAvailableQuestions
-                        }})</span>
-                </div>
-            </div>
         </div>
     </div>
 </template>
