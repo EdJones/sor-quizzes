@@ -109,4 +109,18 @@ onMounted(async () => {
   max-width: 1200px;
   margin: 0 auto;
 }
+
+header {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  h1 {
+    font-size: 1.25rem;
+  }
+
+  img {
+    height: 1.5rem;
+  }
+}
 </style>
