@@ -16,7 +16,9 @@
                 :class="{ 'font-bold': score.isCurrentUser }">
                 <div class="flex items-center gap-2">
                     <span class="text-xs w-4">{{ index + 1 }}</span>
-                    <span class="truncate max-w-[120px]">{{ score.displayName }}</span>
+                    <span class="truncate max-w-[120px]" :class="{ 'text-yellow-400': hasValidEmail(score) }">
+                        {{ displayName(score) }}
+                    </span>
                 </div>
                 <div class="flex items-center gap-4">
                     <span class="text-xs text-gray-500">{{ score.totalScore }}/{{ scoreStore.totalAvailableQuestions
@@ -24,7 +26,7 @@
                 </div>
             </div>
 
-            <!-- Next user with email -->
+            <!-- Next user with email (not in top 5) -->
             <div v-if="scoreStore.nextEmailUser" class="border-t border-gray-700 my-1 pt-1"></div>
             <div v-if="scoreStore.nextEmailUser"
                 class="flex items-center justify-between text-gray-300 dark:text-gray-400">
@@ -40,7 +42,8 @@
                 <div class="flex items-center gap-2">
                     <span class="text-yellow-400">{{ scoreStore.nextEmailUser.totalScore }}</span>
                     <span class="text-xs text-gray-500">({{ scoreStore.nextEmailUser.totalScore }}/{{
-                        scoreStore.totalAvailableQuestions }})</span>
+                        scoreStore.totalAvailableQuestions
+                    }})</span>
                 </div>
             </div>
         </div>
@@ -55,14 +58,58 @@ import { useScoreStore } from '../stores/scoreStore';
 const authStore = useAuthStore();
 const scoreStore = useScoreStore();
 
+// Helper function to check if a score has a valid email
+const hasValidEmail = (score) => {
+    try {
+        if (!score) return false;
+        return score.email &&
+            score.email !== 'Anonymous' &&
+            !score.email?.includes('undefined') &&
+            score.email.includes('@');
+    } catch (error) {
+        console.error('Error in hasValidEmail:', error, { score });
+        return false;
+    }
+};
+
+// Helper function to display the name or email
+const displayName = (score) => {
+    try {
+        if (!score) return 'Anonymous';
+        if (hasValidEmail(score)) {
+            return score.email; // Show the full email if it's valid
+        }
+        return score.displayName || 'Anonymous'; // Otherwise show the display name
+    } catch (error) {
+        console.error('Error in displayName:', error, { score });
+        return 'Anonymous';
+    }
+};
+
 // Fetch scores on mount
 onMounted(() => {
-    scoreStore.fetchTopScores();
+    try {
+        scoreStore.fetchTopScores().catch(error => {
+            console.error('Error fetching top scores:', error);
+            // Handle specific cross-origin errors
+            if (error.name === 'SecurityError') {
+                console.warn('Cross-origin security error detected. This may be due to iframe interactions.');
+            }
+        });
+    } catch (error) {
+        console.error('Error in TopScores component:', error);
+    }
 });
 
 // Re-fetch when auth state changes
 watch(() => authStore.user, () => {
-    scoreStore.fetchTopScores();
+    try {
+        scoreStore.fetchTopScores().catch(error => {
+            console.error('Error fetching top scores on auth change:', error);
+        });
+    } catch (error) {
+        console.error('Error in TopScores auth watch:', error);
+    }
 }, { deep: true });
 </script>
 

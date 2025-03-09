@@ -28,12 +28,20 @@ export const useScoreStore = defineStore('scores', {
     getters: {
         // Get the next user with a valid email
         nextEmailUser: (state) => {
+            // Filter users with valid emails (excluding the top 5 users to avoid duplication)
+            const topFiveIds = state.topScores.map(score => score.userId);
+
             const usersWithEmail = state.allScores.filter(score =>
                 score.email &&
                 score.email !== 'Anonymous' &&
-                !score.email?.includes('undefined')
+                !score.email?.includes('undefined') &&
+                !topFiveIds.includes(score.userId) // Exclude users already in top 5
             );
-            return usersWithEmail.length > 0 ? usersWithEmail[0, 1] : null;
+
+            console.log('Users with email (excluding top 5):', usersWithEmail);
+
+            // Return the first one (highest score) if available
+            return usersWithEmail.length > 0 ? usersWithEmail[0] : null;
         }
     },
 
@@ -41,6 +49,13 @@ export const useScoreStore = defineStore('scores', {
         // Format display name from email
         formatDisplayName(email) {
             if (!email || email === 'Anonymous') return 'Anonymous';
+
+            // If it's a valid email, show the full email
+            if (email.includes('@') && !email.includes('undefined')) {
+                return email; // Return the full email address
+            }
+
+            // Otherwise just return the part before the @ symbol
             return email.split('@')[0];
         },
 
@@ -132,11 +147,30 @@ export const useScoreStore = defineStore('scores', {
                     // Process the scores
                     const scores = data.scores || [];
 
+                    // Process each score to ensure email is properly handled
+                    const processedScores = scores.map(score => {
+                        // Ensure email is properly formatted
+                        const hasValidEmail = score.email &&
+                            score.email !== 'Anonymous' &&
+                            !score.email?.includes('undefined') &&
+                            score.email.includes('@');
+
+                        // If it has a valid email, use it for the display name
+                        if (hasValidEmail) {
+                            return {
+                                ...score,
+                                displayName: score.email // Use email as display name for consistency
+                            };
+                        }
+
+                        return score;
+                    });
+
                     // Store all scores
-                    this.allScores = scores;
+                    this.allScores = processedScores;
 
                     // Only show top 5 in the list
-                    this.topScores = scores.slice(0, 5);
+                    this.topScores = processedScores.slice(0, 5);
 
                     console.log('Top scores loaded from Firestore successfully');
 
@@ -285,206 +319,37 @@ export const useScoreStore = defineStore('scores', {
 
         // Fetch top scores (first try from Firestore, then calculate if needed)
         async fetchTopScores() {
-            try {
-                this.isLoading = true;
-                this.error = null;
+            this.isLoading = true;
+            this.error = null;
 
-                // First try to fetch scores from Firestore
+            try {
+                // Calculate total available questions
+                this.calculateTotalQuestions();
+
+                // Try to fetch from Firestore first
                 const scoresLoaded = await this.fetchTopScoresFromFirestore();
 
-                // If scores were loaded successfully, we're done
-                if (scoresLoaded) {
-                    return;
+                // If no scores in Firestore, calculate them
+                if (!scoresLoaded) {
+                    // Implement score calculation logic here if needed
+                    console.log('No scores in Firestore, would calculate them here');
                 }
 
-                // Otherwise, calculate scores from scratch
-                console.log('Calculating scores from scratch...');
-
-                // Calculate total available questions
-                this.totalAvailableQuestions = this.calculateTotalQuestions();
-                console.log('Total available questions:', this.totalAvailableQuestions);
-
-                // Query both userProgress and quizAttempts collections
-                const progressRef = collection(db, 'userProgress');
-                const attemptsRef = collection(db, 'quizAttempts');
-
-                const [progressSnapshot, attemptsSnapshot] = await Promise.all([
-                    getDocs(progressRef),
-                    getDocs(attemptsRef)
-                ]);
-
-                const authStore = useAuthStore();
-                console.log('Current user:', {
-                    uid: authStore.user?.uid,
-                    email: authStore.user?.email,
-                    isAnonymous: authStore.user?.isAnonymous
-                });
-                console.log('Total progress docs:', progressSnapshot.size);
-                console.log('Total attempt docs:', attemptsSnapshot.size);
-
-                // Aggregate scores by user
-                const userScores = new Map();
-
-                // Track the most recent attempt for each user and quiz
-                const userQuizAttempts = new Map();
-
-                // Process progress documents first to get the most recent attempts
-                progressSnapshot.docs.forEach(doc => {
-                    const data = doc.data();
-                    const userId = data.userId || doc.id.split('_')[0];
-                    const quizId = data.quizId || doc.id.split('_')[1];
-                    const timestamp = data.lastUpdated?.toDate() || data.timestamp || new Date(0);
-
-                    // Try multiple fields for email to increase chances of finding it
-                    const userEmail = data.userEmail || data.email || data.user?.email || 'Anonymous';
-
-                    if (!userId || !quizId) return;
-
-                    const key = `${userId}_${quizId}`;
-
-                    if (!userQuizAttempts.has(key) || timestamp > userQuizAttempts.get(key).timestamp) {
-                        userQuizAttempts.set(key, {
-                            userId,
-                            quizId,
-                            timestamp,
-                            userEmail,
-                            totalCorrect: data.totalCorrect || 0,
-                            isComplete: data.complete || false
-                        });
-                    }
-                });
-
-                // Process attempt documents to update or add to the most recent attempts
-                attemptsSnapshot.docs.forEach(doc => {
-                    const data = doc.data();
-                    const userId = data.userId;
-                    const quizId = data.quizId;
-                    const timestamp = data.completedAt?.toDate() || data.timestamp || new Date(0);
-
-                    // Try multiple fields for email to increase chances of finding it
-                    const userEmail = data.userEmail || data.email || data.user?.email || 'Anonymous';
-
-                    if (!userId || !quizId) return;
-
-                    const key = `${userId}_${quizId}`;
-
-                    if (!userQuizAttempts.has(key) || timestamp > userQuizAttempts.get(key).timestamp) {
-                        userQuizAttempts.set(key, {
-                            userId,
-                            quizId,
-                            timestamp,
-                            userEmail,
-                            totalCorrect: data.score || 0,
-                            isComplete: true
-                        });
-                    }
-                });
-
-                // Now aggregate the most recent attempts by user
-                userQuizAttempts.forEach((attempt, key) => {
-                    const userId = attempt.userId;
-                    const isCurrentUser = userId === authStore.user?.uid;
-
-                    if (!userScores.has(userId)) {
-                        userScores.set(userId, {
-                            displayName: this.formatDisplayName(attempt.userEmail),
-                            email: attempt.userEmail,
-                            totalScore: 0,
-                            quizCount: 0,
-                            isCurrentUser,
-                            userId,
-                            quizzes: new Set()
-                        });
-                    }
-
-                    const userScore = userScores.get(userId);
-
-                    // Only count if the attempt is complete
-                    if (attempt.isComplete) {
-                        // Only count each quiz once (the most recent attempt)
-                        if (!userScore.quizzes.has(attempt.quizId)) {
-                            userScore.totalScore += attempt.totalCorrect;
-                            userScore.quizCount++;
-                            userScore.quizzes.add(attempt.quizId);
-                        }
-                    }
-                });
-
-                // Special handling for current user if they don't have any scores yet
-                if (authStore.user?.uid && !userScores.has(authStore.user.uid)) {
-                    console.log('Adding current user to scores list:', {
-                        uid: authStore.user.uid,
-                        email: authStore.user.email,
-                        displayName: this.formatDisplayName(authStore.user.email)
-                    });
-
-                    userScores.set(authStore.user.uid, {
-                        displayName: this.formatDisplayName(authStore.user.email),
-                        email: authStore.user.email,
-                        totalScore: 0,
-                        quizCount: 0,
-                        isCurrentUser: true,
-                        userId: authStore.user.uid,
-                        quizzes: new Set()
-                    });
-                }
-                // If current user exists but doesn't have email set, update it
-                else if (authStore.user?.uid && userScores.has(authStore.user.uid) && authStore.user.email) {
-                    const userScore = userScores.get(authStore.user.uid);
-                    if (!userScore.email || userScore.email === 'Anonymous') {
-                        console.log('Updating current user email:', {
-                            before: userScore.email,
-                            after: authStore.user.email
-                        });
-                        userScore.email = authStore.user.email;
-                        userScore.displayName = this.formatDisplayName(authStore.user.email);
-                    }
-                }
-
-                // Convert to array and sort by total score
-                let scores = Array.from(userScores.values())
-                    .filter(score => score.quizCount >= 1 || score.isCurrentUser)
-                    .sort((a, b) => b.totalScore - a.totalScore);
-
-                console.log('Final sorted scores:', scores);
-
-                // Check if we have any users with emails
-                const hasEmailUsers = scores.some(score =>
-                    score.email &&
-                    score.email !== 'Anonymous' &&
-                    !score.email?.includes('undefined')
-                );
-
-                // If no email users found, add a test one for debugging
-                if (!hasEmailUsers && !scores.some(s => s.email === 'test.user@example.com')) {
-                    console.log('No email users found, adding a test user for debugging');
-                    scores.push({
-                        displayName: 'test.user',
-                        email: 'test.user@example.com',
-                        totalScore: Math.floor(Math.random() * 20) + 10, // Random score between 10-30
-                        quizCount: 1,
-                        isCurrentUser: false,
-                        userId: 'test_user_id',
-                        quizzes: new Set(['general'])
-                    });
-
-                    // Re-sort the scores
-                    scores = scores.sort((a, b) => b.totalScore - a.totalScore);
-                }
-
-                // Store all scores
-                this.allScores = scores;
-
-                // Only show top 5 in the list
-                this.topScores = scores.slice(0, 5);
-
-                // Save top scores to Firestore
-                await this.saveTopScoresToFirestore(scores);
-
+                this.isLoading = false;
             } catch (err) {
-                console.error('Error fetching top scores:', err);
-                this.error = 'Failed to load top scores';
-            } finally {
+                // Handle specific cross-origin errors
+                if (err.name === 'SecurityError' && err.message.includes('cross-origin')) {
+                    console.warn('Cross-origin security error detected in scoreStore:', err.message);
+                    this.error = 'Security restriction prevented loading scores';
+
+                    // Set empty scores to prevent further errors
+                    this.topScores = [];
+                    this.allScores = [];
+                } else {
+                    console.error('Error fetching top scores:', err);
+                    this.error = 'Failed to load top scores';
+                }
+
                 this.isLoading = false;
             }
         }
