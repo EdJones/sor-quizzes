@@ -121,6 +121,7 @@ import { quizSets } from '../data/quizSets.js'
 import { quizStore } from '../stores/quizStore'; // Import the store
 import { ref, onMounted, watch } from 'vue'
 import { useProgressStore } from '../stores/progressStore';
+import { useScoreStore } from '../stores/scoreStore'; // Import the score store
 import ProgressDetailsPopup from './ProgressDetailsPopup.vue';
 import { auth } from '../firebase';  // Add this import
 
@@ -144,6 +145,7 @@ export default {
   setup(props) {
     const store = quizStore();
     const progressStore = useProgressStore();
+    const scoreStore = useScoreStore(); // Initialize the score store
     const progressPopup = ref(null);
     const showProgressPopup = ref(false);
 
@@ -160,6 +162,7 @@ export default {
     return {
       store,
       progressStore,
+      scoreStore,
       progressPopup,
       showProgress,
       showProgressPopup
@@ -556,6 +559,20 @@ export default {
           totalQuestions: total
         });
         console.log('Quiz attempt recorded successfully');
+
+        // Check and update top scores
+        if (auth.currentUser) {
+          console.log('Updating top scores for user:', auth.currentUser.uid);
+          await this.scoreStore.checkAndUpdateTopScores(
+            auth.currentUser.uid,
+            this.selectedQuiz,
+            score,
+            auth.currentUser.email || 'Anonymous'
+          );
+          console.log('Top scores updated successfully');
+        } else {
+          console.log('User not logged in, skipping top scores update');
+        }
 
         // Save final progress using the progress store
         const progressData = {

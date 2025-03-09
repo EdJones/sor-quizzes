@@ -33,7 +33,7 @@ export const useScoreStore = defineStore('scores', {
                 score.email !== 'Anonymous' &&
                 !score.email?.includes('undefined')
             );
-            return usersWithEmail.length > 0 ? usersWithEmail[0] : null;
+            return usersWithEmail.length > 0 ? usersWithEmail[0, 1] : null;
         }
     },
 
