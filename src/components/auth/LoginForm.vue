@@ -15,7 +15,7 @@
         <input type="password" v-model="password" required
           class="mt-1 block w-full rounded-md border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900" />
       </div>
-      <div>
+      <div v-if="isRegister">
         <label class="block text-sm font-medium text-gray-700">Username</label>
         <input type="text" v-model="username" required
           class="mt-1 block w-full rounded-md border-gray-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900" />
@@ -81,7 +81,7 @@ const handleSubmit = async () => {
   try {
     error.value = '';
     if (isRegister.value) {
-      await authStore.registerWithEmail(email.value, password.value);
+      await authStore.registerWithEmail(email.value, password.value, username.value);
     } else {
       await authStore.loginWithEmail(email.value, password.value);
     }
