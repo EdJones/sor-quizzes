@@ -49,6 +49,7 @@ import {
     limit,
     doc,
     setDoc,
+    getDoc,
     serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -61,6 +62,7 @@ const isLoading = ref(true);
 const error = ref(null);
 const authStore = useAuthStore();
 const totalAvailableQuestions = ref(0);
+const lastUpdated = ref(null);
 
 // Function to format display name from email
 const formatDisplayName = (email) => {
@@ -70,23 +72,12 @@ const formatDisplayName = (email) => {
 
 // Find the next user with an email
 const nextEmailUser = computed(() => {
-    // Log all users with their email information for debugging
-    console.log('All users with email info:', allScores.value.map(score => ({
-        displayName: score.displayName,
-        email: score.email,
-        hasEmail: !!score.email,
-        isAnonymous: score.email === 'Anonymous',
-        containsUndefined: score.email?.includes('undefined')
-    })));
-
     // Filter users with valid emails
     const usersWithEmail = allScores.value.filter(score =>
         score.email &&
         score.email !== 'Anonymous' &&
         !score.email?.includes('undefined')
     );
-
-    console.log('Filtered users with valid emails:', usersWithEmail);
 
     // Return the first one (highest score) if available
     return usersWithEmail.length > 0 ? usersWithEmail[0] : null;
@@ -156,10 +147,96 @@ const saveTopScoresToFirestore = async (scores) => {
     }
 };
 
+// Fetch top scores from Firestore
+const fetchTopScoresFromFirestore = async () => {
+    try {
+        isLoading.value = true;
+        error.value = null;
+
+        // Get the top scores document from Firestore
+        const topScoresRef = doc(db, 'topScores', 'latest');
+        const topScoresDoc = await getDoc(topScoresRef);
+
+        if (topScoresDoc.exists()) {
+            const data = topScoresDoc.data();
+            console.log('Fetched top scores from Firestore:', data);
+
+            // Set the total available questions
+            totalAvailableQuestions.value = data.totalAvailableQuestions || calculateTotalQuestions();
+
+            // Set the last updated timestamp
+            lastUpdated.value = data.lastUpdated?.toDate() || new Date();
+
+            // Process the scores
+            const scores = data.scores || [];
+
+            // Store all scores
+            allScores.value = scores;
+
+            // Only show top 5 in the list
+            topScores.value = scores.slice(0, 5);
+
+            console.log('Top scores loaded from Firestore successfully');
+
+            // If the current user is logged in, check if they're in the scores
+            if (authStore.user?.uid) {
+                const userScoreRef = doc(db, 'userScores', authStore.user.uid);
+                const userScoreDoc = await getDoc(userScoreRef);
+
+                if (userScoreDoc.exists()) {
+                    const userData = userScoreDoc.data();
+                    console.log('Current user score from Firestore:', userData);
+
+                    // Check if the user is already in the scores
+                    const userInScores = allScores.value.some(score => score.userId === authStore.user.uid);
+
+                    if (!userInScores) {
+                        // Add the current user to the scores
+                        const userScore = {
+                            userId: authStore.user.uid,
+                            displayName: userData.displayName || formatDisplayName(authStore.user.email),
+                            email: userData.email || authStore.user.email,
+                            totalScore: userData.totalScore || 0,
+                            quizCount: userData.quizCount || 0,
+                            isCurrentUser: true
+                        };
+
+                        allScores.value.push(userScore);
+
+                        // Re-sort the scores
+                        allScores.value.sort((a, b) => b.totalScore - a.totalScore);
+                    }
+                }
+            }
+
+            return true;
+        } else {
+            console.log('No top scores document found in Firestore, will calculate scores');
+            return false;
+        }
+    } catch (err) {
+        console.error('Error fetching top scores from Firestore:', err);
+        return false;
+    } finally {
+        isLoading.value = false;
+    }
+};
+
 const fetchTopScores = async () => {
     try {
         isLoading.value = true;
         error.value = null;
+
+        // First try to fetch scores from Firestore
+        const scoresLoaded = await fetchTopScoresFromFirestore();
+
+        // If scores were loaded successfully, we're done
+        if (scoresLoaded) {
+            return;
+        }
+
+        // Otherwise, calculate scores from scratch
+        console.log('Calculating scores from scratch...');
 
         // Calculate total available questions
         totalAvailableQuestions.value = calculateTotalQuestions();
