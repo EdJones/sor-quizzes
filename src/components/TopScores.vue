@@ -1,5 +1,5 @@
 <template>
-    <div class="top-scores bg-gray-800/50 dark:bg-gray-900/50 rounded-lg p-2 text-sm">
+    <div v-if="shouldShowTopScores" class="top-scores bg-gray-800/50 dark:bg-gray-900/50 rounded-lg p-2 text-sm">
         <div class="flex items-center gap-2 mb-1">
             <svg class="h-4 w-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -31,12 +31,21 @@
 </template>
 
 <script setup>
-import { onMounted, watch } from 'vue';
+import { onMounted, watch, computed } from 'vue';
 import { useAuthStore } from '../stores/authStore';
 import { useScoreStore } from '../stores/scoreStore';
+import { useRoute } from 'vue-router';
 
 const authStore = useAuthStore();
 const scoreStore = useScoreStore();
+const route = useRoute();
+
+// Compute whether to show top scores based on current route
+const shouldShowTopScores = computed(() => {
+    const hiddenRoutes = ['/edit-item', '/quizsetview', '/issues'];
+    const currentPath = route.path.toLowerCase();
+    return !hiddenRoutes.some(path => currentPath.startsWith(path));
+});
 
 // Helper function to check if a score has a valid email
 const hasValidEmail = (score) => {
