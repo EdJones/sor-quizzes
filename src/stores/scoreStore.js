@@ -386,51 +386,46 @@ export const useScoreStore = defineStore('scores', {
                 const userDataMap = new Map(userDocs.map(doc => [doc.userId, doc.data]));
                 console.log('User data map:', Object.fromEntries(userDataMap));
 
-                // Group progress by base user ID (removing suffixes) to aggregate scores
+                // Create a map of quiz set names
+                const quizSetNames = {};
+                // First, map the setNames directly, skipping debug sets
+                let nonDebugIndex = 0;
+                quizSets.forEach(set => {
+                    if (set.display !== "debug") {
+                        quizSetNames[set.setName] = set.setName;
+                        // Also map the numeric index to the setName
+                        quizSetNames[String(nonDebugIndex)] = set.setName;
+                        nonDebugIndex++;
+                    }
+                });
+                // Map legacy ID "0" to "general"
+                quizSetNames["0"] = "general";
+
+                console.log('Quiz set names:', quizSetNames);
+
+                // Group progress by userId
                 const userProgressMap = new Map();
 
                 progressSnapshot.docs.forEach(doc => {
                     const progressData = doc.data();
-                    // Extract base user ID by removing the suffix
-                    const baseUserId = doc.id.split('_')[0];
-                    const userData = userDataMap.get(baseUserId);
+                    const [userId, quizId] = doc.id.split('_');
 
-                    console.log(`Processing progress for base user ${baseUserId}:`, progressData);
+                    // Map numeric quiz IDs to their corresponding setNames
+                    const mappedQuizId = quizId === "0" ? "general" : (quizSetNames[quizId] || quizId);
 
-                    // Get the current aggregated data or create new
-                    const currentData = userProgressMap.get(baseUserId) || {
-                        userId: baseUserId,
-                        totalCorrect: 0,
-                        totalAnswered: 0,
-                        email: userData?.email,
-                        lastUpdated: null,
-                        quizAttempts: new Set() // Track unique quiz attempts
-                    };
+                    if (!userProgressMap.has(userId)) {
+                        userProgressMap.set(userId, new Map());
+                    }
 
-                    // Get quiz ID to track unique attempts
-                    const quizId = progressData.quizId;
+                    const userAttempts = userProgressMap.get(userId);
+                    const existingAttempt = userAttempts.get(mappedQuizId);
 
-                    // Add this document's scores to the total if it's a completed quiz
-                    const correctItems = Number(progressData.totalCorrect || progressData.correctItems || 0);
-                    const completedQuizzes = Number(progressData.totalAnswered || progressData.completedQuizzes || 0);
-                    const isCompleted = completedQuizzes > 0 || progressData.complete;
-
-                    if (isCompleted && quizId && !currentData.quizAttempts.has(quizId)) {
-                        // Add scores from this new quiz attempt
-                        currentData.totalCorrect += correctItems;
-                        currentData.totalAnswered += 1; // Count each completed quiz as 1
-                        currentData.quizAttempts.add(quizId);
-
-                        // Update lastUpdated if this document is more recent
-                        const docDate = progressData.lastUpdated || progressData.timestamp;
-                        if (docDate && (!currentData.lastUpdated || docDate > currentData.lastUpdated)) {
-                            currentData.lastUpdated = docDate;
-                        }
-
-                        userProgressMap.set(baseUserId, currentData);
-                        console.log(`Updated progress for ${baseUserId}:`, {
-                            ...currentData,
-                            quizAttempts: Array.from(currentData.quizAttempts)
+                    if (!existingAttempt || progressData.lastUpdated > existingAttempt.lastUpdated) {
+                        userAttempts.set(mappedQuizId, {
+                            totalCorrect: progressData.totalCorrect || 0,
+                            totalAnswered: progressData.totalQuestions || 0,
+                            lastUpdated: progressData.lastUpdated,
+                            quizSetName: quizSetNames[quizId] || mappedQuizId
                         });
                     }
                 });
@@ -538,6 +533,23 @@ export const useScoreStore = defineStore('scores', {
                 const progressRef = collection(db, 'userProgress');
                 const progressSnapshot = await getDocs(progressRef);
 
+                // Create a map of quiz set names
+                const quizSetNames = {};
+                // First, map the setNames directly, skipping debug sets
+                let nonDebugIndex = 0;
+                quizSets.forEach(set => {
+                    if (set.display !== "debug") {
+                        quizSetNames[set.setName] = set.setName;
+                        // Also map the numeric index to the setName
+                        quizSetNames[String(nonDebugIndex)] = set.setName;
+                        nonDebugIndex++;
+                    }
+                });
+                // Map legacy ID "0" to "general"
+                quizSetNames["0"] = "general";
+
+                console.log('Quiz set names:', quizSetNames);
+
                 // Group progress by userId
                 const userProgressMap = new Map();
 
@@ -545,18 +557,22 @@ export const useScoreStore = defineStore('scores', {
                     const progressData = doc.data();
                     const [userId, quizId] = doc.id.split('_');
 
+                    // Map numeric quiz IDs to their corresponding setNames
+                    const mappedQuizId = quizId === "0" ? "general" : (quizSetNames[quizId] || quizId);
+
                     if (!userProgressMap.has(userId)) {
                         userProgressMap.set(userId, new Map());
                     }
 
                     const userAttempts = userProgressMap.get(userId);
-                    const existingAttempt = userAttempts.get(quizId);
+                    const existingAttempt = userAttempts.get(mappedQuizId);
 
                     if (!existingAttempt || progressData.lastUpdated > existingAttempt.lastUpdated) {
-                        userAttempts.set(quizId, {
+                        userAttempts.set(mappedQuizId, {
                             totalCorrect: progressData.totalCorrect || 0,
                             totalAnswered: progressData.totalQuestions || 0,
-                            lastUpdated: progressData.lastUpdated
+                            lastUpdated: progressData.lastUpdated,
+                            quizSetName: quizSetNames[quizId] || mappedQuizId
                         });
                     }
                 });
@@ -582,13 +598,19 @@ export const useScoreStore = defineStore('scores', {
                     userAttempts.forEach((attempt, quizId) => {
                         mostRecentAttempts[quizId] = {
                             totalCorrect: attempt.totalCorrect,
-                            totalAnswered: attempt.totalAnswered
+                            totalAnswered: attempt.totalAnswered,
+                            quizSetName: attempt.quizSetName
                         };
                     });
 
                     // Calculate totalRecentAnswers
                     const totalRecentAnswers = Object.values(mostRecentAttempts).reduce((sum, attempt) =>
                         sum + (attempt.totalAnswered || 0), 0);
+
+                    console.log(`Processing user ${score.userId}:`, {
+                        mostRecentAttempts,
+                        totalRecentAnswers
+                    });
 
                     return {
                         ...score,
@@ -604,7 +626,7 @@ export const useScoreStore = defineStore('scores', {
                     lastUpdated: serverTimestamp()
                 });
 
-                console.log('Successfully updated top scores with mostRecentAttempts');
+                console.log('Successfully updated top scores with mostRecentAttempts and quiz set names');
 
                 // Refresh the store's data
                 await this.fetchTopScoresFromFirestore();
