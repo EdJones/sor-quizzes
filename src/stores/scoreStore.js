@@ -388,14 +388,12 @@ export const useScoreStore = defineStore('scores', {
 
                 // Create a map of quiz set names
                 const quizSetNames = {};
-                // First, map the setNames directly, skipping debug sets
-                let nonDebugIndex = 0;
-                quizSets.forEach(set => {
+                // Map quiz IDs to their set names
+                quizSets.forEach((set, index) => {
                     if (set.display !== "debug") {
+                        // Map both the setName and the numeric index
                         quizSetNames[set.setName] = set.setName;
-                        // Also map the numeric index to the setName
-                        quizSetNames[String(nonDebugIndex)] = set.setName;
-                        nonDebugIndex++;
+                        quizSetNames[String(index)] = set.setName;
                     }
                 });
                 // Map legacy ID "0" to "general"
@@ -410,8 +408,9 @@ export const useScoreStore = defineStore('scores', {
                     const progressData = doc.data();
                     const [userId, quizId] = doc.id.split('_');
 
-                    // Map numeric quiz IDs to their corresponding setNames
-                    const mappedQuizId = quizId === "0" ? "general" : (quizSetNames[quizId] || quizId);
+                    // Map quiz ID to set name
+                    const mappedQuizId = quizId === "0" ? "general" : quizId;
+                    const quizSetName = quizSetNames[mappedQuizId] || quizSets[Number(mappedQuizId)]?.setName || mappedQuizId;
 
                     if (!userProgressMap.has(userId)) {
                         userProgressMap.set(userId, new Map());
@@ -425,7 +424,7 @@ export const useScoreStore = defineStore('scores', {
                             totalCorrect: progressData.totalCorrect || 0,
                             totalAnswered: progressData.totalQuestions || 0,
                             lastUpdated: progressData.lastUpdated,
-                            quizSetName: quizSetNames[quizId] || mappedQuizId
+                            quizSetName: quizSetName
                         });
                     }
                 });
@@ -535,14 +534,12 @@ export const useScoreStore = defineStore('scores', {
 
                 // Create a map of quiz set names
                 const quizSetNames = {};
-                // First, map the setNames directly, skipping debug sets
-                let nonDebugIndex = 0;
-                quizSets.forEach(set => {
+                // Map quiz IDs to their set names
+                quizSets.forEach((set, index) => {
                     if (set.display !== "debug") {
+                        // Map both the setName and the numeric index
                         quizSetNames[set.setName] = set.setName;
-                        // Also map the numeric index to the setName
-                        quizSetNames[String(nonDebugIndex)] = set.setName;
-                        nonDebugIndex++;
+                        quizSetNames[String(index)] = set.setName;
                     }
                 });
                 // Map legacy ID "0" to "general"
@@ -557,8 +554,9 @@ export const useScoreStore = defineStore('scores', {
                     const progressData = doc.data();
                     const [userId, quizId] = doc.id.split('_');
 
-                    // Map numeric quiz IDs to their corresponding setNames
-                    const mappedQuizId = quizId === "0" ? "general" : (quizSetNames[quizId] || quizId);
+                    // Map quiz ID to set name
+                    const mappedQuizId = quizId === "0" ? "general" : quizId;
+                    const quizSetName = quizSetNames[mappedQuizId] || quizSets[Number(mappedQuizId)]?.setName || mappedQuizId;
 
                     if (!userProgressMap.has(userId)) {
                         userProgressMap.set(userId, new Map());
@@ -572,7 +570,7 @@ export const useScoreStore = defineStore('scores', {
                             totalCorrect: progressData.totalCorrect || 0,
                             totalAnswered: progressData.totalQuestions || 0,
                             lastUpdated: progressData.lastUpdated,
-                            quizSetName: quizSetNames[quizId] || mappedQuizId
+                            quizSetName: quizSetName
                         });
                     }
                 });
