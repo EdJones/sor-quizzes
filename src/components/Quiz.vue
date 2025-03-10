@@ -560,19 +560,7 @@ export default {
         });
         console.log('Quiz attempt recorded successfully');
 
-        // Check and update top scores
-        if (auth.currentUser) {
-          console.log('Updating top scores for user:', auth.currentUser.uid);
-          await this.scoreStore.checkAndUpdateTopScores(
-            auth.currentUser.uid,
-            this.selectedQuiz,
-            score,
-            auth.currentUser.email || 'Anonymous'
-          );
-          console.log('Top scores updated successfully');
-        } else {
-          console.log('User not logged in, skipping top scores update');
-        }
+
 
         // Save final progress using the progress store
         const progressData = {
@@ -587,6 +575,20 @@ export default {
         console.log('Saving progress data:', progressData);
         await this.progressStore.saveQuizProgress(this.selectedQuiz, progressData);
         console.log('Progress saved successfully');
+
+        // Check and update top scores
+        if (auth.currentUser) {
+          console.log('Updating top scores for user:', auth.currentUser.uid);
+          await this.scoreStore.checkAndUpdateTopScores(
+            auth.currentUser.uid,
+            this.selectedQuiz,
+            score,
+            auth.currentUser.email || 'Anonymous'
+          );
+          console.log('Top scores updated successfully');
+        } else {
+          console.log('User not logged in, skipping top scores update');
+        }
 
         // Update the quiz state
         this.quizState = 'end';
