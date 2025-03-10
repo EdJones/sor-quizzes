@@ -264,6 +264,10 @@ export const useScoreStore = defineStore('scores', {
                 userTotalScore += score;
                 userQuizCount += 1;
 
+                // Calculate totalRecentAnswers from mostRecentAttempts
+                const totalRecentAnswers = Object.values(mostRecentAttempts).reduce((sum, attempt) =>
+                    sum + (attempt.totalAnswered || 0), 0);
+
                 // Update the user's score document
                 await setDoc(userScoreRef, {
                     userId,
@@ -273,6 +277,7 @@ export const useScoreStore = defineStore('scores', {
                     totalScore: userTotalScore,
                     quizCount: userQuizCount,
                     mostRecentAttempts,
+                    totalRecentAnswers,
                     lastUpdated: serverTimestamp()
                 }, { merge: true });
 
@@ -299,6 +304,7 @@ export const useScoreStore = defineStore('scores', {
                         username,
                         email: userEmail,
                         mostRecentAttempts,
+                        totalRecentAnswers,
                         lastUpdated: new Date()
                     };
                 } else {
@@ -311,6 +317,7 @@ export const useScoreStore = defineStore('scores', {
                         totalScore: userTotalScore,
                         quizCount: userQuizCount,
                         mostRecentAttempts,
+                        totalRecentAnswers,
                         lastUpdated: new Date()
                     });
                 }
@@ -579,9 +586,14 @@ export const useScoreStore = defineStore('scores', {
                         };
                     });
 
+                    // Calculate totalRecentAnswers
+                    const totalRecentAnswers = Object.values(mostRecentAttempts).reduce((sum, attempt) =>
+                        sum + (attempt.totalAnswered || 0), 0);
+
                     return {
                         ...score,
-                        mostRecentAttempts
+                        mostRecentAttempts,
+                        totalRecentAnswers
                     };
                 });
 
