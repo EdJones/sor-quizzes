@@ -21,7 +21,7 @@
                 </div>
                 <div class="flex items-center gap-4">
                     <span class="text-xs ">{{ score.totalScore }}/{{ scoreStore.totalAvailableQuestions
-                    }}</span>
+                        }}</span>
                 </div>
             </div>
 
@@ -56,6 +56,13 @@ const hasValidEmail = (score) => {
 const displayName = (score) => {
     try {
         if (!score) return 'Anon_user';
+        console.log('Score data for display name:', {
+            score,
+            hasUsername: !!score.username,
+            username: score.username,
+            email: score.email,
+            userId: score.userId
+        });
         if (score.username) {
             return score.username;
         }

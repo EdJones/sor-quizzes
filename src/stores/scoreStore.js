@@ -145,7 +145,10 @@ export const useScoreStore = defineStore('scores', {
                         (data.scores || []).map(async (score) => {
                             if (score.userId) {
                                 const userDoc = await getDoc(doc(db, 'users', score.userId));
-                                const username = userDoc.exists() ? userDoc.data().username : null;
+                                // Get username from user document or from existing score data
+                                const username = userDoc.exists() ?
+                                    userDoc.data().username :
+                                    score.username || null;
 
                                 // Format display name consistently
                                 let displayName;
@@ -157,6 +160,13 @@ export const useScoreStore = defineStore('scores', {
                                     displayName = `Anon_${score.userId.substring(0, 6)}...`;
                                 }
 
+                                console.log('Processing score:', {
+                                    userId: score.userId,
+                                    username,
+                                    displayName,
+                                    originalUsername: score.username
+                                });
+
                                 return {
                                     ...score,
                                     username,
@@ -165,6 +175,7 @@ export const useScoreStore = defineStore('scores', {
                             }
                             return {
                                 ...score,
+                                username: null,
                                 displayName: score.userId ? `Anon_${score.userId.substring(0, 6)}...` : 'Anon_user'
                             };
                         })
@@ -216,6 +227,13 @@ export const useScoreStore = defineStore('scores', {
                 } else {
                     displayName = `Anon_${userId.substring(0, 6)}...`;
                 }
+
+                console.log('Updating user score with:', {
+                    userId,
+                    username,
+                    displayName,
+                    email: userEmail
+                });
 
                 // If user already has a score document, use that data
                 if (userScoreDoc.exists()) {
