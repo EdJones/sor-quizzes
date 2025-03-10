@@ -218,6 +218,24 @@ export const useScoreStore = defineStore('scores', {
                 let userTotalScore = 0;
                 let userQuizCount = 0;
                 let displayName;
+                let mostRecentAttempts = {};
+
+                // Get most recent attempts for each quiz set
+                const attemptsRef = collection(db, 'quizAttempts');
+                const attemptsQuery = query(attemptsRef, where('userId', '==', userId));
+                const attemptsSnapshot = await getDocs(attemptsQuery);
+
+                // Group attempts by quizId and keep only the most recent
+                attemptsSnapshot.forEach(doc => {
+                    const attempt = doc.data();
+                    if (!mostRecentAttempts[attempt.quizId] ||
+                        attempt.completedAt > mostRecentAttempts[attempt.quizId].completedAt) {
+                        mostRecentAttempts[attempt.quizId] = {
+                            totalCorrect: attempt.score,
+                            totalAnswered: attempt.totalQuestions
+                        };
+                    }
+                });
 
                 // Set display name with preference order: username > email > anonymous format
                 if (username) {
@@ -228,18 +246,18 @@ export const useScoreStore = defineStore('scores', {
                     displayName = `Anon_${userId.substring(0, 6)}...`;
                 }
 
-                console.log('Updating user score with:', {
-                    userId,
-                    username,
-                    displayName,
-                    email: userEmail
-                });
-
                 // If user already has a score document, use that data
                 if (userScoreDoc.exists()) {
                     const userData = userScoreDoc.data();
                     userTotalScore = userData.totalScore || 0;
                     userQuizCount = userData.quizCount || 0;
+                    // Preserve existing attempts that haven't been updated
+                    if (userData.mostRecentAttempts) {
+                        mostRecentAttempts = {
+                            ...userData.mostRecentAttempts,
+                            ...mostRecentAttempts
+                        };
+                    }
                 }
 
                 // Add the new score
@@ -254,6 +272,7 @@ export const useScoreStore = defineStore('scores', {
                     email: userEmail,
                     totalScore: userTotalScore,
                     quizCount: userQuizCount,
+                    mostRecentAttempts,
                     lastUpdated: serverTimestamp()
                 }, { merge: true });
 
@@ -279,6 +298,7 @@ export const useScoreStore = defineStore('scores', {
                         displayName,
                         username,
                         email: userEmail,
+                        mostRecentAttempts,
                         lastUpdated: new Date()
                     };
                 } else {
@@ -290,6 +310,7 @@ export const useScoreStore = defineStore('scores', {
                         email: userEmail,
                         totalScore: userTotalScore,
                         quizCount: userQuizCount,
+                        mostRecentAttempts,
                         lastUpdated: new Date()
                     });
                 }
@@ -500,6 +521,85 @@ export const useScoreStore = defineStore('scores', {
                 console.error('Error fetching top scores:', err);
                 this.error = 'Failed to load top scores';
                 this.isLoading = false;
+            }
+        },
+
+        // One-time function to collect mostRecentAttempts from userProgress and update topScores
+        async collectAndUpdateMostRecentAttempts() {
+            try {
+                // Get all userProgress documents
+                const progressRef = collection(db, 'userProgress');
+                const progressSnapshot = await getDocs(progressRef);
+
+                // Group progress by userId
+                const userProgressMap = new Map();
+
+                progressSnapshot.docs.forEach(doc => {
+                    const progressData = doc.data();
+                    const [userId, quizId] = doc.id.split('_');
+
+                    if (!userProgressMap.has(userId)) {
+                        userProgressMap.set(userId, new Map());
+                    }
+
+                    const userAttempts = userProgressMap.get(userId);
+                    const existingAttempt = userAttempts.get(quizId);
+
+                    if (!existingAttempt || progressData.lastUpdated > existingAttempt.lastUpdated) {
+                        userAttempts.set(quizId, {
+                            totalCorrect: progressData.totalCorrect || 0,
+                            totalAnswered: progressData.totalQuestions || 0,
+                            lastUpdated: progressData.lastUpdated
+                        });
+                    }
+                });
+
+                // Get current top scores
+                const topScoresRef = doc(db, 'topScores', 'latest');
+                const topScoresDoc = await getDoc(topScoresRef);
+
+                if (!topScoresDoc.exists()) {
+                    console.log('No top scores document found');
+                    return;
+                }
+
+                const data = topScoresDoc.data();
+                let scores = data.scores || [];
+
+                // Update each score with mostRecentAttempts
+                scores = scores.map(score => {
+                    const userAttempts = userProgressMap.get(score.userId);
+                    if (!userAttempts) return score;
+
+                    const mostRecentAttempts = {};
+                    userAttempts.forEach((attempt, quizId) => {
+                        mostRecentAttempts[quizId] = {
+                            totalCorrect: attempt.totalCorrect,
+                            totalAnswered: attempt.totalAnswered
+                        };
+                    });
+
+                    return {
+                        ...score,
+                        mostRecentAttempts
+                    };
+                });
+
+                // Save updated scores
+                await setDoc(topScoresRef, {
+                    ...data,
+                    scores,
+                    lastUpdated: serverTimestamp()
+                });
+
+                console.log('Successfully updated top scores with mostRecentAttempts');
+
+                // Refresh the store's data
+                await this.fetchTopScoresFromFirestore();
+
+            } catch (error) {
+                console.error('Error collecting and updating most recent attempts:', error);
+                this.error = 'Failed to update most recent attempts';
             }
         }
     }

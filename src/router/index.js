@@ -5,6 +5,7 @@ import Home from '../components/Home.vue';
 import GitHubIssues from '../components/GitHubIssues.vue';
 import QuizSetView from '../views/QuizSetView.vue';
 import QuizItemEditor from '../views/QuizItemEditor.vue';
+import AdminPage from '../views/AdminPage.vue';
 
 const routes = [
   {
@@ -46,6 +47,11 @@ const routes = [
     path: '/',
     name: 'Home',
     component: Home
+  },
+  {
+    path: '/admin',
+    name: 'admin',
+    component: AdminPage
   },
   // Catch all route for 404 - must be last
   {
