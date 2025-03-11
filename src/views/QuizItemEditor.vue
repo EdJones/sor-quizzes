@@ -1041,6 +1041,25 @@ export default {
     if (!this.store.draftQuizEntry.title) {
       this.initializeNewEntry();
     }
+    this.checkValidation();
+  },
+  watch: {
+    newEntry: {
+      handler() {
+        this.checkValidation();
+      },
+      deep: true
+    },
+    'newEntry.answer_type': {
+      handler(newType, oldType) {
+        if (newType === 'ms') {
+          // Initialize correctAnswers as empty array when switching to multiple select
+          if (!Array.isArray(this.newEntry.correctAnswers)) {
+            this.newEntry.correctAnswers = [];
+          }
+        }
+      }
+    }
   }
 };
 </script>
