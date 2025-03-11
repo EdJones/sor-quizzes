@@ -25,6 +25,7 @@ export const quizStore = defineStore('quiz', {
         draftQuizItems: [],
         draftQuizItemsLoading: false,
         draftQuizItemsError: null,
+        lastSavedDraftQuizEntry: null,
         draftQuizEntry: {
             title: '',
             subtitle: '',
@@ -221,9 +222,14 @@ export const quizStore = defineStore('quiz', {
                     userAnswers: this.userAnswers
                 });
 
+                // Create a consistent document ID
+                const attemptId = `${auth.currentUser.uid}_${this.currentQuizId}_${Date.now()}`;
+                const attemptRef = doc(db, 'quizAttempts', attemptId);
+
                 // Add quiz attempt to Firestore
-                const quizAttemptRef = await addDoc(collection(db, 'quizAttempts'), {
+                await setDoc(attemptRef, {
                     userId: auth.currentUser.uid,
+                    userEmail: auth.currentUser.email || 'Anonymous',
                     quizId: this.currentQuizId,
                     quizStarted: serverTimestamp(),
                     completedAt: serverTimestamp(),
@@ -233,7 +239,7 @@ export const quizStore = defineStore('quiz', {
                     isAnonymous: auth.currentUser.isAnonymous
                 });
 
-                console.log('Quiz attempt recorded:', quizAttemptRef.id);
+                console.log('Quiz attempt recorded:', attemptRef.id);
 
                 // Save final progress using the original system
                 const progressStore = useProgressStore();
@@ -318,6 +324,9 @@ export const quizStore = defineStore('quiz', {
             try {
                 const user = auth.currentUser;
                 if (!user) throw new Error('No user found');
+
+                // Store the current state before saving
+                this.lastSavedDraftQuizEntry = { ...this.draftQuizEntry };
 
                 // Create a copy of the draft entry without the id field
                 const { id, ...entryWithoutId } = this.draftQuizEntry;
@@ -729,26 +738,43 @@ export const quizStore = defineStore('quiz', {
             };
         },
 
-        async recordQuizEdit() {
-            try {
-                const auth = useAuthStore();
-                const editData = {
+        async recordQuizEdit(versionMessage = '') {
+            const auth = useAuthStore();
+
+            // Save the draft first if there's no ID
+            if (!this.draftQuizEntry.id) {
+                const { id, ...entryWithoutId } = this.draftQuizEntry;
+                const entryToSave = {
+                    ...entryWithoutId,
                     userId: auth.user?.uid || 'anonymous',
                     userEmail: auth.user?.email || 'anonymous',
+                    isAnonymous: auth.user?.isAnonymous || true,
+                    status: 'draft',
                     timestamp: serverTimestamp(),
-                    quizStarted: false,  // Set a default value
-                    quizCompleted: false,  // Set a default value if needed
-                    editType: 'draft',
-                    draftId: this.draftQuizEntry.id || null,
-                    originalId: this.draftQuizEntry.originalId || null
                 };
 
-                const docRef = await addDoc(collection(db, 'quizEdits'), editData);
-                console.log('Quiz edit recorded:', docRef.id);
-                return docRef.id;
+                const docRef = await addDoc(collection(db, 'quizEntries'), entryToSave);
+                this.draftQuizEntry.id = docRef.id;
+            }
+
+            const editRecord = {
+                timestamp: serverTimestamp(),
+                userId: auth.user?.uid || 'anonymous',
+                userEmail: auth.user?.email || 'anonymous',
+                quizItemId: this.draftQuizEntry.id,
+                versionMessage: versionMessage,
+                changes: {
+                    before: this.lastSavedDraftQuizEntry || { ...this.draftQuizEntry },
+                    after: { ...this.draftQuizEntry }
+                }
+            };
+
+            try {
+                const editHistoryRef = collection(db, 'quizEditHistory');
+                await addDoc(editHistoryRef, editRecord);
             } catch (error) {
                 console.error('Error recording quiz edit:', error);
-                throw error;
+                // Continue with save even if edit history fails
             }
         },
 

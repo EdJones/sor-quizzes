@@ -15,7 +15,7 @@
       <div v-if="submitStatus.type === 'success' && submittedEntry" class="submitted-preview mt-4">
         <h3>Your submitted quiz item:</h3>
         <QuizItem :currentQuizItem="submittedEntry" :itemNum="0" :reviewMode="true" :basicMode="false"
-          :userAnswer="submittedEntry.correctAnswer" />
+          :userAnswer="submittedEntry.correctAnswer" :debug="false" />
       </div>
     </div>
 
@@ -77,7 +77,7 @@
     <div v-if="previewMode">
       <div class="preview-container">
         <QuizItem :currentQuizItem="newEntry" :itemNum="0" :reviewMode="true" :basicMode="false" :previewMode="true"
-          :userAnswer="newEntry.correctAnswer" />
+          :userAnswer="newEntry.correctAnswer" :debug="false" />
       </div>
     </div>
 
@@ -162,7 +162,6 @@
                   <div class="flex items-center gap-2">
                     <input type="text" :id="'option' + n" v-model="newEntry['option' + n]"
                       :class="['form-input flex-1', { 'invalid-field': invalidFields.has('option' + n) }]"
-                      :data-error="getFieldError('option' + n)" :placeholder="newEntry['option' + n]"
                       @focus="handleFocus($event, 'option' + n)" @blur="handleBlur($event, 'option' + n)" />
 
                     <!-- Single correct answer for MC -->
@@ -170,7 +169,6 @@
                       <input type="radio" :value="n" v-model="newEntry.correctAnswer" :name="'correct-answer'"
                         class="h-4 w-4 text-blue-600 focus:ring-blue-500 dark:bg-gray-700" />
                       <label :for="'option' + n" class="text-sm text-gray-600 dark:text-gray-400">
-                        Correct
                       </label>
                     </template>
 
@@ -179,7 +177,6 @@
                       <input type="checkbox" :value="n" v-model="newEntry.correctAnswers"
                         class="h-4 w-4 text-blue-600 focus:ring-blue-500 dark:bg-gray-700" />
                       <label :for="'option' + n" class="text-sm text-gray-600 dark:text-gray-400">
-                        Correct
                       </label>
                     </template>
                   </div>
@@ -504,15 +501,17 @@
       </div>
 
       <div class="mt-4 flex justify-between items-center">
-        <button @click="saveDraft"
-          class="px-6 py-2 bg-black hover:bg-gray-900 text-[#02b87d] rounded-lg flex items-center transition-colors border-2 border-[#02b87d]">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 4v16a2 2 0 002 2h12a2 2 0 002-2V8.342a2 2 0 00-.602-1.43l-4.44-4.342A2 2 0 0013.56 2H6a2 2 0 00-2 2z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6" />
-          </svg>
-          Save Draft
-        </button>
+        <div class="flex gap-2">
+          <button type="button" @click="saveDraft"
+            class="px-6 py-2 bg-black hover:bg-gray-900 text-[#02b87d] rounded-lg flex items-center transition-colors border-2 border-[#02b87d]">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v16a2 2 0 002 2h12a2 2 0 002-2V8.342a2 2 0 00-.602-1.43l-4.44-4.342A2 2 0 0013.56 2H6a2 2 0 00-2 2z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6" />
+            </svg>
+            Save Draft
+          </button>
+        </div>
         <button type="submit" :class="[
           'submit-btn',
           {
@@ -531,6 +530,9 @@
     </div>
 
     <ProgressSteps :currentStep="currentStep" />
+
+    <!-- Keep VersionInfoModal here, outside of any v-if conditions -->
+    <VersionInfoModal @save="handleSaveDraftWithVersion" ref="versionInfoModal" />
   </div>
 </template>
 
@@ -545,13 +547,15 @@ import { ref, watch, onMounted, computed } from 'vue';
 import ProgressSteps from '../components/ProgressSteps.vue';
 import { useRoute, useRouter } from 'vue-router';
 import QuizSelector from '../components/QuizSelector.vue';
+import VersionInfoModal from '../components/VersionInfoModal.vue';
 
 export default {
   components: {
     QuizItem,
     VueJsonPretty,
+    QuizSelector,
     ProgressSteps,
-    QuizSelector
+    VersionInfoModal
   },
   setup() {
     const store = quizStore();
@@ -774,7 +778,8 @@ export default {
         'podcastEpisode.title': 'Enter podcast title',
         'podcastEpisode2.title': 'Enter second podcast title',
         caution: 'Enter caution text here'
-      }
+      },
+      showVersionInfoModal: false
     }
   },
   methods: {
@@ -825,28 +830,39 @@ export default {
         };
       }
     },
-    async saveDraft() {
+    async saveDraft(event) {
+      // Prevent any default form submission
+      if (event) {
+        event.preventDefault();
+      }
+
+      // Show the version info modal with the current quiz item ID
+      this.$refs.versionInfoModal.show(this.store.draftQuizEntry.id);
+    },
+    async handleSaveDraftWithVersion(versionMessage) {
       try {
-        await this.store.recordQuizEdit();
+        console.log('Saving draft with version message:', versionMessage);
         const draftId = await this.store.saveDraftQuizEntry();
+        console.log('Draft saved with ID:', draftId);
 
         if (!draftId) {
           throw new Error('Failed to save draft');
         }
 
-        // Run validation check after successful save
-        await this.checkValidation();
+        await this.store.recordQuizEdit(versionMessage);
+        console.log('Quiz edit recorded successfully');
 
         this.submitStatus = {
           show: true,
           type: 'success',
           message: 'Draft saved successfully!'
         };
-      } catch (e) {
+      } catch (error) {
+        console.error('Error saving draft:', error);
         this.submitStatus = {
           show: true,
           type: 'error',
-          message: e.message || 'Error saving draft'
+          message: error.message || 'Error saving draft'
         };
       }
     },
@@ -1578,32 +1594,78 @@ details[open] .form-section {
 
 .status-message {
   margin: 1rem 0;
-  padding: 1rem;
-  border-radius: 4px;
+  padding: 1.5rem;
+  border-radius: 8px;
   text-align: center;
-  font-weight: bold;
+  font-weight: 500;
+  background: rgba(31, 41, 55, 0.8);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .status-message.success {
-  background-color: #4CAF50;
-  color: white;
+  background: rgba(31, 41, 55, 0.8);
+  border-color: #02b87d;
+  box-shadow: 0 0 20px rgba(2, 184, 125, 0.2);
 }
 
 .status-message.error {
-  background-color: #f44336;
-  color: white;
+  background: rgba(31, 41, 55, 0.8);
+  border-color: #ef4444;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
 }
 
 .submitted-preview {
   margin-top: 2rem;
-  padding: .2rem;
-  background-color: #f5f5f5;
-  border-radius: 4px;
+  padding: 1.5rem;
+  background: rgba(31, 41, 55, 0.8);
+  backdrop-filter: blur(10px);
+  border: 2px solid #02b87d;
+  box-shadow: 0 0 20px rgba(2, 184, 125, 0.2);
+  border-radius: 8px;
 }
 
 .submitted-preview h3 {
   margin-bottom: 1rem;
-  color: #333;
+  color: #02b87d;
+  font-weight: 500;
+  font-size: 1.2rem;
+}
+
+.submitted-preview :deep(.quiz-item) {
+  background: #1f2937;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.submitted-preview :deep(.question-text),
+.submitted-preview :deep(.answer),
+.submitted-preview :deep(.explanation),
+.submitted-preview :deep(.list-item-right) {
+  color: #fff !important;
+  opacity: 0.9;
+}
+
+.submitted-preview :deep(.quiz-item .answer) {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 0.5rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.submitted-preview :deep(.quiz-item .answer:hover) {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.submitted-preview :deep(.quiz-item .answer.selected) {
+  background: rgba(2, 184, 125, 0.2);
+  border-color: rgba(2, 184, 125, 0.4);
 }
 
 .explanation-toggles {

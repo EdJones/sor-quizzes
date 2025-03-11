@@ -29,6 +29,16 @@
                     <span class="text-gray-600">
                         {{ displayName }}
                     </span>
+                    <!-- Settings Gear Icon -->
+                    <button @click="showUserProfile = true"
+                        class="ml-2 text-gray-400 hover:text-gray-300 transition-colors">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </button>
                     <!-- Contributor Badge -->
                     <button v-if="hasContributed" @click="showContributions = true"
                         class="ml-2 px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 rounded-full flex items-center gap-1 hover:bg-amber-200 dark:hover:bg-amber-800 transition-colors">
@@ -93,7 +103,6 @@
                 </div>
                 <!-- Contributor Mode Toggle -->
 
-
                 <!-- Login/Sign Out Buttons -->
                 <router-link v-if="authStore.user.isAnonymous" to="/login"
                     class="text-blue-500 hover:text-blue-600 text-xs transition-colors">
@@ -123,6 +132,9 @@
 
         <!-- Contributions Modal -->
         <ContributionsModal :show="showContributions" @close="showContributions = false" />
+
+        <!-- User Profile Modal -->
+        <UserProfileModal :show="showUserProfile" @close="showUserProfile = false" />
     </div>
 </template>
 
@@ -136,12 +148,14 @@ import ContributionsModal from './ContributionsModal.vue';
 import { doc, getDoc, query, collection, getDocs, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { quizEntries } from '../data/quiz-items';
+import UserProfileModal from './UserProfileModal.vue';
 
 export default {
     name: 'UserStatus',
     components: {
         ProgressDetailsPopup,
-        ContributionsModal
+        ContributionsModal,
+        UserProfileModal
     },
     setup() {
         const authStore = useAuthStore();
@@ -152,6 +166,12 @@ export default {
         const contributorMode = ref(false);
         const hasContributed = ref(false);
         const userQuizItems = ref([]);
+        const contributionStats = ref({
+            total: 0,
+            published: 0,
+            draft: 0
+        });
+        const showUserProfile = ref(false);
 
         const fetchContributorStatus = async () => {
             if (!authStore.user || authStore.user.isAnonymous) return;
@@ -184,6 +204,8 @@ export default {
                 // Calculate stats
                 const entries = Array.from(uniqueEntries.values());
                 userQuizItems.value = entries;
+
+                // Update contribution stats
                 contributionStats.value = {
                     total: entries.length,
                     published: entries.filter(entry => !entry.isDraft).length,
@@ -197,7 +219,8 @@ export default {
                     email: authStore.user.email,
                     uid: authStore.user.uid,
                     stats: contributionStats.value,
-                    hasContributed: hasContributed.value
+                    hasContributed: hasContributed.value,
+                    entries: entries.length
                 });
             } catch (error) {
                 console.error('Error fetching contributor status:', error);
@@ -237,6 +260,45 @@ export default {
             }
         });
 
+        // Watch for changes in userQuizItems and update stats
+        watch([userQuizItems, () => authStore.user?.email], () => {
+            if (!authStore.user?.email) return;
+
+            // Get published items by matching the full email
+            const publishedItems = quizEntries.filter(item =>
+                item.userEmail === authStore.user.email
+            );
+            const published = publishedItems.length;
+
+            console.log('Published items found:', {
+                email: authStore.user.email,
+                count: published,
+                items: publishedItems.map(item => item.title)
+            });
+
+            // Get draft items by checking if they're not in the published list
+            const draftItems = userQuizItems.value.filter(item =>
+                !quizEntries.some(qi =>
+                    qi.userEmail === authStore.user.email &&
+                    qi.title === item.title
+                )
+            );
+            const draft = draftItems.length;
+
+            console.log('Draft items found:', {
+                count: draft,
+                items: draftItems.map(item => item.title)
+            });
+
+            contributionStats.value = {
+                total: published + draft,
+                published,
+                draft
+            };
+
+            console.log('Updated contribution stats:', contributionStats.value);
+        });
+
         const displayName = computed(() => {
             if (authStore.user.isAnonymous) return 'Anonymous User';
             if (!authStore.user.email) return 'Signed In';
@@ -258,30 +320,11 @@ export default {
         const handleSignOut = async () => {
             try {
                 await authStore.signOut();
-                router.push('/login');
+                router.push('/');
             } catch (error) {
                 console.error('Sign out error:', error);
             }
         };
-
-        const contributionStats = computed(() => {
-            const published = quizEntries.filter(item =>
-                item.userEmail === authStore.user?.email
-            ).length;
-
-            const draft = userQuizItems.value.filter(item =>
-                !quizEntries.some(qi =>
-                    qi.userEmail === authStore.user?.email &&
-                    qi.title === item.title
-                )
-            ).length;
-
-            return {
-                total: published + draft,
-                published,
-                draft
-            };
-        });
 
         return {
             authStore,
@@ -296,7 +339,8 @@ export default {
             toggleContributorMode,
             hasContributed,
             contributionStats,
-            userQuizItems
+            userQuizItems,
+            showUserProfile
         };
     }
 };

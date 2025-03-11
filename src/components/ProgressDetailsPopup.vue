@@ -117,7 +117,7 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import { useProgressStore } from '../stores/progressStore';
 import { quizSets } from '../data/quizSets';
 import { computed, ref, watch } from 'vue';
@@ -125,219 +125,160 @@ import { db, auth } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useAuthStore } from '../stores/authStore';
 
-export default {
-    name: 'ProgressDetailsPopup',
-    props: {
-        show: Boolean
-    },
-    emits: ['close'],
-    setup(props, { emit }) {
-        const authStore = useAuthStore();
-        const progressStore = useProgressStore();
-        const selectedQuizSet = ref(null);
-        const missedItems = ref([]);
-        const quizSetProgress = ref(new Map());
+const props = defineProps({
+    show: {
+        type: Boolean,
+        required: true
+    }
+});
 
-        // Single watcher for show prop
-        watch(() => props.show, async (newVal) => {
-            if (newVal) {
-                console.log('Popup shown, fetching progress');
-                // Pre-fetch all quiz set progress at once
-                for (const set of quizSets.filter(s => !s.inProgress)) {
-                    try {
-                        let quizId;
-                        switch (set.setName.toLowerCase()) {
-                            case 'expert': quizId = 1; break;
-                            case 'general': quizId = 2; break;
-                            case 'kinder-first': quizId = 3; break;
-                            case 'admin': quizId = 4; break;
-                            case 'why care?': quizId = 5; break;
-                            default: continue;
-                        }
+const emit = defineEmits(['close']);
 
-                        const progressRef = doc(db, 'userProgress', `${auth.currentUser.uid}_${quizId}`);
-                        const progressDoc = await getDoc(progressRef);
+const progressStore = useProgressStore();
+const authStore = useAuthStore();
+const quizSetProgress = ref(new Map());
+const selectedQuizSet = ref(null);
+const missedItems = ref([]);
+const currentQuizId = ref(null);
 
-                        if (progressDoc.exists()) {
-                            const data = progressDoc.data();
-                            const correctAnswers = data.totalCorrect || 0;
-                            const totalQuestions = set.items.length;
-                            const percentage = totalQuestions > 0
-                                ? (correctAnswers / totalQuestions) * 100
-                                : 0;
+// Add computed properties for published quiz sets
+const publishedQuizSets = computed(() => {
+    return quizSets.filter(set => !set.inProgress);
+});
 
-                            quizSetProgress.value.set(set.setName, {
-                                correct: correctAnswers,
-                                total: totalQuestions,
-                                percentage: Math.round(percentage)
-                            });
-                        } else {
-                            quizSetProgress.value.set(set.setName, {
-                                correct: 0,
-                                total: set.items.length,
-                                percentage: 0
-                            });
-                        }
-                    } catch (error) {
-                        console.error('Error fetching progress for quiz:', set.setName, error);
-                    }
-                }
-            }
-        });
-
-        const getProgress = (quizSet) => {
-            return quizSetProgress.value.get(quizSet.setName) || {
-                correct: 0,
-                total: quizSet.items.length,
-                percentage: 0
-            };
-        };
-
-        const showMissedItems = async (quizSet, index) => {
-            console.log('Showing missed items for quiz:', {
-                quizSet,
-                index,
-                setName: quizSet.setName,
-                items: quizSet.items
-            });
-
-            if (selectedQuizSet.value === index) {
-                // If clicking the same quiz set, collapse it
-                selectedQuizSet.value = null;
-                missedItems.value = [];
-                return;
-            }
-
-            selectedQuizSet.value = index;
-            missedItems.value = [];
-
+// Watch for changes to the show prop
+watch(() => props.show, async (newVal) => {
+    if (newVal) {
+        // Fetch progress for each quiz set
+        for (const set of quizSets) {
             try {
-                // Get the quiz ID based on the quiz set name
-                let quizId;
-                switch (quizSet.setName.toLowerCase()) {
-                    case 'expert': quizId = 1; break;
-                    case 'general': quizId = 2; break;
-                    case 'kinder-first': quizId = 3; break;
-                    case 'admin': quizId = 4; break;
-                    case 'why care?': quizId = 5; break;
-                    default:
-                        console.log('Unknown quiz set:', quizSet.setName);
-                        return;
-                }
+                // Get the quiz ID from the array index
+                const quizId = quizSets.findIndex(s => s.setName === set.setName);
+
+                console.log('Fetching progress for quiz:', {
+                    setName: set.setName,
+                    quizId,
+                    userId: authStore.user?.uid
+                });
 
                 // Get the user's progress for this quiz
-                const progressRef = doc(db, 'userProgress', `${auth.currentUser.uid}_${quizId}`);
+                const progressRef = doc(db, 'userProgress', `${authStore.user?.uid}_${quizId}`);
                 const progressDoc = await getDoc(progressRef);
 
-                console.log('Progress doc:', progressDoc.data());
+                console.log('Progress doc for quiz:', {
+                    setName: set.setName,
+                    exists: progressDoc.exists(),
+                    data: progressDoc.data()
+                });
 
                 if (progressDoc.exists()) {
                     const data = progressDoc.data();
+                    const correctAnswers = data.totalCorrect || 0;
+                    const totalQuestions = set.items.length;
+                    const percentage = totalQuestions > 0
+                        ? (correctAnswers / totalQuestions) * 100
+                        : 0;
 
-                    // Update to handle both userAnswers and incorrectQuestions
-                    if (data.userAnswers) {
-                        missedItems.value = data.userAnswers
-                            .filter(answer => !answer.correct)
-                            .map(answer => ({
-                                id: answer.questionId,
-                                title: answer.questionTitle || 'Untitled Question'
-                            }));
-                    } else if (data.incorrectQuestions) {
-                        missedItems.value = data.incorrectQuestions.map(q => ({
-                            id: q.id,
-                            title: q.title || 'Untitled Question'
-                        }));
-                    }
+                    console.log('Calculated progress:', {
+                        setName: set.setName,
+                        correctAnswers,
+                        totalQuestions,
+                        percentage: Math.round(percentage)
+                    });
 
-                    console.log('Found missed items:', missedItems.value);
+                    quizSetProgress.value.set(set.setName, {
+                        correct: correctAnswers,
+                        total: totalQuestions,
+                        percentage: Math.round(percentage)
+                    });
+                } else {
+                    console.log('No progress found for quiz:', set.setName);
+                    quizSetProgress.value.set(set.setName, {
+                        correct: 0,
+                        total: set.items.length,
+                        percentage: 0
+                    });
                 }
             } catch (error) {
-                console.error('Error fetching missed items:', error);
-            }
-        };
-
-        const lastUpdatedText = computed(() => {
-            if (!progressStore.lastUpdated) return 'Never';
-            return new Date(progressStore.lastUpdated).toLocaleString();
-        });
-
-        const quizScore = computed(() => {
-            const score = progressStore.getQuizScore(currentQuizId.value);
-            return `${score.score}/${score.total} questions`;
-        });
-
-        const handleClose = () => {
-            emit('close');
-        };
-
-        return {
-            authStore,
-            progressStore,
-            selectedQuizSet,
-            missedItems,
-            getProgress,
-            showMissedItems,
-            lastUpdatedText,
-            quizScore,
-            handleClose
-        };
-    },
-    computed: {
-        publishedQuizSets() {
-            return quizSets.filter(set => !set.inProgress);
-        },
-        totalQuizSets() {
-            return this.publishedQuizSets.length;
-        }
-    },
-    data() {
-        return {
-            completedCount: 0
-        }
-    },
-    async created() {
-        this.completedCount = await this.getTotalCompletedQuizzes();
-    },
-    methods: {
-        async getTotalCompletedQuizzes() {
-            if (!auth.currentUser) return 0;
-
-            try {
-                // Get the user's overall progress document
-                const progressRef = doc(db, 'userProgress', `${auth.currentUser.uid}_overall`);
-                const progressDoc = await getDoc(progressRef);
-
-                console.log('Overall progress data:', progressDoc.data());
-
-                if (progressDoc.exists()) {
-                    const data = progressDoc.data();
-                    // Get the completed quizzes array
-                    const completedQuizzes = data.completedQuizzes || [];
-                    console.log('Completed quizzes:', completedQuizzes);
-                    return completedQuizzes.length;
-                }
-
-                // If no progress document exists yet
-                console.log('No overall progress document found');
-                return 0;
-            } catch (error) {
-                console.error('Error checking completed quizzes:', error);
-                return 0;
-            }
-        },
-        getQuizId(setName) {
-            switch (setName.toLowerCase()) {
-                case 'expert': return 1;
-                case 'general': return 2;
-                case 'kinder-first': return 3;
-                case 'admin': return 4;
-                case 'why care?': return 5;
-                default:
-                    console.log('Unknown quiz set:', setName);
-                    return null;
+                console.error('Error fetching progress for quiz:', set.setName, error);
             }
         }
     }
+});
+
+const getProgress = (quizSet) => {
+    return quizSetProgress.value.get(quizSet.setName) || {
+        correct: 0,
+        total: quizSet.items.length,
+        percentage: 0
+    };
+};
+
+const showMissedItems = async (quizSet, index) => {
+    console.log('Showing missed items for quiz:', {
+        quizSet,
+        index,
+        setName: quizSet.setName,
+        items: quizSet.items
+    });
+
+    if (selectedQuizSet.value === index) {
+        // If clicking the same quiz set, collapse it
+        selectedQuizSet.value = null;
+        missedItems.value = [];
+        return;
+    }
+
+    selectedQuizSet.value = index;
+    missedItems.value = [];
+
+    try {
+        // Get the quiz ID from the array index
+        const quizId = quizSets.findIndex(s => s.setName === quizSet.setName);
+
+        // Get the user's progress for this quiz
+        const progressRef = doc(db, 'userProgress', `${authStore.user?.uid}_${quizId}`);
+        const progressDoc = await getDoc(progressRef);
+
+        console.log('Progress doc:', progressDoc.data());
+
+        if (progressDoc.exists()) {
+            const data = progressDoc.data();
+
+            // Update to handle both userAnswers and incorrectQuestions
+            if (data.userAnswers) {
+                missedItems.value = data.userAnswers
+                    .filter(answer => !answer.correct)
+                    .map(answer => ({
+                        id: answer.questionId,
+                        title: answer.questionTitle || 'Untitled Question'
+                    }));
+            } else if (data.incorrectQuestions) {
+                missedItems.value = data.incorrectQuestions.map(q => ({
+                    id: q.id,
+                    title: q.title || 'Untitled Question'
+                }));
+            }
+
+            console.log('Found missed items:', missedItems.value);
+        }
+    } catch (error) {
+        console.error('Error fetching missed items:', error);
+    }
+};
+
+const lastUpdatedText = computed(() => {
+    if (!progressStore.lastUpdated) return 'Never';
+    return new Date(progressStore.lastUpdated).toLocaleString();
+});
+
+const quizScore = computed(() => {
+    const score = progressStore.getQuizScore(currentQuizId.value);
+    return `${score.score}/${score.total} questions`;
+});
+
+const handleClose = () => {
+    emit('close');
 };
 </script>
 

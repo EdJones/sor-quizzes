@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { auth, githubProvider } from '../firebase';
+import { auth, githubProvider, db } from '../firebase';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -7,8 +7,10 @@ import {
   GoogleAuthProvider,
   signInAnonymously,
   signOut as firebaseSignOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  updateProfile
 } from 'firebase/auth';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -48,12 +50,22 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async registerWithEmail(email, password) {
+    async registerWithEmail(email, password, username) {
       this.loading = true;
       this.error = null;
       try {
         const result = await createUserWithEmailAndPassword(auth, email, password);
         this.user = result.user;
+        await updateProfile(this.user, {
+          displayName: username
+        });
+
+        // Add user profile to Firestore
+        await setDoc(doc(db, 'users', this.user.uid), {
+          username: username,
+          email: email,
+          createdAt: new Date()
+        });
       } catch (error) {
         this.error = error.message;
         throw error;
@@ -121,6 +133,36 @@ export const useAuthStore = defineStore('auth', {
 
     setUser(user) {
       this.user = user;
+    },
+
+    async updateUsername(username) {
+      this.loading = true;
+      this.error = null;
+      try {
+        if (!this.user) throw new Error('No user logged in');
+
+        // Update Firebase Auth profile
+        await updateProfile(this.user, {
+          displayName: username
+        });
+
+        // Update or create Firestore user document
+        const userRef = doc(db, 'users', this.user.uid);
+        await setDoc(userRef, {
+          username: username,
+          email: this.user.email,
+          updatedAt: new Date(),
+          createdAt: new Date() // Only used if document is being created
+        }, { merge: true }); // Use merge to preserve existing fields if document exists
+
+        // Update local state
+        this.user = auth.currentUser;
+      } catch (error) {
+        this.error = error.message;
+        throw error;
+      } finally {
+        this.loading = false;
+      }
     }
   }
 });

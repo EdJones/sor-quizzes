@@ -14,8 +14,8 @@
 
       <div v-if="submitStatus.type === 'success' && submittedEntry" class="submitted-preview mt-4">
         <h3>Your submitted quiz item:</h3>
-        <QuizItem :currentQuizItem="submittedEntry" :itemNum="0" :reviewMode="true" :basicMode="false"
-          :userAnswer="submittedEntry.correctAnswer" />
+        <QuizItem :currentQuizItem="submittedEntry" :itemNum="0" :reviewMode="true" :basicMode="false" :debug="false"
+          :userAnswer="submittedEntry.answer_type === 'ms' ? submittedEntry.correctAnswers : submittedEntry.correctAnswer" />
       </div>
     </div>
 
@@ -75,15 +75,15 @@
 
     <div v-if="previewMode" class="preview-section">
       <QuizItem :currentQuizItem="newEntry" :itemNum="0" :reviewMode="true" :basicMode="false" :previewMode="true"
-        :userAnswer="newEntry.correctAnswer" />
+        :debug="false" :userAnswer="newEntry.correctAnswer" />
     </div>
 
     <div v-else>
       <QuizItem :currentQuizItem="newEntry" :itemNum="0" :reviewMode="true" :basicMode="false" :previewMode="true"
-        :userAnswer="newEntry.correctAnswer" />
+        :debug="false" :userAnswer="newEntry.correctAnswer" />
     </div>
 
-    <form v-else @submit.prevent="submitForm">
+    <form @submit.prevent="submitForm">
       <!-- Add this at the top of the form, before other sections -->
       <div class="template-selector">
         <div class="form1-section bg-indigo-950/10 dark:bg-indigo-950/30 ">
@@ -546,15 +546,24 @@
       </div>
 
       <div class="mt-4 flex justify-between items-center">
-        <button @click="saveDraft"
-          class="px-6 py-2 bg-black hover:bg-gray-900 text-[#02b87d] rounded-lg flex items-center transition-colors border-2 border-[#02b87d]">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 4v16a2 2 0 002 2h12a2 2 0 002-2V8.342a2 2 0 00-.602-1.43l-4.44-4.342A2 2 0 0013.56 2H6a2 2 0 00-2 2z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6" />
-          </svg>
-          Save Draft
-        </button>
+        <div class="flex gap-2">
+          <button type="button" @click="saveDraft"
+            class="px-6 py-2 bg-black hover:bg-gray-900 text-[#02b87d] rounded-lg flex items-center transition-colors border-2 border-[#02b87d]">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v16a2 2 0 002 2h12a2 2 0 002-2V8.342a2 2 0 00-.602-1.43l-4.44-4.342A2 2 0 0013.56 2H6a2 2 0 00-2 2z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6" />
+            </svg>
+            Save Draft
+          </button>
+          <button type="button" @click="showVersionInfoModal = true"
+            class="px-6 py-2 bg-violet-500 hover:bg-violet-600 text-white rounded-lg flex items-center transition-colors border-2 border-violet-400">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Test Modal
+          </button>
+        </div>
         <button type="submit" :class="[
           'submit-btn',
           {
@@ -567,12 +576,16 @@
       </div>
     </form>
 
-    <!-- Add save status indicator -->
+    <!-- Move these outside the form -->
     <div v-if="saveStatus.show" :class="['save-status-indicator', saveStatus.type]" role="status" aria-live="polite">
       {{ saveStatus.message }}
     </div>
 
     <ProgressSteps :currentStep="currentStep" />
+
+    <!-- Keep VersionInfoModal here, outside of any v-if conditions -->
+    <VersionInfoModal :show="showVersionInfoModal" @close="showVersionInfoModal = false"
+      @save="handleSaveDraftWithVersion" />
   </div>
 </template>
 
@@ -585,12 +598,14 @@ import 'vue-json-pretty/lib/styles.css'
 import { quizEntries } from '../data/quiz-items';
 import { ref, watch, onMounted, computed } from 'vue';
 import ProgressSteps from './ProgressSteps.vue';
+import VersionInfoModal from './VersionInfoModal.vue';
 
 export default {
   components: {
     QuizItem,
     VueJsonPretty,
-    ProgressSteps
+    ProgressSteps,
+    VersionInfoModal
   },
   setup() {
     const store = quizStore();
@@ -693,6 +708,7 @@ export default {
       previewMode: false,
       jsonPreviewMode: false,
       showExplanationSection: false,
+      showVersionInfoModal: false, // Initialize modal visibility state
       returnButton: {
         active: false
       },
@@ -773,12 +789,29 @@ export default {
         // Submit for review
         await this.store.submitForReview(this.store.draftQuizEntry.id);
 
-        this.submittedEntry = { ...this.newEntry };
+        // Make a deep copy of the current entry
+        this.submittedEntry = JSON.parse(JSON.stringify(this.newEntry));
+
+        // Initialize store state for the submitted preview
+        if (this.submittedEntry.answer_type === 'ms') {
+          this.store.simpleAnswers = {
+            0: this.submittedEntry.correctAnswers // For multiple select questions
+          };
+        } else {
+          this.store.simpleAnswers = {
+            0: this.submittedEntry.correctAnswer // For multiple choice questions
+          };
+        }
+
+        // Show success message and preview
         this.submitStatus = {
           show: true,
           type: 'success',
           message: 'Quiz entry submitted successfully!'
         };
+
+        // Force a re-render of the QuizItem component
+        await this.$nextTick();
       } catch (e) {
         this.submitStatus = {
           show: true,
@@ -787,29 +820,44 @@ export default {
         };
       }
     },
-    async saveDraft() {
+    async saveDraft(event) {
+      // Prevent any default form submission
+      if (event) {
+        event.preventDefault();
+      }
+
+      // Simply show the modal
+      this.showVersionInfoModal = true;
+      console.log('Modal should be visible now:', this.showVersionInfoModal);
+    },
+    async handleSaveDraftWithVersion(versionMessage) {
       try {
-        await this.store.recordQuizEdit();
+        console.log('Saving draft with version message:', versionMessage);
         const draftId = await this.store.saveDraftQuizEntry();
+        console.log('Draft saved with ID:', draftId);
 
         if (!draftId) {
           throw new Error('Failed to save draft');
         }
 
-        // Run validation check after successful save
-        await this.checkValidation();
+        await this.store.recordQuizEdit(versionMessage);
+        console.log('Quiz edit recorded successfully');
 
         this.submitStatus = {
           show: true,
           type: 'success',
           message: 'Draft saved successfully!'
         };
-      } catch (e) {
+      } catch (error) {
+        console.error('Error saving draft:', error);
         this.submitStatus = {
           show: true,
           type: 'error',
-          message: e.message || 'Error saving draft'
+          message: error.message || 'Error saving draft'
         };
+      } finally {
+        // Close the modal
+        this.showVersionInfoModal = false;
       }
     },
     returnToQuizzes() {

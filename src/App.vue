@@ -11,11 +11,14 @@
         <router-link to="/" class="flex items-center">
           <img :src="logo" alt="SOR Quizzes" class="h-7 md:h-8" />
         </router-link>
-        <h1 class="text-xxl font-semibold text-gray-200 hidden md:block">
+        <h1 class="text-xxl font-semibold text-gray-200 block">
           Science of Reading Quizzes
         </h1>
       </div>
-      <UserStatus />
+      <div class="flex items-center gap-4">
+        <TopScores />
+        <UserStatus />
+      </div>
     </header>
 
     <!-- Help Modal -->
@@ -63,6 +66,7 @@
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue';
 import UserStatus from './components/UserStatus.vue';
+import TopScores from './components/TopScores.vue';
 import logo from './assets/sor-quizzes-logo.png';
 import { useAuthStore } from './stores/authStore';
 import { useProgressStore } from './stores/progressStore';
@@ -104,5 +108,19 @@ onMounted(async () => {
 .container {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+header {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  h1 {
+    font-size: 1.25rem;
+  }
+
+  img {
+    height: 1.5rem;
+  }
 }
 </style>

@@ -31,6 +31,14 @@ import App from './App.vue'
 // 6. Setup
 inject();
 
+// Add global error handler for cross-origin issues
+window.addEventListener('error', (event) => {
+    if (event.message && event.message.includes('cross-origin')) {
+        console.warn('Cross-origin error detected:', event.message);
+        event.preventDefault(); // Prevent the error from propagating
+    }
+});
+
 library.add(
     faUserSecret,
     faCircleQuestion,

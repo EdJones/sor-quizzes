@@ -15,7 +15,7 @@
                 <div class="list-item-right">{{ option }}</div>
                 <div v-if="greenOutline[index] && selectedOptions.includes(index + 1)" class="p-0 m-0">
                     <Vue3Lottie autoplay loop mode="normal" :animationData="fireworksJSON" style="width: 70px"
-                        class="m-0 p-0">
+                        class="m-0 p-0" @error="handleLottieError">
                     </Vue3Lottie>
                 </div>
             </li>
@@ -162,6 +162,9 @@ export default {
         handleAnswerSelected(selectedOptions) {
             console.log("Answer selected:", selectedOptions);
             this.$emit('selected');
+        },
+        handleLottieError(error) {
+            console.error('Error with Lottie animation:', error);
         }
     }
 }
@@ -228,8 +231,15 @@ a {
 .list-item-right {
     margin-top: auto;
     margin-bottom: auto;
-    min-width: 60px;
+    min-width: 100px;
+    flex-grow: 1;
     padding-right: 8px;
+}
+
+@media (min-width: 768px) {
+    .list-item-right {
+        min-width: 200px;
+    }
 }
 
 .hidden {

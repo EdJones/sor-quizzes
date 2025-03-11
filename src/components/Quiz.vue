@@ -98,7 +98,7 @@
     <button class="bg-stone-400 h-10 mt-4 text-amber-400" @click="showOriginalView">Submit thoughts & return to
       Quizzes</button>
     <div class="router-link-container">
-      <router-link to="/new-item" class="button-75">Suggest a New Quiz Entry</router-link>
+      <router-link to="/edit-item/new" class="button-75">Suggest a New Quiz Entry</router-link>
     </div>
   </div>
   <div v-else>
@@ -112,7 +112,7 @@
   </div>
 
   <!-- Add the progress popup component -->
-  <ProgressDetailsPopup ref="progressPopup" />
+  <ProgressDetailsPopup ref="progressPopup" :show="showProgressPopup" @close="showProgressPopup = false" />
 </template>
 <script>
 import QuizItem from './QuizItem.vue';
@@ -121,7 +121,9 @@ import { quizSets } from '../data/quizSets.js'
 import { quizStore } from '../stores/quizStore'; // Import the store
 import { ref, onMounted, watch } from 'vue'
 import { useProgressStore } from '../stores/progressStore';
+import { useScoreStore } from '../stores/scoreStore'; // Import the score store
 import ProgressDetailsPopup from './ProgressDetailsPopup.vue';
+import { auth } from '../firebase';  // Add this import
 
 export default {
   name: 'Quiz',
@@ -143,7 +145,9 @@ export default {
   setup(props) {
     const store = quizStore();
     const progressStore = useProgressStore();
+    const scoreStore = useScoreStore(); // Initialize the score store
     const progressPopup = ref(null);
+    const showProgressPopup = ref(false);
 
     onMounted(() => {
       store.setCurrentQuiz(props.selectedQuiz);
@@ -152,14 +156,16 @@ export default {
     // Add method to show progress
     const showProgress = () => {
       console.log('Showing progress popup for quiz:', props.selectedQuiz);
-      progressPopup.value?.togglePopup(props.selectedQuiz);
+      showProgressPopup.value = true;
     };
 
     return {
       store,
       progressStore,
+      scoreStore,
       progressPopup,
-      showProgress
+      showProgress,
+      showProgressPopup
     }
   },
   data() {
@@ -533,6 +539,13 @@ export default {
         const score = this.numCorrect();
         const total = this.quizItems.length;
 
+        console.log('Starting quizDone:', {
+          score,
+          total,
+          quizId: this.selectedQuiz,
+          userId: auth.currentUser?.uid
+        });
+
         // Validate the values before sending
         if (typeof score !== 'number' || typeof total !== 'number') {
           console.error('Invalid score or total:', { score, total });
@@ -546,6 +559,36 @@ export default {
           totalQuestions: total
         });
         console.log('Quiz attempt recorded successfully');
+
+
+
+        // Save final progress using the progress store
+        const progressData = {
+          complete: true,
+          userAnswers: this.store.userAnswers,
+          incorrectQuestions: this.store.incorrectQuestions,
+          totalCorrect: score,
+          totalQuestions: total,
+          timestamp: new Date()
+        };
+
+        console.log('Saving progress data:', progressData);
+        await this.progressStore.saveQuizProgress(this.selectedQuiz, progressData);
+        console.log('Progress saved successfully');
+
+        // Check and update top scores
+        if (auth.currentUser) {
+          console.log('Updating top scores for user:', auth.currentUser.uid);
+          await this.scoreStore.checkAndUpdateTopScores(
+            auth.currentUser.uid,
+            this.selectedQuiz,
+            score,
+            auth.currentUser.email || 'Anonymous'
+          );
+          console.log('Top scores updated successfully');
+        } else {
+          console.log('User not logged in, skipping top scores update');
+        }
 
         // Update the quiz state
         this.quizState = 'end';
@@ -598,10 +641,6 @@ export default {
       console.log("Emitting change-view event");
       this.$emit('change-view', { showQuizzes: true }); // Emit an event with the new state
       console.log("Event emitted");
-    },
-    showProgress() {
-      console.log('Showing progress popup for quiz:', this.selectedQuiz);
-      this.progressPopup.value?.togglePopup(this.selectedQuiz);
     }
   },
   created() {

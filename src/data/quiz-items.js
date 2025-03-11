@@ -1674,6 +1674,130 @@ export const quizEntries = [{
     ]
 },
 {
+    title: "Nonsense Word Fluency",
+    subtitle: "",
+    id: 45,
+    Question: "Kids should receive how much instruction in nonsense word fluency?",
+    questionP2: "",
+    answer_type: "mc",
+    option1: "0-1 hour",
+    option2: "1-5 hours",
+    option3: "5-10 hours",
+    option4: "> 10 hours",
+    option5: "",
+    correctAnswer: 1,
+    explanation: "Teachers should not teach nonsense word fluency.",
+    explanation2: "While NWF assessments are a crucial part of diagnosing students' word-level skills, instruction in nonsense words is an improper use of time. Plenty of unfamiliar real words can be used to build students' orthographic mapping skills and memories. Use them instead.",
+    videoUrl: "",
+    videoId: "",
+    image: "",
+    imageUrl: "",
+    imageAltText: "",
+    podcastEpisode: {
+        description: "",
+        audioUrl: "",
+        EpisodeUrl: "",
+        title: "",
+        podcastStartTime: 0
+    },
+    podcastEpisode2: {
+        title: "",
+        EpisodeUrl: "",
+        podcastStartTime: 0,
+        audioUrl: "",
+        description: ""
+    },
+    cautionLevel: "",
+    caution: "",
+    citations: [],
+    ref1: "",
+    ref2: "",
+    resources: [
+        {
+            title: "What Doesn't Belong Here? On Teaching Nonsense Words",
+            author: "Tim Shanahan",
+            url: "https://www.shanahanonliteracy.com/blog/what-doesnt-belong-here-on-teaching-nonsense-words",
+            description: ""
+        }
+    ],
+    closingText: "",
+    closingText2: "",
+    modal: "",
+    status: "pending",
+    userEmail: "ed.jones@gmail.com",
+    isAnonymous: false,
+    userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+    correctAnswers: [1],
+    submittedAt: {
+        seconds: 1741170304,
+        nanoseconds: 695000000
+    },
+    timestamp: {
+        seconds: 1741170304,
+        nanoseconds: 767000000
+    }
+},
+{
+    title: "Phonological Awareness",
+    subtitle: "Rhyming and Syllable instruction",
+    id: 46,
+    Question: "T/F: Rhyming and syllable segmentation are a critical part of Kindergarten",
+    questionP2: "",
+    answer_type: "mc",
+    option1: "True",
+    option2: "False",
+    option3: "",
+    option4: "",
+    option5: "",
+    correctAnswer: 2,
+    explanation: "They are an unnecessary use of precious time. This explanation was provided by Holly Lane, Director of the University of Florida Literacy Institute (UFLI):",
+    explanation2: "",
+    videoUrl: "",
+    videoId: "",
+    image: "",
+    imageUrl: "",
+    imageAltText: "",
+    modal: "It's hard to let go of this belief, but it really is worth it. The idea that larger units of sound are important came from research on phonological development that demonstrated a typical developmental sequence. This body of research showed that kids typically become aware of larger units of sound (words, syllables, onsets, rimes) before they tune into smaller units (phonemes).\nBUT...here's where the field went wrong. We ASSUMED (you know what happens when you assume! 😉) that because this was the typical order of development, it was a necessary order. We ASSUMED that children needed to learn to rhyme and segment syllables first, and then we could teach them to blend and segment phonemes. Well, we were wrong. As it turns out, we figured out that kids do just fine jumping right into phonemes.\nThis is a lot like how pediatricians used to be concerned when babies didn't crawl. They had identified a typical developmental sequence in which babies crawl before they walk. They were certain that kids who didn't crawl would suffer long-term developmental problems. Well, as it turns out many children walk without ever crawling and turn out just fine. Pediatricians figured out they were wrong about this, so they stopped suggesting parents take their kids through silly therapies to get them to crawl even though they had already learned to walk.\nEven more important, we figured out that learning to rhyme and segment syllables doesn't actually have any real benefit to reading or spelling. Remember, phonological awareness is not the goal of phonological awareness instruction. The whole purpose of working on phonological awareness in the first place it to help kids read and spell. Teaching kids to rhyme and segment syllables helps kids rhyme and segment syllables, but teaching kids to blend and segment phonemes helps them read and spell words.\nI hear teachers say all the time \"it's only 10 or 15 minutes a day, what's the harm?\" Well, maybe you've got tons of spare time in your school day, but most teachers don't. If you have 10-15 minutes available in your day, your time would be much better used doing additional practice on word work with manipulative letters (i.e., blending and segmenting phonemes with letters) or reading and spelling irregular words or reading connected text--things that will actually improve your kids' reading ability.\nI know the belief is strong, and the activities are fun and engaging, so it's hard to let it go. Believe me when I say I understand. I wrote and entire BOOK that included activities at the word, syllable, onset-rime, and phoneme level. You know that umbrella diagram that people use? That came from PD I did in the early 90s. I was invested in this stuff! But, now I know better, so I do better. I urge you to do the same!",
+    status: "beta",
+    userEmail: "ed.jones@gmail.com",
+    isAnonymous: false,
+    userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+    correctAnswers: [2],
+
+    podcastEpisode: {
+        title: "Episode Title",
+        EpisodeUrl: "",
+        audioUrl: "",
+        description: "",
+        podcastStartTime: 0
+    },
+    podcastEpisode2: {
+        title: "",
+        EpisodeUrl: "",
+        audioUrl: "",
+        description: "",
+        podcastStartTime: 0
+    },
+    cautionLevel: "",
+    caution: "If you can help us add the research to this section, we'd be very appreciative.",
+    citations: [],
+    ref1: "",
+    ref2: "",
+    resources: [
+        {
+            text: "Heggarty has issued updated guidance on lessons to omit.",
+            title: "Heggarty Alignment Guide",
+            author: "Literacy Resources, LLC",
+            url: "https://wp.heggerty.org/wp-content/uploads/2024/04/2020-2022-Edition-Alignment-Guide_Updated-July-2022.pdf",
+            description: ""
+        }
+    ],
+    closingText: "If you can help us add the research to this section, we'd be very appreciative.",
+    closingText2: "",
+    id: "GZp2cdkYhuskL28ENRbb",
+    originalId: "K9G4hnDT4RyVxwE9c7T8"
+},
+{
     title: "Learning Science",
     subtitle: "",
     id: 2000, // New ID for the new quiz entry
