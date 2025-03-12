@@ -588,7 +588,7 @@ export const quizStore = defineStore('quiz', {
                     validation.invalidFields.add(`option${draft.correctAnswer}`);
                 }
             } else if (draft.answer_type === 'ms') {
-                // For multiple select, need at least 2 options and at least one correct answer
+                // For multiple select, need at least 2 options and at least two correct answers
                 const options = [
                     draft.option1,
                     draft.option2,
@@ -612,8 +612,8 @@ export const quizStore = defineStore('quiz', {
                     });
                 }
 
-                if (!draft.correctAnswers || !Array.isArray(draft.correctAnswers) || draft.correctAnswers.length === 0) {
-                    validation.errors.push('Please select at least one correct answer');
+                if (!draft.correctAnswers || !Array.isArray(draft.correctAnswers) || draft.correctAnswers.length < 2) {
+                    validation.errors.push('Multiple select questions require at least two correct answers');
                     validation.invalidFields.add('correctAnswers');
                 }
 
@@ -683,11 +683,14 @@ export const quizStore = defineStore('quiz', {
 
         updateDraftQuizEntry(entry) {
             const currentId = this.draftQuizEntry.id;
-            this.draftQuizEntry = {
+            // Ensure correctAnswers is initialized as an array for multiple select questions
+            const updatedEntry = {
                 ...this.draftQuizEntry,
                 ...entry,
-                id: entry.id || currentId // Keep existing ID if new entry doesn't have one
+                id: entry.id || currentId, // Keep existing ID if new entry doesn't have one
+                correctAnswers: entry.answer_type === 'ms' ? (entry.correctAnswers || []) : []
             };
+            this.draftQuizEntry = updatedEntry;
         },
 
         resetDraftQuizEntry() {
@@ -757,21 +760,46 @@ export const quizStore = defineStore('quiz', {
                 this.draftQuizEntry.id = docRef.id;
             }
 
+            // Helper function to remove undefined values and ensure valid data
+            const sanitizeData = (obj) => {
+                const result = {};
+                Object.entries(obj).forEach(([key, value]) => {
+                    if (value === undefined) {
+                        result[key] = null;  // Convert undefined to null for Firestore
+                    } else if (typeof value === 'object' && value !== null) {
+                        result[key] = sanitizeData(value);  // Recursively sanitize nested objects
+                    } else {
+                        result[key] = value;
+                    }
+                });
+                return result;
+            };
+
+            // Create sanitized versions of the states
+            const beforeState = this.lastSavedDraftQuizEntry ?
+                sanitizeData({ ...this.lastSavedDraftQuizEntry, id: this.draftQuizEntry.id }) :
+                sanitizeData({ ...this.draftQuizEntry });
+
+            const afterState = sanitizeData({ ...this.draftQuizEntry });
+
+            // Create the edit record with sanitized data
             const editRecord = {
                 timestamp: serverTimestamp(),
                 userId: auth.user?.uid || 'anonymous',
                 userEmail: auth.user?.email || 'anonymous',
-                quizItemId: this.draftQuizEntry.id,
-                versionMessage: versionMessage,
+                quizItemId: this.draftQuizEntry.id || null,
+                versionMessage: versionMessage || '',
                 changes: {
-                    before: this.lastSavedDraftQuizEntry || { ...this.draftQuizEntry },
-                    after: { ...this.draftQuizEntry }
+                    before: beforeState,
+                    after: afterState
                 }
             };
 
             try {
                 const editHistoryRef = collection(db, 'quizEditHistory');
                 await addDoc(editHistoryRef, editRecord);
+                // Update lastSavedDraftQuizEntry after successful save
+                this.lastSavedDraftQuizEntry = { ...this.draftQuizEntry };
             } catch (error) {
                 console.error('Error recording quiz edit:', error);
                 // Continue with save even if edit history fails
