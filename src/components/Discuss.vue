@@ -30,10 +30,10 @@
                     </button>
                 </div>
 
-                <div class="flex flex-col sm:flex-row h-[calc(120vh-4rem)] sm:h-[32rem]">
+                <div class="flex flex-col sm:flex-row h-[calc(100vh-4rem)] sm:h-[28rem]">
                     <!-- Quiz Sets List -->
                     <div
-                        class="w-full sm:w-64 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700 overflow-y-auto max-h-64 sm:max-h-full">
+                        class="w-full sm:w-64 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700 overflow-y-auto h-[40vh] sm:h-full">
                         <div class="p-2 sm:p-4">
                             <!-- App Title and General Discussion in same row on mobile -->
                             <div class="flex items-center justify-between sm:block mb-2 sm:mb-3">
@@ -86,9 +86,9 @@
                     </div>
 
                     <!-- Messages Area -->
-                    <div class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900 min-h-0">
+                    <div class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900 min-h-0 h-[calc(60vh-4rem)] sm:h-full">
                         <!-- Messages Container -->
-                        <div class="flex-1 p-3 sm:p-4 overflow-y-auto" ref="messagesContainer">
+                        <div class="flex-1 p-2 sm:p-3 overflow-y-auto" ref="messagesContainer">
                             <div v-if="discussStore.isLoading[selectedQuizSet?.setName || '_general']"
                                 class="flex justify-center items-center h-full">
                                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
