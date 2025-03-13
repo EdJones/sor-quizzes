@@ -30,6 +30,8 @@
                 </svg>
                 <span class="hidden md:inline">Issues</span>
             </button>
+
+            <Discuss :quiz-sets="[...publishedQuizSets, ...betaQuizSets, ...proposedQuizSets]" />
         </div>
         <div> <span class="text-sm text-orange-300">Quiz Set editor is in fluid developent. Caveat emptor.</span></div>
         <!-- Quiz Sets Overview Visualization with Tree -->
@@ -544,6 +546,7 @@ import InProgress from '../components/InProgress.vue'; // Import the InProgress 
 import { useAuth } from '../composables/useAuth';
 import QuizItem from '../components/QuizItem.vue';
 import { quizStore } from '../stores/quizStore';
+import Discuss from '../components/Discuss.vue';
 
 const router = useRouter();
 const currentTab = ref('current');

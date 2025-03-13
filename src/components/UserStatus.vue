@@ -82,6 +82,9 @@
                         </svg>
                     </div>
                 </div>
+                <!-- Discuss Component -->
+                <Discuss />
+                <!-- Contributions Info -->
                 <div class="text-xs text-gray-600 dark:text-gray-300 max-w-full" @click="showContributions = true">
                     <div
                         class="flex items-center gap-1 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 rounded px-2 py-1 transition-colors min-w-0">
@@ -150,13 +153,15 @@ import { doc, getDoc, query, collection, getDocs, where } from 'firebase/firesto
 import { db } from '../firebase';
 import { quizEntries } from '../data/quiz-items';
 import UserProfileModal from './UserProfileModal.vue';
+import Discuss from './Discuss.vue';
 
 export default {
     name: 'UserStatus',
     components: {
         ProgressDetailsPopup,
         ContributionsModal,
-        UserProfileModal
+        UserProfileModal,
+        Discuss
     },
     setup() {
         const authStore = useAuthStore();
