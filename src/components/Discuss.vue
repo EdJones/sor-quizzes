@@ -16,13 +16,13 @@
 
         <!-- Discussion Modal -->
         <div v-if="showDiscussion"
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl">
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-0 sm:p-4 z-50">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full h-full sm:h-auto sm:max-w-4xl sm:w-full">
                 <!-- Modal Header -->
-                <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Discussions</h3>
+                <div class="flex justify-between items-center p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Discussions</h3>
                     <button @click="handleCloseDiscussion"
-                        class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                        class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 p-2">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12" />
@@ -30,14 +30,16 @@
                     </button>
                 </div>
 
-                <div class="flex h-[32rem]">
+                <div class="flex flex-col sm:flex-row h-[calc(100vh-4rem)] sm:h-[32rem]">
                     <!-- Quiz Sets List -->
-                    <div class="w-64 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
-                        <div class="p-4">
+                    <div
+                        class="w-full sm:w-64 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700 overflow-y-auto max-h-48 sm:max-h-full">
+                        <div class="p-3 sm:p-4">
                             <!-- App Title and General Discussion -->
-                            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3">SorQuizzes</h2>
+                            <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3">
+                                SorQuizzes</h2>
                             <div @click="selectQuizSet(null)"
-                                class="mb-4 p-2 rounded-lg cursor-pointer transition-colors" :class="[
+                                class="mb-3 sm:mb-4 p-2 rounded-lg cursor-pointer transition-colors" :class="[
                                     !selectedQuizSet
                                         ? 'bg-blue-500 text-white'
                                         : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -79,9 +81,9 @@
                     </div>
 
                     <!-- Messages Area -->
-                    <div class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
+                    <div class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900 min-h-0">
                         <!-- Messages Container -->
-                        <div class="flex-1 p-4 overflow-y-auto" ref="messagesContainer">
+                        <div class="flex-1 p-3 sm:p-4 overflow-y-auto" ref="messagesContainer">
                             <div v-if="discussStore.isLoading[selectedQuizSet?.setName || '_general']"
                                 class="flex justify-center items-center h-full">
                                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -132,14 +134,14 @@
                         </div>
 
                         <!-- Message Input -->
-                        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+                        <div class="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700">
                             <form @submit.prevent="handleSendMessage" class="flex gap-2">
                                 <input v-model="newMessage" type="text" :placeholder="selectedQuizSet ?
                                     `Message about ${selectedQuizSet.setName}...` :
                                     'Type your message...'"
-                                    class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    class="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <button type="submit" :disabled="isSending || !newMessage.trim()"
-                                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200">
+                                    class="px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-sm sm:text-base">
                                     Send
                                 </button>
                             </form>
