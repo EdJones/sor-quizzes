@@ -30,7 +30,7 @@
                     </button>
                 </div>
 
-                <div class="flex flex-col sm:flex-row h-[calc(100vh-4rem)] sm:h-[50rem]">
+                <div class="flex flex-col sm:flex-row h-[calc(70vh-4rem)] sm:h-[32rem]">
                     <!-- Quiz Sets List -->
                     <div
                         class="w-full sm:w-64 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700 overflow-y-auto max-h-64 sm:max-h-full">
