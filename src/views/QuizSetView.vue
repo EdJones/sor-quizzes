@@ -31,7 +31,7 @@
                 <span class="hidden md:inline">Issues</span>
             </button>
 
-            <Discuss />
+            <Discuss :quiz-sets="[...publishedQuizSets, ...betaQuizSets, ...proposedQuizSets]" />
         </div>
         <div> <span class="text-sm text-orange-300">Quiz Set editor is in fluid developent. Caveat emptor.</span></div>
         <!-- Quiz Sets Overview Visualization with Tree -->
