@@ -33,48 +33,53 @@
                 <div class="flex flex-col sm:flex-row h-[calc(100vh-4rem)] sm:h-[32rem]">
                     <!-- Quiz Sets List -->
                     <div
-                        class="w-full sm:w-64 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700 overflow-y-auto max-h-48 sm:max-h-full">
-                        <div class="p-3 sm:p-4">
-                            <!-- App Title and General Discussion -->
-                            <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3">
-                                SorQuizzes</h2>
-                            <div @click="selectQuizSet(null)"
-                                class="mb-3 sm:mb-4 p-2 rounded-lg cursor-pointer transition-colors" :class="[
-                                    !selectedQuizSet
-                                        ? 'bg-blue-500 text-white'
-                                        : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                ]">
-                                <div class="font-medium">General Discussion</div>
-                                <div v-if="discussStore.unreadCount['_general']" class="text-xs mt-1">
-                                    <span class="px-1.5 py-0.5 bg-green-500 text-white rounded-full">
-                                        {{ discussStore.unreadCount['_general'] }}
-                                    </span>
+                        class="w-full sm:w-64 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700 overflow-y-auto max-h-64 sm:max-h-full">
+                        <div class="p-2 sm:p-4">
+                            <!-- App Title and General Discussion in same row on mobile -->
+                            <div class="flex items-center justify-between sm:block mb-2 sm:mb-3">
+                                <h2 class="text-base sm:text-xl font-bold text-gray-900 dark:text-white">SorQuizzes</h2>
+                                <div @click="selectQuizSet(null)"
+                                    class="flex-shrink-0 px-2 py-1 sm:px-3 sm:py-2 rounded-lg cursor-pointer transition-colors"
+                                    :class="[
+                                        !selectedQuizSet
+                                            ? 'bg-blue-500 text-white'
+                                            : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                    ]">
+                                    <div class="text-sm sm:text-base font-medium">General</div>
+                                    <div v-if="discussStore.unreadCount['_general']" class="text-xs">
+                                        <span class="px-1.5 py-0.5 bg-green-500 text-white rounded-full">
+                                            {{ discussStore.unreadCount['_general'] }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Divider -->
-                            <div class="border-t border-gray-200 dark:border-gray-700 my-4"></div>
+                            <!-- Compact divider on mobile -->
+                            <div class="border-t border-gray-200 dark:border-gray-700 my-2 sm:my-4"></div>
 
-                            <!-- Quiz Sets Section -->
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Quiz Sets</h3>
-                            <div v-for="quizSet in filteredQuizSets" :key="quizSet.setName"
-                                @click="selectQuizSet(quizSet)"
-                                class="mb-2 p-2 rounded-lg cursor-pointer transition-colors" :class="[
-                                    selectedQuizSet?.setName === quizSet.setName
-                                        ? 'bg-blue-500 text-white'
-                                        : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                ]">
-                                <div class="font-medium">{{ quizSet.setName }}</div>
-                                <div class="text-xs" :class="[
-                                    selectedQuizSet?.setName === quizSet.setName
-                                        ? 'text-white opacity-75'
-                                        : 'text-gray-600 dark:text-gray-400'
-                                ]">
-                                    {{ quizSet.items.length }} items
-                                    <span v-if="discussStore.unreadCount[quizSet.setName]"
-                                        class="ml-2 px-1.5 py-0.5 bg-green-500 text-white rounded-full">
-                                        {{ discussStore.unreadCount[quizSet.setName] }}
-                                    </span>
+                            <!-- Quiz Sets Section with compact spacing on mobile -->
+                            <h3 class="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white mb-1 sm:mb-3">Quiz
+                                Sets</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-1 gap-1 sm:gap-2">
+                                <div v-for="quizSet in filteredQuizSets" :key="quizSet.setName"
+                                    @click="selectQuizSet(quizSet)"
+                                    class="p-1.5 sm:p-2 rounded-lg cursor-pointer transition-colors" :class="[
+                                        selectedQuizSet?.setName === quizSet.setName
+                                            ? 'bg-blue-500 text-white'
+                                            : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                    ]">
+                                    <div class="text-sm sm:text-base font-medium truncate">{{ quizSet.setName }}</div>
+                                    <div class="text-xs flex items-center justify-between" :class="[
+                                        selectedQuizSet?.setName === quizSet.setName
+                                            ? 'text-white opacity-75'
+                                            : 'text-gray-600 dark:text-gray-400'
+                                    ]">
+                                        <span>{{ quizSet.items.length }} items</span>
+                                        <span v-if="discussStore.unreadCount[quizSet.setName]"
+                                            class="px-1.5 py-0.5 bg-green-500 text-white rounded-full">
+                                            {{ discussStore.unreadCount[quizSet.setName] }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
