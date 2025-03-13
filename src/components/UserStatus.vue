@@ -1,11 +1,11 @@
 <template>
     <div class="user-status flex items-center gap-2 p-1 text-sm">
         <template v-if="authStore.user">
-            <div class="flex flex-col gap-0.5 bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-1.5">
+            <div class="flex flex-col gap-0.5 bg-gray-100 dark:bg-gray-700 rounded-lg px-2 py-1 max-w-fit">
                 <!-- User Status with Provider Icon -->
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1 min-w-0 max-w-full">
                     <!-- Google Icon -->
-                    <svg v-if="provider === 'google.com'" class="h-4 w-4" viewBox="0 0 24 24">
+                    <svg v-if="provider === 'google.com'" class="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 24 24">
                         <path fill="#4285F4"
                             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                         <path fill="#34A853"
@@ -16,23 +16,24 @@
                             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                     </svg>
                     <!-- GitHub Icon -->
-                    <svg v-else-if="provider === 'github.com'" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <svg v-else-if="provider === 'github.com'" class="h-3.5 w-3.5 flex-shrink-0" fill="currentColor"
+                        viewBox="0 0 24 24">
                         <path
                             d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                     </svg>
                     <!-- Email Icon -->
-                    <svg v-else-if="provider === 'password'" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
+                    <svg v-else-if="provider === 'password'" class="h-3.5 w-3.5 flex-shrink-0" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
-                    <span class="text-gray-600">
+                    <span class="text-gray-600 truncate">
                         {{ displayName }}
                     </span>
                     <!-- Settings Gear Icon -->
                     <button @click="showUserProfile = true"
-                        class="ml-2 text-gray-400 hover:text-gray-300 transition-colors">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        class="gear-icon ml-1 text-gray-400 hover:text-gray-300 transition-colors flex-shrink-0">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -61,14 +62,14 @@
 
                 <!-- Progress Indicator with Info Icon -->
                 <div @click="showProgressDetails = true"
-                    class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 rounded px-2 py-1 transition-colors group">
-                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 rounded px-2 py-1 transition-colors group max-w-full">
+                    <svg class="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                     </svg>
-                    <div class="flex items-center gap-2">
-                        <span>{{ progressText }}</span>
-                        <div class="w-24 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="truncate">{{ progressText }}</span>
+                        <div class="w-16 flex-shrink-0 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                             <div class="h-full bg-green-500 rounded-full"
                                 :style="{ width: `${progressStore.progressPercentage}%` }">
                             </div>
@@ -81,14 +82,14 @@
                         </svg>
                     </div>
                 </div>
-                <div class="text-xs text-gray-600 dark:text-gray-300" @click="showContributions = true">
+                <div class="text-xs text-gray-600 dark:text-gray-300 max-w-full" @click="showContributions = true">
                     <div
-                        class="flex items-center gap-1 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 rounded px-2 py-1 transition-colors">
-                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        class="flex items-center gap-1 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 rounded px-2 py-1 transition-colors min-w-0">
+                        <svg class="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                         </svg>
-                        <span v-if="contributionStats.total > 0">
+                        <span v-if="contributionStats.total > 0" class="truncate">
                             {{ contributionStats.total }} quiz {{ contributionStats.total === 1 ? 'entry' : 'entries' }}
                             ({{ contributionStats.published }} published)
                         </span>
@@ -345,3 +346,12 @@ export default {
     }
 };
 </script>
+<style scoped>
+.gear-icon {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    background-color: transparent;
+}
+</style>
