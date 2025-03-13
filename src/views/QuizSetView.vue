@@ -3,18 +3,18 @@
         <div class="flex justify-end gap-2 mb-4">
 
             <button @click="handleNewQuizItem" class="bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center
-                       px-4 py-2 text-sm md:text-base md:px-4 md:py-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 md:h-5 md:w-5 md:mr-2" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor">
+                       px-3 py-1 text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
                 <span class="hidden md:inline">Create/Edit A Quiz Item</span>
                 <span class="md:hidden">New Item</span>
             </button>
-            <button @click="showCreateModal = true" class="bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center
-                       px-4 py-2 text-sm md:text-base md:px-4 md:py-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 md:h-5 md:w-5 md:mr-2" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor">
+            <button @click="showCreateModal = true"
+                class="flex items-center gap-1 px-3 py-1 text-sm border-green-400 bg-gray-700 hover:bg-gray-600 text-green-400 rounded-lg transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
                 <span class="hidden md:inline">Create New Quiz Set</span>
@@ -30,6 +30,8 @@
                 </svg>
                 <span class="hidden md:inline">Issues</span>
             </button>
+
+            <Discuss :quiz-sets="[...publishedQuizSets, ...betaQuizSets, ...proposedQuizSets]" />
         </div>
         <div> <span class="text-sm text-orange-300">Quiz Set editor is in fluid developent. Caveat emptor.</span></div>
         <!-- Quiz Sets Overview Visualization with Tree -->
@@ -544,6 +546,7 @@ import InProgress from '../components/InProgress.vue'; // Import the InProgress 
 import { useAuth } from '../composables/useAuth';
 import QuizItem from '../components/QuizItem.vue';
 import { quizStore } from '../stores/quizStore';
+import Discuss from '../components/Discuss.vue';
 
 const router = useRouter();
 const currentTab = ref('current');
