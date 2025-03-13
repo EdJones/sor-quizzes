@@ -82,8 +82,6 @@
                         </svg>
                     </div>
                 </div>
-                <!-- Discuss Component -->
-                <Discuss />
                 <!-- Contributions Info -->
                 <div class="text-xs text-gray-600 dark:text-gray-300 max-w-full" @click="showContributions = true">
                     <div
@@ -105,7 +103,6 @@
                         </svg>
                     </div>
                 </div>
-                <!-- Contributor Mode Toggle -->
 
                 <!-- Login/Sign Out Buttons -->
                 <router-link v-if="authStore.user.isAnonymous" to="/login"
@@ -153,15 +150,13 @@ import { doc, getDoc, query, collection, getDocs, where } from 'firebase/firesto
 import { db } from '../firebase';
 import { quizEntries } from '../data/quiz-items';
 import UserProfileModal from './UserProfileModal.vue';
-import Discuss from './Discuss.vue';
 
 export default {
     name: 'UserStatus',
     components: {
         ProgressDetailsPopup,
         ContributionsModal,
-        UserProfileModal,
-        Discuss
+        UserProfileModal
     },
     setup() {
         const authStore = useAuthStore();

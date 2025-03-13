@@ -38,10 +38,14 @@
                                 class="mb-2 p-2 rounded-lg cursor-pointer transition-colors" :class="[
                                     selectedQuizSet?.setName === quizSet.setName
                                         ? 'bg-blue-500 text-white'
-                                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
                                 ]">
                                 <div class="font-medium">{{ quizSet.setName }}</div>
-                                <div class="text-xs opacity-75">
+                                <div class="text-xs" :class="[
+                                    selectedQuizSet?.setName === quizSet.setName
+                                        ? 'text-white opacity-75'
+                                        : 'text-gray-600 dark:text-gray-400'
+                                ]">
                                     {{ quizSet.items.length }} items
                                     <span v-if="discussStore.unreadCount[quizSet.setName]"
                                         class="ml-2 px-1.5 py-0.5 bg-green-500 text-white rounded-full">
@@ -53,8 +57,9 @@
                     </div>
 
                     <!-- Messages Area -->
-                    <div class="flex-1 flex flex-col">
-                        <div v-if="!selectedQuizSet" class="flex-1 flex items-center justify-center text-gray-500">
+                    <div class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
+                        <div v-if="!selectedQuizSet"
+                            class="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
                             Select a quiz set to view discussions
                         </div>
                         <template v-else>
@@ -73,20 +78,19 @@
                                         :class="{ 'ml-auto': message.userId === authStore.user?.uid }">
                                         <div class="flex items-start gap-2"
                                             :class="{ 'flex-row-reverse': message.userId === authStore.user?.uid }">
-                                            <!-- User Avatar -->
                                             <div
-                                                class="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex-shrink-0 flex items-center justify-center">
+                                                class="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex-shrink-0 flex items-center justify-center text-gray-700 dark:text-gray-200">
                                                 {{ message.userName.charAt(0).toUpperCase() }}
                                             </div>
-                                            <!-- Message Content -->
                                             <div class="flex flex-col">
                                                 <div class="flex items-center gap-2"
                                                     :class="{ 'flex-row-reverse': message.userId === authStore.user?.uid }">
                                                     <span class="text-sm font-medium text-gray-900 dark:text-white">
                                                         {{ message.userName }}
                                                     </span>
-                                                    <span class="text-xs text-gray-500">{{ formatTime(message.timestamp)
-                                                        }}</span>
+                                                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                                                        {{ formatTime(message.timestamp) }}
+                                                    </span>
                                                 </div>
                                                 <div class="mt-1 p-3 rounded-lg" :class="[
                                                     message.userId === authStore.user?.uid
@@ -102,10 +106,10 @@
                             </div>
 
                             <!-- Message Input -->
-                            <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+                            <div class="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                                 <form @submit.prevent="handleSendMessage" class="flex gap-2">
                                     <input v-model="newMessage" type="text" placeholder="Type your message..."
-                                        class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                                        class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
                                     <button type="submit"
                                         class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         :disabled="!newMessage.trim() || isSending">
@@ -191,10 +195,39 @@ export default {
             try {
                 await discussStore.sendMessage(selectedQuizSet.value.setName, newMessage.value);
                 newMessage.value = '';
+            } catch (error) {
+                console.error('Failed to send message:', error);
+                // Show error to user
+                alert('Failed to send message. Please try again.');
             } finally {
                 isSending.value = false;
             }
         };
+
+        // Add error handling for subscription
+        watch(() => selectedQuizSet.value, (newQuizSet) => {
+            if (newQuizSet) {
+                try {
+                    discussStore.subscribeToMessages(newQuizSet.setName);
+                } catch (error) {
+                    console.error('Failed to subscribe to messages:', error);
+                    alert('Failed to load messages. Please try refreshing the page.');
+                }
+            }
+        }, { immediate: true });
+
+        // Scroll to bottom when messages change or when opening modal
+        watch([
+            () => showDiscussion.value,
+            () => selectedQuizSet.value && discussStore.messages[selectedQuizSet.value.setName]
+        ], async () => {
+            if (showDiscussion.value && selectedQuizSet.value) {
+                await nextTick();
+                if (messagesContainer.value) {
+                    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+                }
+            }
+        }, { deep: true });
 
         const formatTime = (timestamp) => {
             if (!timestamp) return '';
