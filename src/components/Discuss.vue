@@ -34,7 +34,29 @@
                     <!-- Quiz Sets List -->
                     <div class="w-64 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
                         <div class="p-4">
-                            <div v-for="quizSet in quizSets" :key="quizSet.setName" @click="selectQuizSet(quizSet)"
+                            <!-- App Title and General Discussion -->
+                            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3">SorQuizzes</h2>
+                            <div @click="selectQuizSet(null)"
+                                class="mb-4 p-2 rounded-lg cursor-pointer transition-colors" :class="[
+                                    !selectedQuizSet
+                                        ? 'bg-blue-500 text-white'
+                                        : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                ]">
+                                <div class="font-medium">General Discussion</div>
+                                <div v-if="discussStore.unreadCount['_general']" class="text-xs mt-1">
+                                    <span class="px-1.5 py-0.5 bg-green-500 text-white rounded-full">
+                                        {{ discussStore.unreadCount['_general'] }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Divider -->
+                            <div class="border-t border-gray-200 dark:border-gray-700 my-4"></div>
+
+                            <!-- Quiz Sets Section -->
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Quiz Sets</h3>
+                            <div v-for="quizSet in filteredQuizSets" :key="quizSet.setName"
+                                @click="selectQuizSet(quizSet)"
                                 class="mb-2 p-2 rounded-lg cursor-pointer transition-colors" :class="[
                                     selectedQuizSet?.setName === quizSet.setName
                                         ? 'bg-blue-500 text-white'
@@ -58,66 +80,70 @@
 
                     <!-- Messages Area -->
                     <div class="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
-                        <div v-if="!selectedQuizSet"
-                            class="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                            Select a quiz set to view discussions
-                        </div>
-                        <template v-else>
-                            <!-- Messages Container -->
-                            <div class="flex-1 p-4 overflow-y-auto" ref="messagesContainer">
-                                <div v-if="discussStore.isLoading[selectedQuizSet.setName]"
-                                    class="flex justify-center items-center h-full">
-                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                        <!-- Messages Container -->
+                        <div class="flex-1 p-4 overflow-y-auto" ref="messagesContainer">
+                            <div v-if="discussStore.isLoading[selectedQuizSet?.setName || '_general']"
+                                class="flex justify-center items-center h-full">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                            </div>
+                            <div v-else-if="discussStore.error" class="text-red-500 text-center">
+                                Error loading messages. Please try again.
+                            </div>
+                            <template v-else>
+                                <!-- Welcome message when no messages -->
+                                <div v-if="!discussStore.messages[selectedQuizSet?.setName || '_general']?.length"
+                                    class="text-center text-gray-500 dark:text-gray-400 mt-4">
+                                    {{ selectedQuizSet ?
+                                        `Start the discussion about ${selectedQuizSet.setName}` :
+                                        'Welcome to General Discussion! Feel free to start a conversation.' }}
                                 </div>
-                                <div v-else-if="discussStore.error" class="text-red-500 text-center">
-                                    Error loading messages. Please try again.
-                                </div>
-                                <template v-else>
-                                    <div v-for="message in discussStore.messages[selectedQuizSet.setName]"
-                                        :key="message.id" class="mb-4"
-                                        :class="{ 'ml-auto': message.userId === authStore.user?.uid }">
-                                        <div class="flex items-start gap-2"
-                                            :class="{ 'flex-row-reverse': message.userId === authStore.user?.uid }">
-                                            <div
-                                                class="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex-shrink-0 flex items-center justify-center text-gray-700 dark:text-gray-200">
-                                                {{ message.userName.charAt(0).toUpperCase() }}
+                                <!-- Messages -->
+                                <div v-else
+                                    v-for="message in discussStore.messages[selectedQuizSet?.setName || '_general']"
+                                    :key="message.id" class="mb-4"
+                                    :class="{ 'ml-auto': message.userId === authStore.user?.uid }">
+                                    <div class="flex items-start gap-2"
+                                        :class="{ 'flex-row-reverse': message.userId === authStore.user?.uid }">
+                                        <div
+                                            class="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex-shrink-0 flex items-center justify-center text-gray-700 dark:text-gray-200">
+                                            {{ message.userName?.charAt(0).toUpperCase() }}
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <div class="flex items-center gap-2"
+                                                :class="{ 'flex-row-reverse': message.userId === authStore.user?.uid }">
+                                                <span class="text-sm font-medium text-gray-900 dark:text-white">
+                                                    {{ message.userName }}
+                                                </span>
+                                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                                    {{ formatTime(message.timestamp) }}
+                                                </span>
                                             </div>
-                                            <div class="flex flex-col">
-                                                <div class="flex items-center gap-2"
-                                                    :class="{ 'flex-row-reverse': message.userId === authStore.user?.uid }">
-                                                    <span class="text-sm font-medium text-gray-900 dark:text-white">
-                                                        {{ message.userName }}
-                                                    </span>
-                                                    <span class="text-xs text-gray-500 dark:text-gray-400">
-                                                        {{ formatTime(message.timestamp) }}
-                                                    </span>
-                                                </div>
-                                                <div class="mt-1 p-3 rounded-lg" :class="[
-                                                    message.userId === authStore.user?.uid
-                                                        ? 'bg-blue-500 text-white'
-                                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                                                ]">
-                                                    {{ message.content }}
-                                                </div>
+                                            <div class="mt-1 p-3 rounded-lg" :class="[
+                                                message.userId === authStore.user?.uid
+                                                    ? 'bg-blue-500 text-white'
+                                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                                            ]">
+                                                {{ message.content }}
                                             </div>
                                         </div>
                                     </div>
-                                </template>
-                            </div>
+                                </div>
+                            </template>
+                        </div>
 
-                            <!-- Message Input -->
-                            <div class="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                                <form @submit.prevent="handleSendMessage" class="flex gap-2">
-                                    <input v-model="newMessage" type="text" placeholder="Type your message..."
-                                        class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                                    <button type="submit"
-                                        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                        :disabled="!newMessage.trim() || isSending">
-                                        {{ isSending ? 'Sending...' : 'Send' }}
-                                    </button>
-                                </form>
-                            </div>
-                        </template>
+                        <!-- Message Input -->
+                        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+                            <form @submit.prevent="handleSendMessage" class="flex gap-2">
+                                <input v-model="newMessage" type="text" :placeholder="selectedQuizSet ?
+                                    `Message about ${selectedQuizSet.setName}...` :
+                                    'Type your message...'"
+                                    class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <button type="submit" :disabled="isSending || !newMessage.trim()"
+                                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200">
+                                    Send
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -126,7 +152,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
 import { useAuthStore } from '../stores/authStore';
 import { useDiscussStore } from '../stores/discussStore';
 
@@ -146,10 +172,20 @@ export default {
         const messagesContainer = ref(null);
         const authStore = useAuthStore();
         const discussStore = useDiscussStore();
+        const filteredQuizSets = computed(() => {
+            return props.quizSets.filter(quizSet =>
+                quizSet.setName.toLowerCase() !== 'test-expert' &&
+                !quizSet.debug
+            );
+        });
 
-        // Subscribe to messages for all quiz sets
+        // Subscribe to messages for all quiz sets and general discussion
         onMounted(() => {
-            props.quizSets.forEach(quizSet => {
+            // Subscribe to general discussion
+            discussStore.subscribeToMessages('_general');
+
+            // Subscribe to quiz set discussions
+            filteredQuizSets.value.forEach(quizSet => {
                 discussStore.subscribeToMessages(quizSet.setName);
             });
         });
@@ -160,8 +196,15 @@ export default {
         });
 
         // Scroll to bottom when new messages arrive
-        watch(() => selectedQuizSet.value && discussStore.messages[selectedQuizSet.value.setName], async () => {
-            if (showDiscussion.value && selectedQuizSet.value) {
+        watch([
+            () => showDiscussion.value,
+            () => selectedQuizSet.value,
+            () => {
+                const topicId = selectedQuizSet.value?.setName || 'general';
+                return discussStore.messages[topicId];
+            }
+        ], async () => {
+            if (showDiscussion.value) {
                 await nextTick();
                 if (messagesContainer.value) {
                     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
@@ -171,69 +214,50 @@ export default {
 
         const selectQuizSet = (quizSet) => {
             selectedQuizSet.value = quizSet;
-            discussStore.markAsRead(quizSet.setName);
+            const topicId = quizSet?.setName || '_general';
+            discussStore.markAsRead(topicId);
         };
 
         const handleShowDiscussion = () => {
             showDiscussion.value = true;
-            if (selectedQuizSet.value) {
-                discussStore.markAsRead(selectedQuizSet.value.setName);
-            }
+            const topicId = selectedQuizSet.value?.setName || '_general';
+            discussStore.markAsRead(topicId);
         };
 
         const handleCloseDiscussion = () => {
             showDiscussion.value = false;
-            if (selectedQuizSet.value) {
-                discussStore.markAsRead(selectedQuizSet.value.setName);
-            }
+            const topicId = selectedQuizSet.value?.setName || '_general';
+            discussStore.markAsRead(topicId);
         };
 
         const handleSendMessage = async () => {
-            if (!newMessage.value.trim() || isSending.value || !selectedQuizSet.value) return;
+            if (!newMessage.value.trim() || isSending.value) return;
 
             isSending.value = true;
+            const topicId = selectedQuizSet.value?.setName || '_general';
+
             try {
-                await discussStore.sendMessage(selectedQuizSet.value.setName, newMessage.value);
+                await discussStore.sendMessage({
+                    content: newMessage.value.trim(),
+                    quizSetId: topicId,
+                    userId: authStore.user.uid,
+                    userName: authStore.user.displayName || 'Anonymous',
+                    timestamp: new Date()
+                });
                 newMessage.value = '';
             } catch (error) {
-                console.error('Failed to send message:', error);
-                // Show error to user
-                alert('Failed to send message. Please try again.');
+                console.error('Error sending message:', error);
             } finally {
                 isSending.value = false;
             }
         };
 
-        // Add error handling for subscription
-        watch(() => selectedQuizSet.value, (newQuizSet) => {
-            if (newQuizSet) {
-                try {
-                    discussStore.subscribeToMessages(newQuizSet.setName);
-                } catch (error) {
-                    console.error('Failed to subscribe to messages:', error);
-                    alert('Failed to load messages. Please try refreshing the page.');
-                }
-            }
-        }, { immediate: true });
-
-        // Scroll to bottom when messages change or when opening modal
-        watch([
-            () => showDiscussion.value,
-            () => selectedQuizSet.value && discussStore.messages[selectedQuizSet.value.setName]
-        ], async () => {
-            if (showDiscussion.value && selectedQuizSet.value) {
-                await nextTick();
-                if (messagesContainer.value) {
-                    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
-                }
-            }
-        }, { deep: true });
-
         const formatTime = (timestamp) => {
             if (!timestamp) return '';
             return new Intl.DateTimeFormat('default', {
                 hour: 'numeric',
-                minute: 'numeric'
+                minute: 'numeric',
+                hour12: true
             }).format(timestamp);
         };
 
@@ -245,6 +269,7 @@ export default {
             messagesContainer,
             authStore,
             discussStore,
+            filteredQuizSets,
             selectQuizSet,
             handleShowDiscussion,
             handleCloseDiscussion,

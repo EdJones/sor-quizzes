@@ -10,7 +10,7 @@ export const useDiscussStore = defineStore('discuss', () => {
     const lastReadTimestamp = ref({});  // Map of quizSetId to last read timestamp
     const isLoading = ref({});
     const error = ref(null);
-    const unsubscribe = ref({});  // Map of quizSetId to unsubscribe function
+    const subscriptions = ref({});  // Map of quizSetId to unsubscribe function
 
     const authStore = useAuthStore();
 
@@ -22,77 +22,72 @@ export const useDiscussStore = defineStore('discuss', () => {
     };
 
     // Subscribe to messages for a specific quiz set
-    const subscribeToMessages = (quizSetId) => {
-        console.log('Subscribing to messages for quiz set:', quizSetId);
-
-        if (unsubscribe.value[quizSetId]) {
-            console.log('Cleaning up existing subscription');
-            unsubscribe.value[quizSetId]();
-        }
-
-        isLoading.value[quizSetId] = true;
-        messages.value[quizSetId] = [];
-
+    const subscribeToMessages = async (quizSetId) => {
         try {
-            const messagesQuery = query(
+            console.log(`Creating subscription for quiz set: ${quizSetId}`);
+
+            // Initialize state for this quiz set
+            messages[quizSetId] = [];
+            isLoading[quizSetId] = true;
+            error.value = null;
+            unreadCount[quizSetId] = 0;
+            lastReadTimestamp[quizSetId] = Date.now();
+
+            // Create query based on quiz set ID
+            const q = query(
                 collection(db, 'discussions'),
-                where('quizSetId', '==', quizSetId),
+                where('quizSetId', '==', quizSetId === '_general' ? 'general' : quizSetId),
                 orderBy('timestamp', 'asc'),
                 limit(100)
             );
 
-            console.log('Setting up new subscription');
-            unsubscribe.value[quizSetId] = onSnapshot(messagesQuery,
-                (snapshot) => {
-                    console.log('Received snapshot update:', snapshot.size, 'messages');
-                    const newMessages = [];
-                    snapshot.forEach((doc) => {
-                        const data = doc.data();
-                        newMessages.push({
-                            id: doc.id,
-                            ...data,
-                            timestamp: data.timestamp?.toDate() || new Date()
-                        });
-                    });
-                    console.log('Processed messages:', newMessages.length);
-                    messages.value[quizSetId] = newMessages;
-                    updateUnreadCount(quizSetId);
-                    isLoading.value[quizSetId] = false;
-                },
-                (err) => {
-                    console.error('Error in messages subscription:', err);
-                    error.value = err;
-                    isLoading.value[quizSetId] = false;
-                }
-            );
+            // Subscribe to messages
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                console.log(`Received update for quiz set: ${quizSetId}`);
+                messages[quizSetId] = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                // Update unread count
+                updateUnreadCount(quizSetId);
+                isLoading[quizSetId] = false;
+            }, (error) => {
+                console.error(`Error in subscription for quiz set ${quizSetId}:`, error);
+                error.value = error;
+                isLoading[quizSetId] = false;
+            });
+
+            // Store unsubscribe function
+            subscriptions[quizSetId] = unsubscribe;
+            console.log(`Subscription created for quiz set: ${quizSetId}`);
+
         } catch (err) {
-            console.error('Error setting up subscription:', err);
+            console.error(`Error setting up subscription for quiz set ${quizSetId}:`, err);
             error.value = err;
-            isLoading.value[quizSetId] = false;
+            isLoading[quizSetId] = false;
         }
     };
 
     // Send a new message
-    const sendMessage = async (quizSetId, content) => {
-        if (!content.trim()) return;
-        console.log('Sending message to quiz set:', quizSetId);
-
+    const sendMessage = async (messageData) => {
         try {
-            const messageData = {
-                content: content.trim(),
-                userId: authStore.user?.uid || 'anonymous',
-                userName: getUserDisplayName(),
-                timestamp: serverTimestamp(),
-                userEmail: authStore.user?.email || null,
-                quizSetId
+            console.log('Sending message:', messageData);
+            const { quizSetId, text, userId, userName } = messageData;
+
+            const message = {
+                quizSetId: quizSetId === '_general' ? 'general' : quizSetId,
+                text,
+                userId,
+                userName,
+                timestamp: serverTimestamp()
             };
 
-            const docRef = await addDoc(collection(db, 'discussions'), messageData);
-            console.log('Message sent successfully:', docRef.id);
+            await addDoc(collection(db, 'discussions'), message);
+            console.log('Message sent successfully');
         } catch (err) {
             console.error('Error sending message:', err);
-            error.value = err;
-            throw err; // Re-throw to handle in component
+            throw err;
         }
     };
 
@@ -123,16 +118,16 @@ export const useDiscussStore = defineStore('discuss', () => {
     // Cleanup on unmount
     const cleanup = (quizSetId) => {
         if (quizSetId) {
-            if (unsubscribe.value[quizSetId]) {
+            if (subscriptions.value[quizSetId]) {
                 console.log('Cleaning up subscription for quiz set:', quizSetId);
-                unsubscribe.value[quizSetId]();
-                delete unsubscribe.value[quizSetId];
+                subscriptions.value[quizSetId]();
+                delete subscriptions.value[quizSetId];
             }
         } else {
             // Cleanup all subscriptions
             console.log('Cleaning up all subscriptions');
-            Object.values(unsubscribe.value).forEach(unsub => unsub?.());
-            unsubscribe.value = {};
+            Object.values(subscriptions.value).forEach(unsub => unsub?.());
+            subscriptions.value = {};
         }
     };
 
