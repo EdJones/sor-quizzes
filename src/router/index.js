@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { requireAuth } from './guards';
+import { requireAuth, requireAdmin } from './guards';
 import LoginForm from '../components/auth/LoginForm.vue';
 import Home from '../components/Home.vue';
 import GitHubIssues from '../components/GitHubIssues.vue';
@@ -51,7 +51,8 @@ const routes = [
   {
     path: '/admin',
     name: 'admin',
-    component: AdminPage
+    component: AdminPage,
+    beforeEnter: requireAdmin
   },
   // Catch all route for 404 - must be last
   {

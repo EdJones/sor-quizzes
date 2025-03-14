@@ -462,59 +462,16 @@ export const quizStore = defineStore('quiz', {
             }
         },
 
-        async submitForReview(draftId) {
+        async submitForReview(quizId) {
             try {
-                const user = auth.currentUser;
-                if (!user) throw new Error('No user found');
-                if (user.isAnonymous) throw new Error('Must be signed in to submit for review');
-
-                // Make sure we have the latest draft items
-                await this.fetchDraftQuizItems();
-
-                // Verify ownership before submitting
-                const existingDraft = this.draftQuizItems.find(item => item.id === draftId);
-                if (!existingDraft) {
-                    throw new Error('Draft not found - please try saving again');
-                }
-                if (existingDraft.userId !== user.uid) {
-                    throw new Error('You can only submit your own drafts');
-                }
-
-                // Final validation before submission
-                const validation = this.validateDraftQuizEntry(this.draftQuizEntry);
-                if (validation.errors.length > 0) {
-                    this.saveStatus = {
-                        message: 'Cannot submit: ' + validation.errors.join(', '),
-                        type: 'error',
-                        show: true
-                    };
-                    throw new Error('Validation failed: ' + validation.errors.join(', '));
-                }
-
-                const docRef = doc(db, 'quizEntries', draftId);
+                const docRef = doc(db, 'quizEntries', quizId);
                 await setDoc(docRef, {
                     status: 'pending',
-                    submittedAt: serverTimestamp(),
-                    timestamp: serverTimestamp(),
+                    submittedAt: serverTimestamp()
                 }, { merge: true });
-
-                // Refresh the draft items list after submission
-                await this.fetchDraftQuizItems();
-
-                this.saveStatus = {
-                    message: 'Quiz entry submitted for review!',
-                    type: 'success',
-                    show: true
-                };
-                return draftId;
-            } catch (e) {
-                console.error('Error submitting for review:', e);
-                this.saveStatus = {
-                    message: e.message || 'Error submitting for review',
-                    type: 'error',
-                    show: true
-                };
-                throw e;
+            } catch (error) {
+                console.error('Error submitting for review:', error);
+                throw error;
             }
         },
 
@@ -899,6 +856,33 @@ export const quizStore = defineStore('quiz', {
                 throw error;
             } finally {
                 this.githubIssuesLoading = false;
+            }
+        },
+
+        async updateQuizItemStatus(quizId, newStatus) {
+            try {
+                const docRef = doc(db, 'quizEntries', quizId);
+                await setDoc(docRef, {
+                    status: newStatus,
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
+            } catch (error) {
+                console.error('Error updating quiz item status:', error);
+                throw error;
+            }
+        },
+
+        async fetchAllQuizItems() {
+            try {
+                const quizRef = collection(db, 'quizEntries');
+                const querySnapshot = await getDocs(quizRef);
+                return querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+            } catch (error) {
+                console.error('Error fetching all quiz items:', error);
+                throw error;
             }
         }
     },
