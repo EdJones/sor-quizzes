@@ -13,61 +13,9 @@
     <!-- Selection mode for new items -->
     <template v-else>
         <label for="template-select" class="text-stone-400">Choose a starting point:</label>
-        <select id="template-select" v-model="selectedTemplate" @change="useTemplate" class="w-full px-4 py-2 rounded-lg border border-gray-300/50 
-                         bg-white/50 dark:bg-gray-500/50 
-                         dark:border-gray-600/50 color:#ffffff
-                         focus:ring-2 focus:ring-amber-400 focus:border-transparent
-                         backdrop-blur-sm
-                         transition-colors duration-200 ease-in-out
-                         appearance-none cursor-pointer
-                         hover:bg-white/40 dark:hover:bg-gray-500/40
-                         dark:[&>*]:bg-gray-700 text-white">
-            <option value="" class="py-2 text-white">Start from scratch</option>
-            <template v-if="isLoadingDrafts">
-                <option disabled>Loading draft items...</option>
-            </template>
-            <template v-else-if="draftLoadError">
-                <option disabled>Error loading drafts: {{ draftLoadError }}</option>
-            </template>
-            <template v-else>
-                <optgroup label="My Draft Quiz Items" class="font-medium text-sm" v-if="userDraftQuizItems.length">
-                    <option v-for="item in userDraftQuizItems" :key="item.id" :value="item.id" class="py-1">
-                        {{ item.title || 'Untitled Draft' }} &nbsp; &nbsp; &nbsp; &nbsp; {{ item.timestamp ? `(${new
-                            Date(item.timestamp.seconds *
-                                1000).toLocaleDateString()} ${new Date(item.timestamp.seconds * 1000).toLocaleTimeString([],
-                                    { hour: '2-digit', minute: '2-digit' })})` : '' }}
-                    </option>
-                </optgroup>
-                <optgroup label="Pending Review" class="font-medium" v-if="pendingQuizItems.length">
-                    <option v-for="item in pendingQuizItems" :key="item.id" :value="item.id" class="py-1">
-                        {{ item.title || 'Untitled Pending' }} ({{ item.userEmail || 'Anonymous' }}) &nbsp; &nbsp;
-                        &nbsp; &nbsp; {{ item.timestamp ?
-                            `(${new Date(item.timestamp.seconds * 1000).toLocaleDateString()} ${new
-                                Date(item.timestamp.seconds * 1000).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                })})` : '' }}
-                    </option>
-                </optgroup>
-                <optgroup label="Other Draft Items" class="font-medium" v-if="otherDraftQuizItems.length">
-                    <option v-for="item in otherDraftQuizItems" :key="item.id" :value="item.id" class="py-1">
-                        {{ item.title || 'Untitled Draft' }} &nbsp; &nbsp; &nbsp; &nbsp; {{ item.timestamp ? `(${new
-                            Date(item.timestamp.seconds *
-                                1000).toLocaleDateString()} ${new Date(item.timestamp.seconds * 1000).toLocaleTimeString([],
-                                    { hour: '2-digit', minute: '2-digit' })})` : '' }}
-                    </option>
-                </optgroup>
-            </template>
-            <optgroup label="Permanent Quiz Items" class="font-medium text-blue-500">
-                <option v-for="item in permanentQuizItems" :key="item.id" :value="item.id" class="py-1 text-blue-700">
-                    {{ String(item.id).padStart(3, '0') }}. {{ item.title }} &nbsp; &nbsp; &nbsp; &nbsp; {{
-                        item.timestamp
-                            ?
-                            `(${new Date(item.timestamp.seconds *
-                                1000).toLocaleString()})` : '' }}
-                </option>
-            </optgroup>
-        </select>
+        <CustomDropdown v-model="selectedTemplate" @change="useTemplate" :userDrafts="userDraftQuizItems"
+            :pendingItems="pendingQuizItems" :otherDrafts="otherDraftQuizItems" :permanentItems="permanentQuizItems"
+            :isLoading="isLoadingDrafts" :error="draftLoadError" />
     </template>
 </template>
 
@@ -76,6 +24,7 @@ import { ref, computed, onMounted } from 'vue';
 import { quizStore } from '../stores/quizStore';
 import { useAuthStore } from '../stores/authStore';
 import { quizEntries } from '../data/quiz-items';
+import CustomDropdown from './CustomDropdown.vue';
 
 const store = quizStore();
 const auth = useAuthStore();
