@@ -20,8 +20,8 @@
     </div>
 
     <div class="flex items-center gap-4">
-      <span class="preview-controls-text">{{ store.draftQuizEntry.originalId ? `Editing Quiz Item
-        #${store.draftQuizEntry.originalId}` : 'Create New Quiz Item' }}</span>
+      <span class="preview-controls-text">{{ store.draftQuizEntry.originalId ? `Editing Quiz Item:
+        ${store.draftQuizEntry.originalId}` : 'Create New Quiz Item' }}</span>
       <div class="preview-controls">
         <div class="button-group">
           <div class="flex flex-col gap-1">
@@ -1421,7 +1421,7 @@ details[open] .form-section {
 .preview-controls-text {
   padding-left: .8rem;
   margin-right: 1rem;
-  font-size: x-large;
+  font-size: 1rem;
   color: #fff;
   font-weight: 500;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -1500,6 +1500,8 @@ details[open] .form-section {
 .form-group-section {
   background: rgba(63, 63, 136, 0.95);
   border: 0px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 1;
 }
 
 .form-group-section h2 {
@@ -1510,13 +1512,16 @@ details[open] .form-section {
 }
 
 .question-section {
-
-  /* Green accent for question section */
+  position: relative;
+  z-index: 15;
+  /* Lower than template selector but higher than explanation */
 }
 
 .explanation-section {
+  position: relative;
+  z-index: 10;
+  /* Lower than question section */
   border-left: 4px solid #2196F3;
-  /* Blue accent for explanation section */
 }
 
 /* Adjust spacing between sections within groups */
@@ -1540,10 +1545,10 @@ details[open] .form-section {
       rgba(63, 63, 136, 0.1) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  /* border: 1px solid rgba(255, 255, 255, 0.18); */
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
   padding: 0.5rem;
   border-radius: 4px;
+  position: relative;
 }
 
 .question-content-wrapper .form-section,
@@ -2063,5 +2068,11 @@ option {
   .preview-container :deep(.explanation) {
     color: #f7fafc !important;
   }
+}
+
+.template-selector {
+  position: relative;
+  z-index: 20;
+  /* Higher than form sections to ensure dropdown is visible */
 }
 </style>
