@@ -20,8 +20,8 @@
     </div>
 
     <div class="flex items-center gap-4">
-      <span class="preview-controls-text">{{ store.draftQuizEntry.originalId ? `Editing Quiz Item
-        #${store.draftQuizEntry.originalId}` : 'Create New Quiz Item' }}</span>
+      <span class="preview-controls-text">{{ store.draftQuizEntry.originalId ? `Editing Quiz Item:
+        ${store.draftQuizEntry.originalId}` : 'Create New Quiz Item' }}</span>
       <div class="preview-controls">
         <div class="button-group">
           <div class="flex flex-col gap-1">
@@ -1421,7 +1421,7 @@ details[open] .form-section {
 .preview-controls-text {
   padding-left: .8rem;
   margin-right: 1rem;
-  font-size: x-large;
+  font-size: 1rem;
   color: #fff;
   font-weight: 500;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
