@@ -30,25 +30,41 @@
                 <option disabled>Error loading drafts: {{ draftLoadError }}</option>
             </template>
             <template v-else>
-                <optgroup label="My Draft Quiz Items" class="font-medium" v-if="userDraftQuizItems.length">
+                <optgroup label="My Draft Quiz Items" class="font-medium text-sm" v-if="userDraftQuizItems.length">
                     <option v-for="item in userDraftQuizItems" :key="item.id" :value="item.id" class="py-1">
-                        {{ item.title || 'Untitled Draft' }}
+                        {{ item.title || 'Untitled Draft' }} &nbsp; &nbsp; &nbsp; &nbsp; {{ item.timestamp ? `(${new
+                            Date(item.timestamp.seconds *
+                                1000).toLocaleDateString()} ${new Date(item.timestamp.seconds * 1000).toLocaleTimeString([],
+                                    { hour: '2-digit', minute: '2-digit' })})` : '' }}
                     </option>
                 </optgroup>
                 <optgroup label="Pending Review" class="font-medium" v-if="pendingQuizItems.length">
                     <option v-for="item in pendingQuizItems" :key="item.id" :value="item.id" class="py-1">
-                        {{ item.title || 'Untitled Pending' }} ({{ item.userEmail || 'Anonymous' }})
+                        {{ item.title || 'Untitled Pending' }} ({{ item.userEmail || 'Anonymous' }}) &nbsp; &nbsp;
+                        &nbsp; &nbsp; {{ item.timestamp ?
+                            `(${new Date(item.timestamp.seconds * 1000).toLocaleDateString()} ${new
+                                Date(item.timestamp.seconds * 1000).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })})` : '' }}
                     </option>
                 </optgroup>
                 <optgroup label="Other Draft Items" class="font-medium" v-if="otherDraftQuizItems.length">
                     <option v-for="item in otherDraftQuizItems" :key="item.id" :value="item.id" class="py-1">
-                        {{ item.title || 'Untitled Draft' }}
+                        {{ item.title || 'Untitled Draft' }} &nbsp; &nbsp; &nbsp; &nbsp; {{ item.timestamp ? `(${new
+                            Date(item.timestamp.seconds *
+                                1000).toLocaleDateString()} ${new Date(item.timestamp.seconds * 1000).toLocaleTimeString([],
+                                    { hour: '2-digit', minute: '2-digit' })})` : '' }}
                     </option>
                 </optgroup>
             </template>
             <optgroup label="Permanent Quiz Items" class="font-medium text-blue-500">
                 <option v-for="item in permanentQuizItems" :key="item.id" :value="item.id" class="py-1 text-blue-700">
-                    {{ String(item.id).padStart(3, '0') }}. {{ item.title }}
+                    {{ String(item.id).padStart(3, '0') }}. {{ item.title }} &nbsp; &nbsp; &nbsp; &nbsp; {{
+                        item.timestamp
+                            ?
+                            `(${new Date(item.timestamp.seconds *
+                                1000).toLocaleString()})` : '' }}
                 </option>
             </optgroup>
         </select>
@@ -56,7 +72,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { quizStore } from '../stores/quizStore';
 import { useAuthStore } from '../stores/authStore';
 import { quizEntries } from '../data/quiz-items';
@@ -73,6 +89,10 @@ const props = defineProps({
 });
 
 const selectedTemplate = ref('');
+
+onMounted(async () => {
+    await store.fetchDraftQuizItems();
+});
 
 const userDraftQuizItems = computed(() => {
     return store.draftQuizItems
