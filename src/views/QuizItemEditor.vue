@@ -44,6 +44,7 @@
           <button @click="$router.push('/issues')" class="github-button">
             View/Add Issues
           </button>
+
         </div>
       </div>
     </div>
@@ -91,7 +92,18 @@
           </div>
         </div>
       </div>
-
+      <div class="form-group-section flex justify-end">
+        <!--Item History-->
+        <button type="button" @click="showVersionHistory = true" class="flex items-center gap-1 px-3 py-1 text-sm
+        border-green-400 bg-gray-700 hover:bg-gray-600 text-green-400 rounded-lg transition-colors duration-200 mr-9"
+          v-if="store.draftQuizEntry.id">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Version History
+        </button>
+      </div>
       <!-- Question Group -->
       <div class="form-group-section question-section">
         <div class="question-content-wrapper">
@@ -533,6 +545,10 @@
 
     <!-- Keep VersionInfoModal here, outside of any v-if conditions -->
     <VersionInfoModal @save="handleSaveDraftWithVersion" ref="versionInfoModal" />
+
+    <!-- Add this before the closing </div> tag of the template -->
+    <VersionHistoryModal :show="showVersionHistory" :quizItemId="store.draftQuizEntry.id"
+      @close="showVersionHistory = false" />
   </div>
 </template>
 
@@ -548,6 +564,7 @@ import ProgressSteps from '../components/ProgressSteps.vue';
 import { useRoute, useRouter } from 'vue-router';
 import QuizSelector from '../components/QuizSelector.vue';
 import VersionInfoModal from '../components/VersionInfoModal.vue';
+import VersionHistoryModal from '../components/VersionHistoryModal.vue';
 
 export default {
   components: {
@@ -555,13 +572,15 @@ export default {
     VueJsonPretty,
     QuizSelector,
     ProgressSteps,
-    VersionInfoModal
+    VersionInfoModal,
+    VersionHistoryModal
   },
   setup() {
     const store = quizStore();
     const auth = useAuthStore();
     const route = useRoute();
     const router = useRouter();
+    const showVersionHistory = ref(false);
 
     // Function to handle item loading
     const loadItem = async (itemId) => {
@@ -669,7 +688,8 @@ export default {
     return {
       store,
       auth,
-      route
+      route,
+      showVersionHistory
     };
   },
   computed: {
