@@ -107,7 +107,12 @@ const props = defineProps({
     },
     quizItemId: {
         type: String,
-        required: true
+        required: false,
+        default: null,
+        validator: (value) => {
+            // Allow null/undefined or non-empty string
+            return value === null || value === undefined || (typeof value === 'string' && value.length > 0);
+        }
     }
 });
 
@@ -119,7 +124,9 @@ const error = ref(null);
 
 const fetchVersions = async () => {
     if (!props.quizItemId) {
-        console.log('No quizItemId provided');
+        console.log('No quizItemId provided, skipping fetch');
+        versions.value = [];
+        isLoading.value = false;
         return;
     }
 
@@ -129,6 +136,14 @@ const fetchVersions = async () => {
     try {
         console.log('Fetching versions for quizItemId:', props.quizItemId);
         const editHistoryRef = collection(db, 'quizEditHistory');
+
+        // Log the query parameters
+        console.log('Query parameters:', {
+            collection: 'quizEditHistory',
+            where: ['quizItemId', '==', props.quizItemId],
+            orderBy: ['timestamp', 'desc']
+        });
+
         const q = query(
             editHistoryRef,
             where('quizItemId', '==', props.quizItemId),
@@ -138,15 +153,46 @@ const fetchVersions = async () => {
         const querySnapshot = await getDocs(q);
         console.log('Query snapshot size:', querySnapshot.size);
 
-        versions.value = querySnapshot.docs.map(doc => {
+        // Log each document for debugging
+        querySnapshot.forEach((doc, index) => {
             const data = doc.data();
+            const versionNumber = querySnapshot.size - index;
+            console.log(`Version ${versionNumber}:`, {
+                id: doc.id,
+                timestamp: data.timestamp?.toDate?.(),
+                userEmail: data.userEmail,
+                versionMessage: data.versionMessage,
+                quizItemId: data.quizItemId,
+                changes: {
+                    beforeId: data.changes?.before?.id,
+                    afterId: data.changes?.after?.id,
+                    hasChanges: !!data.changes?.before
+                }
+            });
+        });
+
+        versions.value = querySnapshot.docs.map((doc, index) => {
+            const data = doc.data();
+            // Check if timestamp exists and is a valid Firestore timestamp
+            const timestamp = data.timestamp?.toDate ? data.timestamp : null;
             return {
                 id: doc.id,
                 ...data,
+                timestamp: timestamp,
                 // Format the version message if it exists
-                versionMessage: data.versionMessage ? data.versionMessage.trim() : 'No description provided'
+                versionMessage: data.versionMessage ? data.versionMessage.trim() : 'No description provided',
+                // Add version number
+                versionNumber: querySnapshot.size - index
             };
         });
+
+        console.log('Processed versions:', versions.value.map(v => ({
+            id: v.id,
+            timestamp: v.timestamp?.toDate?.(),
+            userEmail: v.userEmail,
+            versionMessage: v.versionMessage,
+            quizItemId: v.quizItemId
+        })));
 
         if (versions.value.length === 0) {
             console.log('No versions found for quiz item');
@@ -169,9 +215,20 @@ onMounted(() => {
     }
 });
 
-// Add watch effect for show prop
-watch(() => props.show, (newValue) => {
+// Add watch for quizItemId changes
+watch(() => props.quizItemId, (newId, oldId) => {
+    console.log('Quiz item ID changed:', { oldId, newId });
+    if (props.show && newId) {
+        console.log('Fetching new versions for ID:', newId);
+        fetchVersions();
+    }
+});
+
+// Add watch for show prop
+watch(() => props.show, (newValue, oldValue) => {
+    console.log('Show prop changed:', { oldValue, newValue });
     if (newValue && props.quizItemId) {
+        console.log('Modal shown, fetching versions for ID:', props.quizItemId);
         fetchVersions();
     }
 });

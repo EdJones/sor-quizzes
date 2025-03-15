@@ -329,7 +329,7 @@ export const quizStore = defineStore('quiz', {
                 this.lastSavedDraftQuizEntry = { ...this.draftQuizEntry };
 
                 // Create a copy of the draft entry without the id field
-                const { id, ...entryWithoutId } = this.draftQuizEntry;
+                const { id, originalId, ...entryWithoutId } = this.draftQuizEntry;
 
                 const entryToSave = {
                     ...entryWithoutId,
@@ -356,44 +356,24 @@ export const quizStore = defineStore('quiz', {
 
                 let docRef;
 
-                // Always create a new document if this is a copy (originalId exists)
-                if (this.draftQuizEntry.originalId) {
+                // If we have an existing ID and not making a copy, update it
+                if (id && !originalId) {
+                    // Update existing document
+                    docRef = doc(db, 'quizEntries', id);
+                    await setDoc(docRef, entryToSave, { merge: true });
+                    console.log('Updated existing quiz item:', id);
+                }
+                // If making a copy or no ID exists, create a new document
+                else {
                     // Create new document
                     docRef = await addDoc(collection(db, 'quizEntries'), entryToSave);
                     // Update store state with new ID
                     this.draftQuizEntry = {
                         ...this.draftQuizEntry,
-                        id: docRef.id
+                        id: docRef.id,
+                        originalId: null // Clear originalId after copy is created
                     };
-                    console.log('Created new copy with ID:', docRef.id);
-                }
-                // If we have an ID, try to update the existing draft
-                else if (this.draftQuizEntry.id) {
-                    const existingDraft = this.draftQuizItems.find(item => item.id === this.draftQuizEntry.id);
-                    if (existingDraft && existingDraft.userId === user.uid) {
-                        // Update existing draft
-                        docRef = doc(db, 'quizEntries', this.draftQuizEntry.id);
-                        await setDoc(docRef, entryToSave, { merge: true });
-                        console.log('Updated existing draft:', this.draftQuizEntry.id);
-                    } else {
-                        // Create new draft if we can't update the existing one
-                        docRef = await addDoc(collection(db, 'quizEntries'), entryToSave);
-                        // Update store state with new ID
-                        this.draftQuizEntry = {
-                            ...this.draftQuizEntry,
-                            id: docRef.id
-                        };
-                        console.log('Created new draft from existing with ID:', docRef.id);
-                    }
-                } else {
-                    // Create new draft
-                    docRef = await addDoc(collection(db, 'quizEntries'), entryToSave);
-                    // Update store state with new ID
-                    this.draftQuizEntry = {
-                        ...this.draftQuizEntry,
-                        id: docRef.id
-                    };
-                    console.log('Created new draft with ID:', docRef.id);
+                    console.log('Created new quiz item with ID:', docRef.id);
                 }
 
                 // Refresh the draft items list

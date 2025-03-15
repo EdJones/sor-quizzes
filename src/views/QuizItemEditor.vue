@@ -96,7 +96,7 @@
         <!--Item History-->
         <button type="button" @click="showVersionHistory = true" class="flex items-center gap-1 px-3 py-1 text-sm
         border-green-400 bg-gray-700 hover:bg-gray-600 text-green-400 rounded-lg transition-colors duration-200 mr-9"
-          v-if="store.draftQuizEntry.id">
+          v-if="store.draftQuizEntry?.id">
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -547,7 +547,7 @@
     <VersionInfoModal @save="handleSaveDraftWithVersion" ref="versionInfoModal" />
 
     <!-- Add this before the closing </div> tag of the template -->
-    <VersionHistoryModal :show="showVersionHistory" :quizItemId="store.draftQuizEntry.id"
+    <VersionHistoryModal :show="showVersionHistory" :quizItemId="store.draftQuizEntry?.id || null"
       @close="showVersionHistory = false" />
   </div>
 </template>
@@ -683,6 +683,13 @@ export default {
     // Initial load
     onMounted(async () => {
       await loadItem(route.params.id);
+    });
+
+    // Watch for changes in draft quiz entry ID and reset version history if ID changes
+    watch(() => store.draftQuizEntry?.id, (newId) => {
+      if (!newId) {
+        showVersionHistory.value = false;
+      }
     });
 
     return {
