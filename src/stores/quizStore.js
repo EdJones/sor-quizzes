@@ -320,13 +320,87 @@ export const quizStore = defineStore('quiz', {
             }
         },
 
+        async recordQuizEdit(versionMessage = '') {
+            const auth = useAuthStore();
+
+            // Create sanitized versions of the states
+            const sanitizeData = (obj) => {
+                const result = {};
+                Object.entries(obj).forEach(([key, value]) => {
+                    if (value === undefined) {
+                        result[key] = null;  // Convert undefined to null for Firestore
+                    } else if (typeof value === 'object' && value !== null) {
+                        result[key] = sanitizeData(value);  // Recursively sanitize nested objects
+                    } else {
+                        result[key] = value;
+                    }
+                });
+                return result;
+            };
+
+            // Create sanitized versions of the states
+            const beforeState = this.lastSavedDraftQuizEntry ?
+                sanitizeData({ ...this.lastSavedDraftQuizEntry }) :
+                null;
+
+            const afterState = sanitizeData({ ...this.draftQuizEntry });
+
+            // Log the states for debugging
+            console.log('Recording version with states:', {
+                beforeId: beforeState?.id,
+                afterId: afterState?.id,
+                lastSavedId: this.lastSavedDraftQuizEntry?.id,
+                currentId: this.draftQuizEntry?.id
+            });
+
+            // Ensure we're using the correct quiz item ID
+            const quizItemId = afterState?.id || beforeState?.id;
+            if (!quizItemId) {
+                console.error('No quiz item ID found for version history');
+                return;
+            }
+
+            // Create the edit record with sanitized data
+            const editRecord = {
+                timestamp: serverTimestamp(),
+                userId: auth.user?.uid || 'anonymous',
+                userEmail: auth.user?.email || 'anonymous',
+                quizItemId: quizItemId,
+                versionMessage: versionMessage || '',
+                changes: {
+                    before: beforeState,
+                    after: afterState
+                }
+            };
+
+            try {
+                console.log('Recording version history:', {
+                    quizItemId,
+                    versionMessage,
+                    hasBeforeState: !!beforeState,
+                    hasAfterState: !!afterState
+                });
+
+                const editHistoryRef = collection(db, 'quizEditHistory');
+                await addDoc(editHistoryRef, editRecord);
+
+                // Update lastSavedDraftQuizEntry after successful save
+                this.lastSavedDraftQuizEntry = { ...this.draftQuizEntry };
+
+                console.log('Version history recorded successfully');
+            } catch (error) {
+                console.error('Error recording quiz edit:', error);
+                // Continue with save even if edit history fails
+            }
+        },
+
         async saveDraftQuizEntry() {
             try {
                 const user = auth.currentUser;
                 if (!user) throw new Error('No user found');
 
                 // Store the current state before saving
-                this.lastSavedDraftQuizEntry = { ...this.draftQuizEntry };
+                const previousState = { ...this.lastSavedDraftQuizEntry };
 
                 // Create a copy of the draft entry without the id field
                 const { id, originalId, ...entryWithoutId } = this.draftQuizEntry;
@@ -355,26 +429,39 @@ export const quizStore = defineStore('quiz', {
                 };
 
                 let docRef;
+                let savedId;
 
-                // If we have an existing ID and not making a copy, update it
-                if (id && !originalId) {
-                    // Update existing document
+                // Log the current state
+                console.log('Saving draft with state:', {
+                    hasId: !!id,
+                    id,
+                    hasOriginalId: !!originalId,
+                    originalId,
+                    isNewRoute: window.location.pathname.includes('/new')
+                });
+
+                // If we have an ID and we're not explicitly making a copy (originalId is only for copies)
+                if (id && (!originalId || originalId === id)) {
                     docRef = doc(db, 'quizEntries', id);
                     await setDoc(docRef, entryToSave, { merge: true });
                     console.log('Updated existing quiz item:', id);
-                }
-                // If making a copy or no ID exists, create a new document
-                else {
-                    // Create new document
+                    savedId = id;
+                } else {
+                    // Create new document for new items or explicit copies
                     docRef = await addDoc(collection(db, 'quizEntries'), entryToSave);
-                    // Update store state with new ID
-                    this.draftQuizEntry = {
-                        ...this.draftQuizEntry,
-                        id: docRef.id,
-                        originalId: null // Clear originalId after copy is created
-                    };
-                    console.log('Created new quiz item with ID:', docRef.id);
+                    savedId = docRef.id;
+                    console.log('Created new quiz item with ID:', savedId);
                 }
+
+                // Update the draft entry with the saved ID
+                this.draftQuizEntry = {
+                    ...this.draftQuizEntry,
+                    id: savedId,
+                    originalId: null // Clear originalId after save
+                };
+
+                // Update lastSavedDraftQuizEntry AFTER successful save
+                this.lastSavedDraftQuizEntry = { ...this.draftQuizEntry };
 
                 // Refresh the draft items list
                 await this.fetchDraftQuizItems();
@@ -385,7 +472,7 @@ export const quizStore = defineStore('quiz', {
                     show: true
                 };
 
-                return this.draftQuizEntry.id;
+                return savedId;
             } catch (e) {
                 console.error('Error saving draft:', e);
                 this.saveStatus = {
@@ -676,71 +763,6 @@ export const quizStore = defineStore('quiz', {
                 modal: '',
                 status: 'draft'
             };
-        },
-
-        async recordQuizEdit(versionMessage = '') {
-            const auth = useAuthStore();
-
-            // Save the draft first if there's no ID
-            if (!this.draftQuizEntry.id) {
-                const { id, ...entryWithoutId } = this.draftQuizEntry;
-                const entryToSave = {
-                    ...entryWithoutId,
-                    userId: auth.user?.uid || 'anonymous',
-                    userEmail: auth.user?.email || 'anonymous',
-                    isAnonymous: auth.user?.isAnonymous || true,
-                    status: 'draft',
-                    timestamp: serverTimestamp(),
-                };
-
-                const docRef = await addDoc(collection(db, 'quizEntries'), entryToSave);
-                this.draftQuizEntry.id = docRef.id;
-            }
-
-            // Helper function to remove undefined values and ensure valid data
-            const sanitizeData = (obj) => {
-                const result = {};
-                Object.entries(obj).forEach(([key, value]) => {
-                    if (value === undefined) {
-                        result[key] = null;  // Convert undefined to null for Firestore
-                    } else if (typeof value === 'object' && value !== null) {
-                        result[key] = sanitizeData(value);  // Recursively sanitize nested objects
-                    } else {
-                        result[key] = value;
-                    }
-                });
-                return result;
-            };
-
-            // Create sanitized versions of the states
-            const beforeState = this.lastSavedDraftQuizEntry ?
-                sanitizeData({ ...this.lastSavedDraftQuizEntry, id: this.draftQuizEntry.id }) :
-                sanitizeData({ ...this.draftQuizEntry });
-
-            const afterState = sanitizeData({ ...this.draftQuizEntry });
-
-            // Create the edit record with sanitized data
-            const editRecord = {
-                timestamp: serverTimestamp(),
-                userId: auth.user?.uid || 'anonymous',
-                userEmail: auth.user?.email || 'anonymous',
-                quizItemId: this.draftQuizEntry.id || null,
-                versionMessage: versionMessage || '',
-                changes: {
-                    before: beforeState,
-                    after: afterState
-                }
-            };
-
-            try {
-                const editHistoryRef = collection(db, 'quizEditHistory');
-                await addDoc(editHistoryRef, editRecord);
-                // Update lastSavedDraftQuizEntry after successful save
-                this.lastSavedDraftQuizEntry = { ...this.draftQuizEntry };
-            } catch (error) {
-                console.error('Error recording quiz edit:', error);
-                // Continue with save even if edit history fails
-            }
         },
 
         clearSaveStatus() {

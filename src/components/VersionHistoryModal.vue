@@ -49,7 +49,7 @@
                     <div class="mt-3 flex flex-wrap gap-2">
                         <span
                             class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                            Version {{ versions.length - index }}
+                            Version {{ version.versionNumber }}
                         </span>
                         <span v-if="version.changes?.before"
                             class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
@@ -144,6 +144,17 @@ const fetchVersions = async () => {
             orderBy: ['timestamp', 'desc']
         });
 
+        // First, get all documents to check what's actually in the collection
+        const allVersionsQuery = query(editHistoryRef);
+        const allVersions = await getDocs(allVersionsQuery);
+        console.log('All versions in collection:', allVersions.docs.map(doc => ({
+            id: doc.id,
+            quizItemId: doc.data().quizItemId,
+            versionMessage: doc.data().versionMessage,
+            timestamp: doc.data().timestamp?.toDate?.()
+        })));
+
+        // Then do our filtered query
         const q = query(
             editHistoryRef,
             where('quizItemId', '==', props.quizItemId),
@@ -156,8 +167,7 @@ const fetchVersions = async () => {
         // Log each document for debugging
         querySnapshot.forEach((doc, index) => {
             const data = doc.data();
-            const versionNumber = querySnapshot.size - index;
-            console.log(`Version ${versionNumber}:`, {
+            console.log(`Version ${querySnapshot.size - index}:`, {
                 id: doc.id,
                 timestamp: data.timestamp?.toDate?.(),
                 userEmail: data.userEmail,
@@ -181,13 +191,14 @@ const fetchVersions = async () => {
                 timestamp: timestamp,
                 // Format the version message if it exists
                 versionMessage: data.versionMessage ? data.versionMessage.trim() : 'No description provided',
-                // Add version number
+                // Add version number (most recent is highest number)
                 versionNumber: querySnapshot.size - index
             };
         });
 
         console.log('Processed versions:', versions.value.map(v => ({
             id: v.id,
+            versionNumber: v.versionNumber,
             timestamp: v.timestamp?.toDate?.(),
             userEmail: v.userEmail,
             versionMessage: v.versionMessage,
