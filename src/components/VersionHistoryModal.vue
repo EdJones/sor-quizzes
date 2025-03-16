@@ -57,7 +57,23 @@
                             class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                             Version {{ version.versionNumber }}
                         </span>
-
+                        <!-- Add status badge -->
+                        <span v-if="version.status" :class="[
+                            'px-2 py-1 text-xs rounded-full',
+                            {
+                                'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200': version.status === 'draft',
+                                'bg-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': version.status === 'pending',
+                                'bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200': version.status === 'approved',
+                                'bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-200': version.status === 'rejected'
+                            }
+                        ]">
+                            {{ version.status.charAt(0).toUpperCase() + version.status.slice(1) }}
+                        </span>
+                        <!-- Show status change if it occurred -->
+                        <span v-if="version.statusChange"
+                            class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            Status changed: {{ version.statusChange.from }} → {{ version.statusChange.to }}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -100,7 +116,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const props = defineProps({
@@ -137,6 +153,11 @@ const fetchVersions = async () => {
     error.value = null;
 
     try {
+        // First get the current quiz item to get its current status
+        const quizItemRef = doc(db, 'quizItems', targetId);
+        const quizItemDoc = await getDoc(quizItemRef);
+        const currentStatus = quizItemDoc.data()?.status || 'draft';
+
         const versionsRef = collection(db, 'quizEditHistory');
         const q = query(
             versionsRef,
@@ -147,6 +168,7 @@ const fetchVersions = async () => {
         const querySnapshot = await getDocs(q);
         console.log('Found versions:', querySnapshot.size);
 
+        let previousStatus = currentStatus;
         versions.value = querySnapshot.docs.map((doc, index) => {
             const data = doc.data();
             console.log('Version data:', data);
@@ -161,13 +183,24 @@ const fetchVersions = async () => {
                 timestamp = new Date();
             }
 
+            // Check if status changed in this version
+            const statusChange = data.status && data.status !== previousStatus ? {
+                from: previousStatus,
+                to: data.status
+            } : null;
+
+            // Update previous status for next iteration
+            previousStatus = data.status || previousStatus;
+
             return {
                 id: doc.id,
                 versionNumber: data.revisionNumber || querySnapshot.size - index,
                 timestamp: timestamp,
                 userEmail: data.userEmail || 'Unknown',
                 versionMessage: data.versionMessage || 'No message provided',
-                changes: data.changes || {}
+                changes: data.changes || {},
+                status: data.status || previousStatus,
+                statusChange
             };
         });
     } catch (error) {

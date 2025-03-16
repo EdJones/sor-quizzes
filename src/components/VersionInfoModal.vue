@@ -11,6 +11,22 @@
 
             <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Version Info</h3>
 
+            <!-- Add status indicator -->
+            <div v-if="quizItemStatus" class="mb-4 flex items-center">
+                <span class="text-sm font-medium mr-2">Status:</span>
+                <span :class="[
+                    'px-2 py-1 rounded-full text-xs font-semibold',
+                    {
+                        'bg-gray-200 text-gray-800': quizItemStatus === 'draft',
+                        'bg-yellow-200 text-yellow-800': quizItemStatus === 'pending',
+                        'bg-green-200 text-green-800': quizItemStatus === 'approved',
+                        'bg-red-200 text-red-800': quizItemStatus === 'rejected'
+                    }
+                ]">
+                    {{ quizItemStatus.charAt(0).toUpperCase() + quizItemStatus.slice(1) }}
+                </span>
+            </div>
+
             <div class="mb-4">
                 <label for="versionMessage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     What changes did you make in this version?
@@ -46,13 +62,16 @@
 <script setup>
 import { ref, watch } from 'vue';
 import VersionHistoryModal from './VersionHistoryModal.vue';
+import { quizStore } from '../stores/quizStore';
 
+const store = quizStore();
 const emit = defineEmits(['close', 'save']);
 
 const message = ref('');
 const isVisible = ref(false);
 const showVersionHistory = ref(false);
 const quizItemId = ref('');
+const quizItemStatus = ref('');
 
 const handleClose = () => {
     isVisible.value = false;
@@ -71,6 +90,8 @@ const handleSave = () => {
 const show = (id) => {
     isVisible.value = true;
     quizItemId.value = id;
+    // Get the status from the store's draftQuizEntry
+    quizItemStatus.value = store.draftQuizEntry?.status || 'draft';
 };
 
 defineExpose({

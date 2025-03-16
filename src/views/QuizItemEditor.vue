@@ -148,7 +148,11 @@
           <!-- Multiple Choice Options -->
           <details>
             <summary class="section-summary">
-              <span class="summary-text">Add/Edit Answer Options</span>
+              <span class="summary-text">
+                Add/Edit Answer Options
+                <span v-if="hasAnswerSectionErrors" class="section-error-indicator"
+                  title="This section contains validation errors">⚠️</span>
+              </span>
               <span class="arrow-indicator">▼</span>
             </summary>
             <div class="form-section">
@@ -750,6 +754,19 @@ export default {
 
       return explanationFields.some(field => this.validationState.invalidFields.has(field));
     },
+    hasAnswerSectionErrors() {
+      const answerFields = [
+        'option1',
+        'option2',
+        'option3',
+        'option4',
+        'option5',
+        'correctAnswer',
+        'correctAnswers'
+      ];
+
+      return answerFields.some(field => this.validationState.invalidFields.has(field));
+    },
     currentStep() {
       let completedSteps = 0;
 
@@ -945,10 +962,17 @@ export default {
         await this.store.recordQuizEdit(versionMessage);
         console.log('Quiz edit recorded successfully');
 
+        // Check validation state after saving
+        await this.checkValidation();
+        console.log('Validation state after save:', this.validationState);
+
+        // Set submit status based on validation
         this.submitStatus = {
           show: true,
-          type: 'success',
-          message: 'Draft saved successfully!'
+          type: this.validationState.isValid ? 'success' : 'caution',
+          message: this.validationState.isValid
+            ? 'Draft saved successfully!'
+            : 'Draft saved with validation errors: ' + this.validationState.errors.join(', ')
         };
       } catch (error) {
         console.error('Error saving draft:', error);
@@ -1709,6 +1733,12 @@ details[open] .form-section {
   background: rgba(31, 41, 55, 0.8);
   border-color: #ef4444;
   box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+}
+
+.status-message.caution {
+  background: rgba(31, 41, 55, 0.8);
+  border-color: #f59e0b;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
 }
 
 .submitted-preview {
