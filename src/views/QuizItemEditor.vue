@@ -907,19 +907,19 @@ export default {
       }
 
       try {
-        await this.store.submitQuizEntry(this.newEntry);
-        this.submittedEntry = { ...this.newEntry };
+        await this.store.submitForReview(this.store.draftQuizEntry.id);
+        this.submittedEntry = { ...this.store.draftQuizEntry };
         this.submitStatus = {
           show: true,
           type: 'success',
-          message: 'Quiz entry submitted successfully!'
+          message: 'Quiz entry submitted for review successfully!'
         };
       } catch (error) {
         console.error('Error submitting quiz entry:', error);
         this.submitStatus = {
           show: true,
           type: 'error',
-          message: 'Error submitting quiz entry. Please try again.'
+          message: 'Error submitting quiz entry for review. Please try again.'
         };
       }
     },
