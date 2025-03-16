@@ -1136,6 +1136,29 @@ export default {
       if (!entry.correctAnswers) entry.correctAnswers = [];
 
       this.store.updateDraftQuizEntry(entry);
+    },
+    addCitation() {
+      if (!this.newEntry.citations) {
+        this.newEntry.citations = [];
+      }
+      this.newEntry.citations.push({
+        title: '',
+        author: '',
+        url: '',
+        year: '',
+        imageUrl: ''
+      });
+    },
+    addResource() {
+      if (!this.newEntry.resources) {
+        this.newEntry.resources = [];
+      }
+      this.newEntry.resources.push({
+        title: '',
+        author: '',
+        url: '',
+        description: ''
+      });
     }
   },
   beforeUnmount() {
