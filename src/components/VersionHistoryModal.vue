@@ -30,7 +30,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                {{ version.timestamp?.toDate?.()?.toLocaleString() || 'Unknown date' }}
+                                {{ version.timestamp.toLocaleString() }}
                             </p>
                             <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-1">
                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -43,18 +43,21 @@
                     </div>
                     <div v-if="version.versionMessage"
                         class="mt-3 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-900 dark:text-white">
-                        <p class="text-sm font-medium mb-1 text-gray-500 dark:text-gray-400">Changes made:</p>
-                        <p class="whitespace-pre-wrap">{{ version.versionMessage }}</p>
+                        <p class="flex items-left gap-2 text-sm font-medium mb-1 text-gray-500 dark:text-gray-400">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Version commit message:
+                        </p>
+                        <p class="flex items-left gap-2 whitespace-pre-wrap">{{ version.versionMessage }}</p>
                     </div>
                     <div class="mt-3 flex flex-wrap gap-2">
                         <span
                             class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                             Version {{ version.versionNumber }}
                         </span>
-                        <span v-if="version.changes?.before"
-                            class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                            Has changes
-                        </span>
+
                     </div>
                 </div>
             </div>
@@ -108,25 +111,25 @@ const props = defineProps({
     quizItemId: {
         type: String,
         required: false,
-        default: null,
-        validator: (value) => {
-            // Allow null/undefined or non-empty string
-            return value === null || value === undefined || (typeof value === 'string' && value.length > 0);
-        }
+        default: null
+    },
+    originalId: {
+        type: String,
+        required: false,
+        default: null
     }
 });
 
 const emit = defineEmits(['close']);
 
 const versions = ref([]);
-const isLoading = ref(true);
+const isLoading = ref(false);
 const error = ref(null);
 
 const fetchVersions = async () => {
-    if (!props.quizItemId) {
-        console.log('No quizItemId provided, skipping fetch');
-        versions.value = [];
-        isLoading.value = false;
+    const targetId = props.quizItemId || props.originalId;
+    if (!targetId) {
+        error.value = 'No quiz item ID provided';
         return;
     }
 
@@ -134,83 +137,42 @@ const fetchVersions = async () => {
     error.value = null;
 
     try {
-        console.log('Fetching versions for quizItemId:', props.quizItemId);
-        const editHistoryRef = collection(db, 'quizEditHistory');
-
-        // Log the query parameters
-        console.log('Query parameters:', {
-            collection: 'quizEditHistory',
-            where: ['quizItemId', '==', props.quizItemId],
-            orderBy: ['timestamp', 'desc']
-        });
-
-        // First, get all documents to check what's actually in the collection
-        const allVersionsQuery = query(editHistoryRef);
-        const allVersions = await getDocs(allVersionsQuery);
-        console.log('All versions in collection:', allVersions.docs.map(doc => ({
-            id: doc.id,
-            quizItemId: doc.data().quizItemId,
-            versionMessage: doc.data().versionMessage,
-            timestamp: doc.data().timestamp?.toDate?.()
-        })));
-
-        // Then do our filtered query
+        const versionsRef = collection(db, 'quizEditHistory');
         const q = query(
-            editHistoryRef,
-            where('quizItemId', '==', props.quizItemId),
+            versionsRef,
+            where('quizItemId', '==', targetId),
             orderBy('timestamp', 'desc')
         );
 
         const querySnapshot = await getDocs(q);
-        console.log('Query snapshot size:', querySnapshot.size);
-
-        // Log each document for debugging
-        querySnapshot.forEach((doc, index) => {
-            const data = doc.data();
-            console.log(`Version ${querySnapshot.size - index}:`, {
-                id: doc.id,
-                timestamp: data.timestamp?.toDate?.(),
-                userEmail: data.userEmail,
-                versionMessage: data.versionMessage,
-                quizItemId: data.quizItemId,
-                changes: {
-                    beforeId: data.changes?.before?.id,
-                    afterId: data.changes?.after?.id,
-                    hasChanges: !!data.changes?.before
-                }
-            });
-        });
+        console.log('Found versions:', querySnapshot.size);
 
         versions.value = querySnapshot.docs.map((doc, index) => {
             const data = doc.data();
-            // Check if timestamp exists and is a valid Firestore timestamp
-            const timestamp = data.timestamp?.toDate ? data.timestamp : null;
+            console.log('Version data:', data);
+
+            // Handle timestamp conversion properly
+            let timestamp;
+            if (data.timestamp?.toDate) {
+                timestamp = data.timestamp.toDate();
+            } else if (data.timestamp instanceof Date) {
+                timestamp = data.timestamp;
+            } else {
+                timestamp = new Date();
+            }
+
             return {
                 id: doc.id,
-                ...data,
+                versionNumber: data.revisionNumber || querySnapshot.size - index,
                 timestamp: timestamp,
-                // Format the version message if it exists
-                versionMessage: data.versionMessage ? data.versionMessage.trim() : 'No description provided',
-                // Add version number (most recent is highest number)
-                versionNumber: querySnapshot.size - index
+                userEmail: data.userEmail || 'Unknown',
+                versionMessage: data.versionMessage || 'No message provided',
+                changes: data.changes || {}
             };
         });
-
-        console.log('Processed versions:', versions.value.map(v => ({
-            id: v.id,
-            versionNumber: v.versionNumber,
-            timestamp: v.timestamp?.toDate?.(),
-            userEmail: v.userEmail,
-            versionMessage: v.versionMessage,
-            quizItemId: v.quizItemId
-        })));
-
-        if (versions.value.length === 0) {
-            console.log('No versions found for quiz item');
-        }
     } catch (error) {
-        console.error('Error fetching version history:', error);
-        error.value = error.message || 'Failed to load version history';
+        console.error('Error fetching versions:', error);
+        error.value = 'Failed to load version history';
     } finally {
         isLoading.value = false;
     }
@@ -236,11 +198,11 @@ watch(() => props.quizItemId, (newId, oldId) => {
 });
 
 // Add watch for show prop
-watch(() => props.show, (newValue, oldValue) => {
-    console.log('Show prop changed:', { oldValue, newValue });
-    if (newValue && props.quizItemId) {
-        console.log('Modal shown, fetching versions for ID:', props.quizItemId);
-        fetchVersions();
+watch(() => props.show, async (newVal) => {
+    console.log('Show prop changed:', { oldValue: !newVal, newValue: newVal });
+    if (newVal) {
+        console.log('Modal shown, fetching versions for ID:', props.quizItemId || props.originalId);
+        await fetchVersions();
     }
 });
 </script>

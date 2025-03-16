@@ -96,7 +96,7 @@
         <!--Item History-->
         <button type="button" @click="showVersionHistory = true" class="flex items-center gap-1 px-3 py-1 text-sm
         border-green-400 bg-gray-700 hover:bg-gray-600 text-green-400 rounded-lg transition-colors duration-200 mr-9"
-          v-if="store.draftQuizEntry?.id">
+          v-if="store.draftQuizEntry?.id || store.draftQuizEntry?.originalId">
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -547,8 +547,8 @@
     <VersionInfoModal @save="handleSaveDraftWithVersion" ref="versionInfoModal" />
 
     <!-- Add this before the closing </div> tag of the template -->
-    <VersionHistoryModal :show="showVersionHistory" :quizItemId="store.draftQuizEntry?.id || null"
-      @close="showVersionHistory = false" />
+    <VersionHistoryModal :show="showVersionHistory" :quiz-item-id="store.draftQuizEntry?.id"
+      :original-id="store.draftQuizEntry?.originalId" @close="showVersionHistory = false" />
   </div>
 </template>
 
@@ -587,13 +587,15 @@ export default {
       try {
         console.log('Loading item:', itemId);
 
-        // Check if this is a new item
-        if (itemId === 'new' || route.query.new === 'true') {
+        // If itemId is undefined or null, and we're on the new route, create a new item
+        if ((!itemId || itemId === 'new') && route.query.new === 'true') {
+          console.log('Creating new item');
           store.resetDraftQuizEntry();
           return;
         }
 
-        if (itemId) {
+        // If we have an itemId, try to load it
+        if (itemId && itemId !== 'new') {
           // First check if it's a permanent quiz item
           const permanentItem = quizEntries.find(item =>
             item.id.toString() === itemId.toString()
@@ -631,40 +633,21 @@ export default {
           store.saveStatus = {
             show: true,
             type: 'error',
-            message: `Quiz item ${itemId} was not found in either permanent or draft items. It may have been deleted or moved. You can create a new item or return to the quiz list.`
+            message: `Quiz item ${itemId} was not found in either permanent or draft items.`
           };
+        }
 
-          // Initialize a new entry while keeping the ID for reference
+        // If we get here and we're on the new route, create a new item
+        if (route.query.new === 'true') {
+          console.log('Creating new item as fallback');
           store.resetDraftQuizEntry();
-
-          // Add buttons for user actions
-          setTimeout(() => {
-            store.saveStatus = {
-              ...store.saveStatus,
-              show: true,
-              type: 'error',
-              message: `
-                <div class="flex flex-col gap-4">
-                  <p>Quiz item ${itemId} was not found. Would you like to:</p>
-                  <div class="flex gap-4">
-                    <button @click="$router.push('/')" class="px-4 py-2 bg-gray-600 text-white rounded">
-                      Return to Quiz List
-                    </button>
-                    <button @click="$router.push('/edit-item/new')" class="px-4 py-2 bg-blue-600 text-white rounded">
-                      Create New Item
-                    </button>
-                  </div>
-                </div>
-              `
-            };
-          }, 100);
         }
       } catch (error) {
         console.error('Error in QuizItemEditor setup:', error);
         store.saveStatus = {
           show: true,
           type: 'error',
-          message: 'Error loading quiz item. Please try again or return to the quiz list.'
+          message: 'Error loading quiz item. Please try again.'
         };
       }
     };
@@ -698,6 +681,20 @@ export default {
       route,
       showVersionHistory
     };
+  },
+  created() {
+    // Initialize new entry if this is a new item
+    if (this.$route.params.id === 'new' || this.$route.query.new === 'true') {
+      this.initializeNewEntry();
+    }
+  },
+  watch: {
+    // Watch for changes in the route that indicate a new item
+    '$route.params.id'(newId) {
+      if (newId === 'new' || this.$route.query.new === 'true') {
+        this.initializeNewEntry();
+      }
+    }
   },
   computed: {
     newEntry: {
@@ -798,29 +795,8 @@ export default {
   },
   data() {
     return {
-      previewMode: false,
-      jsonPreviewMode: false,
-      showExplanationSection: false,
-      returnButton: {
-        active: false
-      },
-      submitStatus: {
-        show: false,
-        type: '',
-        message: ''
-      },
-      submittedEntry: null,
-      activeSection: '',
-      copySuccess: false,
-      autoSaveTimeout: null,
-      lastSaved: null,
-      saveStatus: {
-        show: false,
-        message: '',
-        type: ''
-      },
       validationState: {
-        isValid: false,
+        isValid: true,
         errors: [],
         invalidFields: new Set()
       },
@@ -834,6 +810,7 @@ export default {
         option3: 'Enter option 3',
         option4: 'Enter option 4',
         option5: 'Enter option 5',
+        option6: 'Enter option 6',
         explanation: 'Enter explanation here',
         explanation2: 'Enter additional explanation here',
         closingText: 'Enter closing text here',
@@ -843,54 +820,106 @@ export default {
         'podcastEpisode2.title': 'Enter second podcast title',
         caution: 'Enter caution text here'
       },
-      showVersionInfoModal: false
-    }
+      activeSection: '',
+      showExplanationSection: false,
+      previewMode: false,
+      jsonPreviewMode: false,
+      copySuccess: false,
+      submitStatus: {
+        show: false,
+        type: '',
+        message: ''
+      },
+      saveStatus: {
+        show: false,
+        type: '',
+        message: ''
+      },
+      submittedEntry: null,
+      returnButton: {
+        active: false
+      }
+    };
   },
   methods: {
-    addCitation() {
-      this.store.draftQuizEntry.citations.push({
-        title: '',
-        author: '',
-        url: '',
-        year: '',
-        imageUrl: '',
-      });
-    },
-    removeCitation(index) {
-      this.store.draftQuizEntry.citations.splice(index, 1);
-    },
-    addResource() {
-      this.store.draftQuizEntry.resources.push({
-        title: '',
-        author: '',
-        url: '',
-        description: '',
-      });
-    },
-    removeResource(index) {
-      this.store.draftQuizEntry.resources.splice(index, 1);
-    },
-    async submitForm() {
-      try {
-        // Only submit for review, no saving here
-        if (!this.store.draftQuizEntry.id) {
-          throw new Error('Please save your draft first before submitting');
+    validateForm() {
+      const errors = [];
+      const invalidFields = new Set();
+
+      // Required fields validation
+      if (!this.newEntry.title?.trim()) {
+        errors.push('Title is required');
+        invalidFields.add('title');
+      }
+
+      if (!this.newEntry.Question?.trim()) {
+        errors.push('Question is required');
+        invalidFields.add('Question');
+      }
+
+      // Validate options based on answer type
+      if (this.newEntry.answer_type === 'mc' || this.newEntry.answer_type === 'ms') {
+        let optionCount = 0;
+        for (let i = 1; i <= 6; i++) {
+          if (this.newEntry[`option${i}`]?.trim()) {
+            optionCount++;
+          }
         }
 
-        // Submit for review
-        await this.store.submitForReview(this.store.draftQuizEntry.id);
+        if (optionCount < 2) {
+          errors.push('At least 2 options are required');
+          for (let i = 1; i <= 2; i++) {
+            invalidFields.add(`option${i}`);
+          }
+        }
 
+        // Validate correct answer selection
+        if (this.newEntry.answer_type === 'mc' && !this.newEntry.correctAnswer) {
+          errors.push('Please select a correct answer');
+        } else if (this.newEntry.answer_type === 'ms' && (!this.newEntry.correctAnswers || this.newEntry.correctAnswers.length === 0)) {
+          errors.push('Please select at least one correct answer');
+        }
+      }
+
+      this.validationState = {
+        isValid: errors.length === 0,
+        errors,
+        invalidFields
+      };
+
+      return errors.length === 0;
+    },
+    getFieldError(fieldName) {
+      if (this.validationState.invalidFields.has(fieldName)) {
+        return this.validationState.errors.find(error => error.toLowerCase().includes(fieldName.toLowerCase()));
+      }
+      return '';
+    },
+    handleFocus(event, fieldName) {
+      this.validationState.invalidFields.delete(fieldName);
+    },
+    handleBlur(event, fieldName) {
+      this.validateForm();
+    },
+    async submitForm() {
+      if (!this.validateForm()) {
+        return;
+      }
+
+      try {
+        await this.store.submitQuizEntry(this.newEntry);
         this.submittedEntry = { ...this.newEntry };
         this.submitStatus = {
           show: true,
           type: 'success',
           message: 'Quiz entry submitted successfully!'
         };
-      } catch (e) {
+      } catch (error) {
+        console.error('Error submitting quiz entry:', error);
         this.submitStatus = {
           show: true,
           type: 'error',
-          message: e.message || 'Error submitting quiz entry'
+          message: 'Error submitting quiz entry. Please try again.'
         };
       }
     },
@@ -1051,48 +1080,37 @@ export default {
       // Hide JSON when toggling preview mode in either direction
       this.jsonPreviewMode = false;
     },
-    getFieldError(fieldName) {
-      if (this.validationState.invalidFields.has(fieldName)) {
-        // Return specific error message based on field type
-        if (fieldName.startsWith('option')) {
-          return 'This option needs to be changed from its default value';
-        }
-        if (fieldName === 'title') {
-          return 'Title is required';
-        }
-        if (fieldName === 'Question') {
-          return 'Question is required and must be different from default';
-        }
-        if (fieldName === 'explanation') {
-          return 'Explanation is required and must be different from default';
-        }
-        if (fieldName === 'correctAnswer') {
-          return 'Please select a valid answer number';
-        }
-        // For URLs
-        if (fieldName.includes('Url') || fieldName.includes('url')) {
-          return 'Please enter a valid URL';
-        }
-        return 'This field needs to be filled out properly';
-      }
-      return '';
-    },
     initializeNewEntry() {
       // Get a clean entry from the store
       const entry = this.store.draftQuizEntry;
 
-      // Populate with default values
+      // Initialize with default values only if the field doesn't exist or is empty
       Object.entries(this.defaultValues).forEach(([field, value]) => {
         if (field.includes('.')) {
           const [parent, child] = field.split('.');
-          if (!entry[parent]) entry[parent] = {};
-          entry[parent][child] = value;
+          if (!entry[parent]) {
+            entry[parent] = {};
+          }
+          if (!entry[parent][child]) {
+            entry[parent][child] = value;
+          }
         } else {
-          entry[field] = value;
+          if (!entry[field]) {
+            entry[field] = value;
+          }
         }
       });
 
-      // Update the store with the initialized entry
+      // Set default answer type if not set
+      if (!entry.answer_type) {
+        entry.answer_type = 'mc';
+      }
+
+      // Initialize arrays if not set
+      if (!entry.citations) entry.citations = [];
+      if (!entry.resources) entry.resources = [];
+      if (!entry.correctAnswers) entry.correctAnswers = [];
+
       this.store.updateDraftQuizEntry(entry);
     }
   },
@@ -1100,18 +1118,6 @@ export default {
     if (this.autoSaveTimeout) {
       clearTimeout(this.autoSaveTimeout);
     }
-  },
-  created() {
-    if (!this.store.draftQuizEntry.title) {
-      this.initializeNewEntry();
-    }
-    // Initialize validation state
-    const validation = this.store.validateDraftQuizEntry(this.store.draftQuizEntry);
-    this.validationState = {
-      isValid: validation.errors.length === 0,
-      errors: validation.errors,
-      invalidFields: validation.invalidFields
-    };
   },
   watch: {
     newEntry: {

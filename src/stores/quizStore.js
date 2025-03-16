@@ -10,7 +10,9 @@ import {
     query,
     where,
     getDocs,
-    or
+    or,
+    orderBy,
+    limit
 } from 'firebase/firestore';
 import { useAuthStore } from './authStore';
 import { useProgressStore } from './progressStore';
@@ -69,7 +71,7 @@ export const quizStore = defineStore('quiz', {
             closingText2: '',
             modal: '',
             status: 'draft',
-            id: null
+            version: 1
         },
         saveStatus: {
             message: '',
@@ -301,18 +303,34 @@ export const quizStore = defineStore('quiz', {
                 );
                 const querySnapshot = await getDocs(q);
 
-                // Log the raw results
-                console.log('Raw query results:', querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    status: doc.data().status
-                })));
-
-                this.draftQuizItems = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
+                // Log the raw results with version numbers
+                console.log('Raw query results with versions:', querySnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        status: data.status,
+                        version: data.version || 1, // Ensure version is at least 1
+                        title: data.title
+                    };
                 }));
 
-                console.log('Fetched draft/pending items:', this.draftQuizItems.length);
+                this.draftQuizItems = querySnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        ...data,
+                        version: data.version || 1 // Ensure version is at least 1
+                    };
+                });
+
+                // Log processed items with versions
+                console.log('Processed draft/pending items with versions:', this.draftQuizItems.map(item => ({
+                    id: item.id,
+                    status: item.status,
+                    version: item.version,
+                    title: item.title
+                })));
+
                 return this.draftQuizItems;
             } catch (error) {
                 console.error('Error fetching draft items:', error);
@@ -360,28 +378,41 @@ export const quizStore = defineStore('quiz', {
                 return;
             }
 
-            // Create the edit record with sanitized data
-            const editRecord = {
-                timestamp: serverTimestamp(),
-                userId: auth.user?.uid || 'anonymous',
-                userEmail: auth.user?.email || 'anonymous',
-                quizItemId: quizItemId,
-                versionMessage: versionMessage || '',
-                changes: {
-                    before: beforeState,
-                    after: afterState
-                }
-            };
-
             try {
+                // Get the latest revision number for this quiz item
+                const editHistoryRef = collection(db, 'quizEditHistory');
+                const q = query(
+                    editHistoryRef,
+                    where('quizItemId', '==', quizItemId),
+                    orderBy('revisionNumber', 'desc'),
+                    limit(1)
+                );
+
+                const latestRevision = await getDocs(q);
+                const nextRevisionNumber = latestRevision.empty ? 1 : latestRevision.docs[0].data().revisionNumber + 1;
+
+                // Create the edit record with sanitized data
+                const editRecord = {
+                    timestamp: serverTimestamp(),
+                    userId: auth.user?.uid || 'anonymous',
+                    userEmail: auth.user?.email || 'anonymous',
+                    quizItemId: quizItemId,
+                    versionMessage: versionMessage || '',
+                    revisionNumber: nextRevisionNumber,
+                    changes: {
+                        before: beforeState,
+                        after: afterState
+                    }
+                };
+
                 console.log('Recording version history:', {
                     quizItemId,
                     versionMessage,
+                    revisionNumber: nextRevisionNumber,
                     hasBeforeState: !!beforeState,
                     hasAfterState: !!afterState
                 });
 
-                const editHistoryRef = collection(db, 'quizEditHistory');
                 await addDoc(editHistoryRef, editRecord);
 
                 // Update lastSavedDraftQuizEntry after successful save
@@ -405,12 +436,17 @@ export const quizStore = defineStore('quiz', {
                 // Create a copy of the draft entry without the id field
                 const { id, originalId, ...entryWithoutId } = this.draftQuizEntry;
 
+                // Increment version number if this is an update to an existing item
+                const currentVersion = this.draftQuizEntry.version || 1;
+                const newVersion = id && (!originalId || originalId === id) ? currentVersion + 1 : 1;
+
                 const entryToSave = {
                     ...entryWithoutId,
                     userId: user.uid,
                     userEmail: user.email,
                     isAnonymous: user.isAnonymous,
                     status: 'draft',
+                    version: newVersion,  // Add version number to saved entry
                     podcastEpisode: this.draftQuizEntry.podcastEpisode || {
                         title: '',
                         EpisodeUrl: '',
@@ -442,21 +478,26 @@ export const quizStore = defineStore('quiz', {
 
                 // If we have an ID and we're not explicitly making a copy (originalId is only for copies)
                 if (id && (!originalId || originalId === id)) {
+                    // Increment version for updates to existing items
+                    entryToSave.version = (entryToSave.version || 1) + 1;
                     docRef = doc(db, 'quizEntries', id);
                     await setDoc(docRef, entryToSave, { merge: true });
-                    console.log('Updated existing quiz item:', id);
+                    console.log('Updated existing quiz item:', id, 'with version:', entryToSave.version);
                     savedId = id;
                 } else {
+                    // Set initial version for new items
+                    entryToSave.version = 1;
                     // Create new document for new items or explicit copies
                     docRef = await addDoc(collection(db, 'quizEntries'), entryToSave);
                     savedId = docRef.id;
-                    console.log('Created new quiz item with ID:', savedId);
+                    console.log('Created new quiz item with ID:', savedId, 'and version:', entryToSave.version);
                 }
 
-                // Update the draft entry with the saved ID
+                // Update the draft entry with the saved ID and version
                 this.draftQuizEntry = {
                     ...this.draftQuizEntry,
                     id: savedId,
+                    version: entryToSave.version,
                     originalId: null // Clear originalId after save
                 };
 
@@ -498,12 +539,17 @@ export const quizStore = defineStore('quiz', {
                     throw new Error('You can only edit your own drafts');
                 }
 
+                // Increment version number
+                const currentVersion = existingDraft.version || 1;
+                const newVersion = currentVersion + 1;
+
                 const entryToUpdate = {
                     ...this.draftQuizEntry,
                     userId: user.uid,
                     userEmail: user.email,
                     isAnonymous: user.isAnonymous,
                     status: 'draft',
+                    version: newVersion,  // Add incremented version number
                     timestamp: serverTimestamp(),
                 };
 
@@ -706,14 +752,30 @@ export const quizStore = defineStore('quiz', {
         },
 
         updateDraftQuizEntry(entry) {
-            const currentId = this.draftQuizEntry.id;
-            // Ensure correctAnswers is initialized as an array for multiple select questions
+            // Log the incoming entry details
+            console.log('updateDraftQuizEntry called with:', {
+                entryId: entry.id,
+                entryVersion: entry.version,
+                entryTitle: entry.title
+            });
+
+            // Ensure we preserve the version number from the entry
             const updatedEntry = {
                 ...this.draftQuizEntry,
                 ...entry,
-                id: entry.id || currentId, // Keep existing ID if new entry doesn't have one
+                // Explicitly preserve version, defaulting to 1 if not set
+                version: entry.version || 1,
+                // Initialize correctAnswers array for multiple select questions
                 correctAnswers: entry.answer_type === 'ms' ? (entry.correctAnswers || []) : []
             };
+
+            // Log the final updated entry
+            console.log('Final updated entry:', {
+                id: updatedEntry.id,
+                version: updatedEntry.version,
+                title: updatedEntry.title
+            });
+
             this.draftQuizEntry = updatedEntry;
         },
 
@@ -761,7 +823,8 @@ export const quizStore = defineStore('quiz', {
                 closingText: '',
                 closingText2: '',
                 modal: '',
-                status: 'draft'
+                status: 'draft',
+                version: 1  // Initialize version number
             };
         },
 
