@@ -969,6 +969,10 @@ export const quizStore = defineStore('quiz', {
                     updatedAt: serverTimestamp()
                 });
 
+                // Record this change in version history
+                this.draftQuizEntry = { ...quizData, id: itemId };
+                await this.recordQuizEdit('Quiz item approved and moved to permanent entries');
+
                 // Refresh the draft items list
                 await this.fetchDraftQuizItems();
 
