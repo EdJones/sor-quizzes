@@ -26,8 +26,8 @@
     </div>
 
     <div v-else-if="quizItem.answer_type == 'short_answer'" class="text-gray-900 dark:text-white">
-      <ShortAnswer v-model:userAnswer="userAnswer" @answer-selected="handleAnswerSelected" :quizItem="quizItem"
-        :reviewMode="reviewMode" />
+      <ShortAnswer v-model:userAnswer="userAnswer" @answer-selected="handleAnswerSelected"
+        @correctness-change="handleShortAnswerCorrectness" :quizItem="quizItem" :reviewMode="reviewMode" />
     </div>
 
     <!-- Sortable list -->
@@ -161,6 +161,10 @@ export default {
     handleAnswerSelected(selectedOption) {
       console.log("Answer selected in QuizItem:", selectedOption);
       this.$emit('selected', selectedOption);
+    },
+    handleShortAnswerCorrectness(isCorrect) {
+      console.log("Short answer correctness:", isCorrect);
+      this.$emit('selected', this.userAnswer, isCorrect);
     }
   },
   setup(props, { emit }) {

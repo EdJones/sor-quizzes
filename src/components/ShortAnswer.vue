@@ -11,6 +11,18 @@
                 <div class="answer mb-4">
                     <div class="font-medium mb-2">Your answer:</div>
                     <div class="p-2 rounded-md">{{ userAnswer || 'No answer provided' }}</div>
+                    <div class="mt-4 flex items-center justify-center space-x-6">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="correctness" :value="true" v-model="isAnswerCorrect"
+                                class="form-radio h-4 w-4 text-blue-600" @change="handleCorrectnessChange">
+                            <span class="ml-2">Yes</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="correctness" :value="false" v-model="isAnswerCorrect"
+                                class="form-radio h-4 w-4 text-blue-600" @change="handleCorrectnessChange">
+                            <span class="ml-2">No</span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -36,9 +48,10 @@ export default {
             default: null
         }
     },
-    emits: ['update:userAnswer', 'answer-selected'],
+    emits: ['update:userAnswer', 'answer-selected', 'correctness-change'],
     setup(props, { emit }) {
         const localAnswer = ref(props.userAnswer || '');
+        const isAnswerCorrect = ref(null);
 
         watch(() => props.userAnswer, (newVal) => {
             localAnswer.value = newVal || '';
@@ -49,9 +62,15 @@ export default {
             emit('answer-selected', localAnswer.value);
         };
 
+        const handleCorrectnessChange = () => {
+            emit('correctness-change', isAnswerCorrect.value);
+        };
+
         return {
             localAnswer,
-            handleInput
+            handleInput,
+            isAnswerCorrect,
+            handleCorrectnessChange
         };
     }
 };
@@ -80,5 +99,21 @@ export default {
 
 .answer-display .answer {
     @apply border-gray-300 dark:border-gray-600;
+}
+
+/* Radio button styles */
+.form-radio {
+    @apply border-gray-300 dark:border-gray-600;
+}
+
+.form-radio:checked {
+    @apply bg-blue-600 border-transparent;
+}
+
+/* Dark mode styles for radio text */
+@media (prefers-color-scheme: dark) {
+    .inline-flex span {
+        @apply text-white;
+    }
 }
 </style>

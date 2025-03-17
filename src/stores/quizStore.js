@@ -149,6 +149,27 @@ export const quizStore = defineStore('quiz', {
                 return;
             }
 
+            // For short answer questions
+            if (quizEntry.answer_type === 'short_answer') {
+                const isCorrect = correctAnswer === true; // Use the correctAnswer parameter as the correctness flag
+                this.userAnswers[index] = {
+                    selected: selectedAnswer,
+                    correct: isCorrect,
+                    questionId: questionId || '',
+                    questionTitle: questionTitle || '',
+                    timestamp: new Date().toISOString()
+                };
+
+                if (!isCorrect && !this.incorrectQuestions.some(q => q.id === questionId)) {
+                    this.incorrectQuestions.push({
+                        id: questionId || '',
+                        title: questionTitle || '',
+                        chosenAnswer: selectedAnswer?.substring(0, 100) || ''
+                    });
+                }
+                return;
+            }
+
             // For multiple choice, ensure consistent string comparison
             const isCorrect = String(selectedAnswer) === String(correctAnswer);
 
