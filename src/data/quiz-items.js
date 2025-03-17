@@ -1867,6 +1867,66 @@ export const quizEntries = [{
     userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1"
 },
 {
+    title: "Vowels and Consonants",
+    subtitle: "Deep in the phonetics",
+    id: 48,
+    Question: "What is a vowel? How is a consonant different?",
+    questionP2: "Additional text here",
+    answer_type: "short_answer",
+    option1: "First option",
+    option2: "Second option",
+    option3: "Third option",
+    option4: "Fourth option",
+    option5: "Fifth option",
+    correctAnswer: 1,
+    correctAnswers: [],
+    explanation: "It's these details that can often hang up teachers working with struggling students. Hopefully experts will weigh in here with what teachers should know.",
+    explanation2: "Did you answer: \"A continuous, voiced speech sound produced by an open mouth with airflow unobstructed by your teeth, lips, tongue or airflow\"?",
+    videoUrl: "",
+    videoId: "9K3uPI3qu4c",
+    image: "",
+    imageUrl: "",
+    imageAltText: "",
+    podcastEpisode: {
+        title: "Episode Title",
+        podcastStartTime: 0,
+        description: "",
+        EpisodeUrl: "",
+        audioUrl: ""
+    },
+    podcastEpisode2: {
+        description: "",
+        EpisodeUrl: "",
+        podcastStartTime: 0,
+        title: "",
+        audioUrl: ""
+    },
+    cautionLevel: "",
+    caution: "",
+    citations: [],
+    ref1: "",
+    ref2: "",
+    resources: [],
+    closingText: "",
+    closingText2: "",
+    modal: "",
+    status: "draft",
+    version: 1,
+    id: null,
+    timestamp: {
+        seconds: 1742151531,
+        nanoseconds: 914000000
+    },
+    userEmail: "ed.jones@gmail.com",
+    submittedAt: {
+        seconds: 1742204528,
+        nanoseconds: 804000000
+    },
+    userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+    originalId: "mZVtSMFOgWfHyoQGgM3x",
+    isAnonymous: false
+},
+{
     title: "Learning Science",
     subtitle: "",
     id: 2000, // New ID for the new quiz entry
