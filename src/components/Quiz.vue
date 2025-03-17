@@ -508,7 +508,8 @@ export default {
       this.store.setUserAnswer(
         this.itemNum,
         option,
-        this.currentQuizItem.answer_type === 'ms' ? this.currentQuizItem.correctAnswers : this.currentQuizItem.correctAnswer,
+        this.currentQuizItem.answer_type === 'short_answer' ? isCorrect :
+          this.currentQuizItem.answer_type === 'ms' ? this.currentQuizItem.correctAnswers : this.currentQuizItem.correctAnswer,
         this.currentQuizItem.id,
         this.currentQuizItem.title,
         this.currentQuizItem
