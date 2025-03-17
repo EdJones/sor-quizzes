@@ -14,7 +14,6 @@ import {
     orderBy,
     limit,
     updateDoc,
-    updateDoc,
     getDoc
 } from 'firebase/firestore';
 import { useAuthStore } from './authStore';
@@ -722,12 +721,14 @@ export const quizStore = defineStore('quiz', {
                 currentId: this.draftQuizEntry.id  // Log current ID for debugging
             });
 
-            // Ensure we preserve both the ID and version number
+            // When copying from a template, we want to create a new entry
+            // So we explicitly set id to null (not undefined)
             const updatedEntry = {
                 ...this.draftQuizEntry,  // Start with current draft to preserve existing values
                 ...entry,                 // Override with new values
-                id: entry.id || this.draftQuizEntry.id,  // Preserve existing ID if new one is null
-                version: entry.version || this.draftQuizEntry.version || 1,
+                id: null,                 // For new entries from templates, explicitly set id to null
+                version: 1,              // Start version at 1 for new entries
+                status: 'draft',         // Ensure status is draft
                 // Initialize correctAnswers array for multiple select questions
                 correctAnswers: entry.answer_type === 'ms' ? (entry.correctAnswers || []) : []
             };
