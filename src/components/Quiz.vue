@@ -630,7 +630,7 @@ export default {
         });
 
         // Show the progress popup
-        this.showProgress();
+        // this.showProgress();
 
       } catch (error) {
         console.error('Error in quizDone:', error);
