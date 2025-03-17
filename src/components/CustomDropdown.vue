@@ -42,7 +42,10 @@
                         class="px-4 py-2 cursor-pointer hover:bg-gray-700">
                         <div class="flex justify-between items-center">
                             <span class="text-white">{{ item.title || 'Untitled Draft' }}</span>
-                            <span class="text-xs text-gray-400">{{ formatDate(item.timestamp) }}</span>
+                            <div class="flex items-center gap-2">
+                                <span v-if="item.version" class="text-xs text-gray-400">v{{ item.version }}</span>
+                                <span class="text-xs text-gray-400">{{ formatDate(item.timestamp) }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -57,7 +60,10 @@
                                 <span class="text-white">{{ item.title || 'Untitled Pending' }}</span>
                                 <span class="text-sm text-gray-400">({{ item.userEmail || 'Anonymous' }})</span>
                             </div>
-                            <span class="text-xs text-gray-400">{{ formatDate(item.timestamp) }}</span>
+                            <div class="flex items-center gap-2">
+                                <span v-if="item.version" class="text-xs text-gray-400">v{{ item.version }}</span>
+                                <span class="text-xs text-gray-400">{{ formatDate(item.timestamp) }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -69,7 +75,10 @@
                         class="px-4 py-2 cursor-pointer hover:bg-gray-700">
                         <div class="flex justify-between items-center">
                             <span class="text-white">{{ item.title || 'Untitled Draft' }}</span>
-                            <span class="text-xs text-gray-400">{{ formatDate(item.timestamp) }}</span>
+                            <div class="flex items-center gap-2">
+                                <span v-if="item.version" class="text-xs text-gray-400">v{{ item.version }}</span>
+                                <span class="text-xs text-gray-400">{{ formatDate(item.timestamp) }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -164,6 +173,25 @@ onMounted(() => {
 
 onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside);
+});
+
+// Log props for debugging
+console.log('CustomDropdown props:', {
+    userDrafts: props.userDrafts.map(item => ({
+        id: item.id,
+        title: item.title,
+        version: item.version
+    })),
+    pendingItems: props.pendingItems.map(item => ({
+        id: item.id,
+        title: item.title,
+        version: item.version
+    })),
+    otherDrafts: props.otherDrafts.map(item => ({
+        id: item.id,
+        title: item.title,
+        version: item.version
+    }))
 });
 </script>
 

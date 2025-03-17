@@ -283,6 +283,19 @@ export default {
           continue;
         }
 
+        // Handle short answer questions
+        if (quizItem.answer_type === 'short_answer') {
+          // Get the correctness from the store
+          const storedAnswer = this.store.userAnswers[i];
+          if (storedAnswer && storedAnswer.correct) {
+            correct++;
+            console.log("✓ Short Answer Correct!");
+          } else {
+            console.log("✗ Short Answer Incorrect");
+          }
+          continue;
+        }
+
         // Handle multiple choice questions
         const correctAnswer = Number(quizItem.correctAnswer);
         console.log("Correct answer:", correctAnswer);
@@ -462,29 +475,32 @@ export default {
         console.error("Error in checkIt method:", error);
       }
     },
-    async answerSelected(option) {
-      console.log("In answerSelected with answer:", option);
+    async answerSelected(option, isCorrect) {
+      console.log("In answerSelected with answer:", option, "isCorrect:", isCorrect);
       this.selectError = false;
       this.chosen = true;
       this.userAnswers[this.itemNum] = option;
 
       // Check if answer is correct
-      let isCorrect = false;
+      let answerIsCorrect = false;
       if (this.currentQuizItem.answer_type === 'ms') {
         const correctAnswers = this.currentQuizItem.correctAnswers || [];
-        isCorrect = Array.isArray(option) &&
+        answerIsCorrect = Array.isArray(option) &&
           option.length === correctAnswers.length &&
           option.every(answer => correctAnswers.includes(answer));
+      } else if (this.currentQuizItem.answer_type === 'short_answer') {
+        // For short answer questions, use the isCorrect parameter from the radio buttons
+        answerIsCorrect = isCorrect;
       } else {
-        isCorrect = option === this.currentQuizItem.correctAnswer;
+        answerIsCorrect = option === this.currentQuizItem.correctAnswer;
       }
 
-      if (isCorrect) {
+      if (answerIsCorrect) {
         // Pass both quizId and questionId
         await this.progressStore.markQuizItemCorrect(
           this.selectedQuiz,
           this.currentQuizItem.id,
-          isCorrect
+          answerIsCorrect
         );
       }
 
@@ -492,7 +508,8 @@ export default {
       this.store.setUserAnswer(
         this.itemNum,
         option,
-        this.currentQuizItem.answer_type === 'ms' ? this.currentQuizItem.correctAnswers : this.currentQuizItem.correctAnswer,
+        this.currentQuizItem.answer_type === 'short_answer' ? isCorrect :
+          this.currentQuizItem.answer_type === 'ms' ? this.currentQuizItem.correctAnswers : this.currentQuizItem.correctAnswer,
         this.currentQuizItem.id,
         this.currentQuizItem.title,
         this.currentQuizItem
@@ -614,7 +631,7 @@ export default {
         });
 
         // Show the progress popup
-        this.showProgress();
+        // this.showProgress();
 
       } catch (error) {
         console.error('Error in quizDone:', error);

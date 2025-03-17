@@ -1798,6 +1798,135 @@ export const quizEntries = [{
     originalId: "K9G4hnDT4RyVxwE9c7T8"
 },
 {
+    title: "Researchers: The Simple View of Reading",
+    subtitle: "",
+    id: 47,
+    Question: "1986 saw the introduction of \"The Simple View of Reading\". It reduced reading research to a simple, but effective one-sentence definition.",
+    questionP2: "The authors of this were (pick all): ",
+    answer_type: "ms",
+    option1: "Wesley Hoover",
+    option2: "Phillip Gough",
+    option3: "Linnea Ehri",
+    option4: "William Tunmer",
+    option5: "Mark Seidenberg",
+    correctAnswer: 1,
+    correctAnswers: [
+        2,
+        4
+    ],
+    explanation: "Gough & Tunmer's Simple View of Reading (1986) transformed how teachers see the reading development process. ",
+    explanation2: "",
+    videoUrl: "",
+    videoId: "",
+    image: "",
+    imageUrl: "",
+    imageAltText: "",
+    podcastEpisode: {
+        title: "Episode Title",
+        podcastStartTime: 0,
+        audioUrl: "",
+        EpisodeUrl: "",
+        description: ""
+    },
+    podcastEpisode2: {
+        podcastStartTime: 0,
+        description: "",
+        EpisodeUrl: "",
+        title: "",
+        audioUrl: ""
+    },
+    cautionLevel: "",
+    caution: "",
+    citations: [
+        {
+            url: "https://journals.sagepub.com/doi/abs/10.1177/074193258600700104",
+            year: "1986",
+            title: "Decoding, Reading, and Reading Disability",
+            imageUrl: "https://express-readers.s3.us-west-1.amazonaws.com/express/wp-content/uploads/2023/07/28032903/Simple-View-RGB-2048x910.jpg",
+            author: "Philip B. Gough and William E. Tunmer"
+        }
+    ],
+    ref1: "",
+    ref2: "",
+    resources: [],
+    closingText: "",
+    closingText2: "",
+    modal: "",
+    status: "draft",
+    userEmail: "ed.jones@gmail.com",
+    originalId: "rNenkcoeaWhFxaDmZyG5",
+    submittedAt: {
+        seconds: 1741739243,
+        nanoseconds: 169000000
+    },
+    timestamp: {
+        seconds: 1741739445,
+        nanoseconds: 504000000
+    },
+    isAnonymous: false,
+    userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1"
+},
+{
+    title: "Vowels and Consonants",
+    subtitle: "Deep in the phonetics",
+    id: 48,
+    Question: "What is a vowel? How is a consonant different?",
+    questionP2: "",
+    answer_type: "short_answer",
+    option1: "First option",
+    option2: "Second option",
+    option3: "Third option",
+    option4: "Fourth option",
+    option5: "Fifth option",
+    correctAnswer: 1,
+    correctAnswers: [],
+    explanation: "It's these details that can often hang up teachers working with struggling students. Hopefully experts will weigh in here with what teachers should know.",
+    explanation2: "Did you answer: \"A continuous, voiced speech sound produced by an open mouth with airflow unobstructed by your teeth, lips, tongue or airflow\"?",
+    videoUrl: "",
+    videoId: "9K3uPI3qu4c",
+    image: "",
+    imageUrl: "",
+    imageAltText: "",
+    podcastEpisode: {
+        title: "Episode Title",
+        podcastStartTime: 0,
+        description: "",
+        EpisodeUrl: "",
+        audioUrl: ""
+    },
+    podcastEpisode2: {
+        description: "",
+        EpisodeUrl: "",
+        podcastStartTime: 0,
+        title: "",
+        audioUrl: ""
+    },
+    cautionLevel: "",
+    caution: "",
+    citations: [],
+    ref1: "",
+    ref2: "",
+    resources: [],
+    closingText: "",
+    closingText2: "",
+    modal: "",
+    status: "draft",
+    version: 1,
+    id: null,
+    timestamp: {
+        seconds: 1742151531,
+        nanoseconds: 914000000
+    },
+    userEmail: "ed.jones@gmail.com",
+    submittedAt: {
+        seconds: 1742204528,
+        nanoseconds: 804000000
+    },
+    userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+    originalId: "mZVtSMFOgWfHyoQGgM3x",
+    isAnonymous: false
+},
+{
     title: "Learning Science",
     subtitle: "",
     id: 2000, // New ID for the new quiz entry

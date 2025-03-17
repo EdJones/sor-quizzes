@@ -12,10 +12,12 @@
 
     <!-- Selection mode for new items -->
     <template v-else>
-        <label for="template-select" class="text-stone-400">Choose a starting point:</label>
-        <CustomDropdown v-model="selectedTemplate" @change="useTemplate" :userDrafts="userDraftQuizItems"
-            :pendingItems="pendingQuizItems" :otherDrafts="otherDraftQuizItems" :permanentItems="permanentQuizItems"
-            :isLoading="isLoadingDrafts" :error="draftLoadError" />
+        <div class="flex flex-col gap-2">
+            <label for="template-select" class="text-stone-400">Choose a starting point:</label>
+            <CustomDropdown v-model="selectedTemplate" @change="useTemplate" :userDrafts="userDraftQuizItems"
+                :pendingItems="pendingQuizItems" :otherDrafts="otherDraftQuizItems" :permanentItems="permanentQuizItems"
+                :isLoading="isLoadingDrafts" :error="draftLoadError" />
+        </div>
     </template>
 </template>
 
@@ -40,25 +42,36 @@ const props = defineProps({
 const selectedTemplate = ref('');
 
 onMounted(async () => {
+    // Fetch draft items when component mounts
+    console.log('QuizSelector mounted, fetching draft items...');
     await store.fetchDraftQuizItems();
 });
 
 const userDraftQuizItems = computed(() => {
-    return store.draftQuizItems
+    const items = store.draftQuizItems
         .filter(item => item.userId === auth.user?.uid)
         .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
+    console.log('User draft items:', items);
+    return items;
 });
 
 const otherDraftQuizItems = computed(() => {
-    return store.draftQuizItems
-        .filter(item => item.userId && item.userId !== auth.user?.uid)
+    const items = store.draftQuizItems
+        .filter(item => item.userId !== auth.user?.uid && item.status === 'draft')
         .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
+    console.log('Other draft items:', items);
+    return items;
 });
 
 const pendingQuizItems = computed(() => {
-    return store.draftQuizItems
+    const items = store.draftQuizItems
         .filter(item => item.status === 'pending')
         .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
+    console.log('Pending items:', items);
+    return items;
 });
 
 const permanentQuizItems = computed(() => {
@@ -73,7 +86,10 @@ const isLoadingDrafts = computed(() => store.draftQuizItemsLoading);
 const draftLoadError = computed(() => store.draftQuizItemsError);
 
 const useTemplate = () => {
+    console.log('Using template:', selectedTemplate.value);
+
     if (!selectedTemplate.value) {
+        console.log('No template selected, resetting draft entry');
         store.resetDraftQuizEntry();
         return;
     }
@@ -81,6 +97,7 @@ const useTemplate = () => {
     // First check if it's a permanent quiz item
     const permanentItem = permanentQuizItems.value.find(item => item.id === selectedTemplate.value);
     if (permanentItem) {
+        console.log('Using permanent item as template:', permanentItem);
         const copyItem = { ...permanentItem };
         copyItem.originalId = copyItem.id;
         copyItem.id = null;
@@ -93,6 +110,7 @@ const useTemplate = () => {
         .find(item => item.id === selectedTemplate.value);
 
     if (draftItem) {
+        console.log('Using draft item as template:', draftItem);
         const copyItem = { ...draftItem };
         copyItem.originalId = copyItem.id;
         copyItem.id = null;

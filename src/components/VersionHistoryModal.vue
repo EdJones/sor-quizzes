@@ -22,35 +22,93 @@
             <!-- Version List -->
             <div v-else-if="versions.length > 0" class="space-y-4">
                 <div v-for="(version, index) in versions" :key="index"
-                    class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
-                                {{ version.timestamp?.toDate?.()?.toLocaleString() || 'Unknown date' }}
+                        <div class="flex-1">
+                            <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {{ version.timestamp.toLocaleString() }}
                             </p>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
-                                by {{ version.userEmail }}
+                            <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-1">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                {{ version.userEmail }}
                             </p>
                         </div>
                     </div>
-                    <p v-if="version.versionMessage" class="text-gray-900 dark:text-white mb-2">
-                        {{ version.versionMessage }}
-                    </p>
-                    <div class="text-sm">
-                        <div class="flex items-center gap-2 text-green-600 dark:text-green-400">
+                    <div v-if="version.versionMessage"
+                        class="mt-3 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-900 dark:text-white">
+                        <p class="flex items-left gap-2 text-sm font-medium mb-1 text-gray-500 dark:text-gray-400">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M5 13l4 4L19 7" />
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span>Changes made</span>
-                        </div>
+                            Version commit message:
+                        </p>
+                        <p class="flex items-left gap-2 whitespace-pre-wrap">{{ version.versionMessage }}</p>
+                    </div>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <span
+                            class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            Version {{ version.versionNumber }}
+                        </span>
+                        <!-- Add status badge -->
+                        <span v-if="version.status" :class="[
+                            'px-2 py-1 text-xs rounded-full',
+                            {
+                                'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200': version.status === 'draft',
+                                'bg-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': version.status === 'pending',
+                                'bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200': version.status === 'approved',
+                                'bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-200': version.status === 'rejected'
+                            }
+                        ]">
+                            {{ version.status.charAt(0).toUpperCase() + version.status.slice(1) }}
+                        </span>
+                        <!-- Show status change if it occurred -->
+                        <span v-if="version.statusChange"
+                            class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            Status changed: {{ version.statusChange.from }} → {{ version.statusChange.to }}
+                        </span>
                     </div>
                 </div>
             </div>
 
             <!-- No Versions -->
-            <div v-else class="text-center py-4 text-gray-600 dark:text-gray-400">
-                No version history available.
+            <div v-else class="text-center py-8">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No version history</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    This quiz item doesn't have any recorded changes yet.
+                </p>
+            </div>
+
+            <!-- Error State -->
+            <div v-if="error" class="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
+                            Error loading version history
+                        </h3>
+                        <div class="mt-2 text-sm text-red-700 dark:text-red-300">
+                            {{ error }}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -58,7 +116,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const props = defineProps({
@@ -68,61 +126,86 @@ const props = defineProps({
     },
     quizItemId: {
         type: String,
-        required: true
+        required: false,
+        default: null
+    },
+    originalId: {
+        type: String,
+        required: false,
+        default: null
     }
 });
 
 const emit = defineEmits(['close']);
 
 const versions = ref([]);
-const isLoading = ref(true);
+const isLoading = ref(false);
+const error = ref(null);
 
 const fetchVersions = async () => {
-    if (!props.quizItemId) {
-        console.log('No quizItemId provided');
+    const targetId = props.quizItemId || props.originalId;
+    if (!targetId) {
+        error.value = 'No quiz item ID provided';
         return;
     }
 
     isLoading.value = true;
+    error.value = null;
+
     try {
-        console.log('Fetching versions for quizItemId:', props.quizItemId);
-        const editHistoryRef = collection(db, 'quizEditHistory');
+        // First get the current quiz item to get its current status
+        const quizItemRef = doc(db, 'quizItems', targetId);
+        const quizItemDoc = await getDoc(quizItemRef);
+        const currentStatus = quizItemDoc.data()?.status || 'draft';
+
+        const versionsRef = collection(db, 'quizEditHistory');
         const q = query(
-            editHistoryRef,
-            where('quizItemId', '==', props.quizItemId),
+            versionsRef,
+            where('quizItemId', '==', targetId),
             orderBy('timestamp', 'desc')
         );
 
-        console.log('Executing query:', q);
         const querySnapshot = await getDocs(q);
-        console.log('Query snapshot size:', querySnapshot.size);
+        console.log('Found versions:', querySnapshot.size);
 
-        versions.value = querySnapshot.docs.map(doc => {
+        let previousStatus = currentStatus;
+        versions.value = querySnapshot.docs.map((doc, index) => {
             const data = doc.data();
-            console.log('Version data:', {
-                id: doc.id,
-                timestamp: data.timestamp,
-                userEmail: data.userEmail,
-                versionMessage: data.versionMessage,
-                changes: {
-                    before: data.changes?.before,
-                    after: data.changes?.after
-                }
-            });
+            console.log('Version data:', data);
+
+            // Handle timestamp conversion properly
+            let timestamp;
+            if (data.timestamp?.toDate) {
+                timestamp = data.timestamp.toDate();
+            } else if (data.timestamp instanceof Date) {
+                timestamp = data.timestamp;
+            } else {
+                timestamp = new Date();
+            }
+
+            // Check if status changed in this version
+            const statusChange = data.status && data.status !== previousStatus ? {
+                from: previousStatus,
+                to: data.status
+            } : null;
+
+            // Update previous status for next iteration
+            previousStatus = data.status || previousStatus;
+
             return {
                 id: doc.id,
-                ...data
+                versionNumber: data.revisionNumber || querySnapshot.size - index,
+                timestamp: timestamp,
+                userEmail: data.userEmail || 'Unknown',
+                versionMessage: data.versionMessage || 'No message provided',
+                changes: data.changes || {},
+                status: data.status || previousStatus,
+                statusChange
             };
         });
-
-        console.log('Final versions array:', versions.value);
     } catch (error) {
-        console.error('Error fetching version history:', error);
-        console.error('Error details:', {
-            message: error.message,
-            code: error.code,
-            stack: error.stack
-        });
+        console.error('Error fetching versions:', error);
+        error.value = 'Failed to load version history';
     } finally {
         isLoading.value = false;
     }
@@ -138,10 +221,21 @@ onMounted(() => {
     }
 });
 
-// Add watch effect for show prop
-watch(() => props.show, (newValue) => {
-    if (newValue && props.quizItemId) {
+// Add watch for quizItemId changes
+watch(() => props.quizItemId, (newId, oldId) => {
+    console.log('Quiz item ID changed:', { oldId, newId });
+    if (props.show && newId) {
+        console.log('Fetching new versions for ID:', newId);
         fetchVersions();
+    }
+});
+
+// Add watch for show prop
+watch(() => props.show, async (newVal) => {
+    console.log('Show prop changed:', { oldValue: !newVal, newValue: newVal });
+    if (newVal) {
+        console.log('Modal shown, fetching versions for ID:', props.quizItemId || props.originalId);
+        await fetchVersions();
     }
 });
 </script>

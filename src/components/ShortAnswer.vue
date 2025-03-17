@@ -8,19 +8,21 @@
                 class="answer w-full px-4 py-2 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 :placeholder="'Enter your answer...'" />
             <div v-else class="answer-display">
-                <div class="answer mb-4"
-                    :class="{ 'border-red-500 dark:border-red-600': !isCorrect, 'border-green-500 dark:border-green-600': isCorrect }">
+                <div class="answer mb-4">
                     <div class="font-medium mb-2">Your answer:</div>
                     <div class="p-2 rounded-md">{{ userAnswer || 'No answer provided' }}</div>
-                    <div v-if="userAnswer" class="mt-2 text-sm"
-                        :class="{ 'text-red-500': !isCorrect, 'text-green-500': isCorrect }">
-                        {{ assessmentMessage }}
-                        <div v-if="isLoading" class="mt-1 text-gray-500">Assessing answer...</div>
+                    <div class="mt-4 flex items-center justify-center space-x-6">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="correctness" :value="true" v-model="isAnswerCorrect"
+                                class="form-radio h-4 w-4 text-blue-600" @change="handleCorrectnessChange">
+                            <span class="ml-2">Yes</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="correctness" :value="false" v-model="isAnswerCorrect"
+                                class="form-radio h-4 w-4 text-blue-600" @change="handleCorrectnessChange">
+                            <span class="ml-2">No</span>
+                        </label>
                     </div>
-                </div>
-                <div class="answer">
-                    <div class="font-medium mb-2">Correct answer:</div>
-                    <div class="p-2 rounded-md">{{ quizItem.correctAnswer }}</div>
                 </div>
             </div>
         </div>
@@ -28,7 +30,7 @@
 </template>
 
 <script>
-import { ref, watch, computed } from 'vue';
+import { ref, watch } from 'vue';
 
 export default {
     name: 'ShortAnswer',
@@ -46,11 +48,10 @@ export default {
             default: null
         }
     },
-    emits: ['update:userAnswer', 'answer-selected'],
+    emits: ['update:userAnswer', 'answer-selected', 'correctness-change'],
     setup(props, { emit }) {
         const localAnswer = ref(props.userAnswer || '');
-        const isLoading = ref(false);
-        const aiAssessment = ref(null);
+        const isAnswerCorrect = ref(null);
 
         watch(() => props.userAnswer, (newVal) => {
             localAnswer.value = newVal || '';
@@ -61,86 +62,15 @@ export default {
             emit('answer-selected', localAnswer.value);
         };
 
-        const assessAnswerWithAI = async (userAnswer, correctAnswer) => {
-            if (!userAnswer || !correctAnswer) return null;
-
-            isLoading.value = true;
-            try {
-                const response = await fetch('/api/assess-answer', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        userAnswer,
-                        correctAnswer,
-                        question: props.quizItem.Question
-                    })
-                });
-
-                if (!response.ok) throw new Error('API request failed');
-
-                const data = await response.json();
-                aiAssessment.value = data;
-                return data;
-            } catch (error) {
-                console.error('AI assessment failed:', error);
-                return null;
-            } finally {
-                isLoading.value = false;
-            }
+        const handleCorrectnessChange = () => {
+            emit('correctness-change', isAnswerCorrect.value);
         };
-
-        const fallbackAssessment = () => {
-            if (!props.userAnswer || !props.quizItem.correctAnswer) return false;
-
-            const userAnswerLower = props.userAnswer.toLowerCase().trim();
-            const correctAnswerLower = props.quizItem.correctAnswer.toLowerCase().trim();
-
-            if (userAnswerLower === correctAnswerLower) return true;
-            if (userAnswerLower.includes(correctAnswerLower)) return true;
-            if (correctAnswerLower.includes(userAnswerLower)) return true;
-
-            return false;
-        };
-
-        const isCorrect = computed(() => {
-            if (aiAssessment.value) {
-                return aiAssessment.value.isCorrect;
-            }
-            return fallbackAssessment();
-        });
-
-        const assessmentMessage = computed(() => {
-            if (!props.userAnswer) return '';
-            if (isLoading.value) return 'Assessing your answer...';
-
-            if (aiAssessment.value) {
-                return aiAssessment.value.message;
-            }
-
-            const userAnswerLower = props.userAnswer.toLowerCase().trim();
-            const correctAnswerLower = props.quizItem.correctAnswer.toLowerCase().trim();
-
-            if (userAnswerLower === correctAnswerLower) return 'Correct!';
-            if (userAnswerLower.includes(correctAnswerLower)) return 'Correct! (Contains the answer)';
-            if (correctAnswerLower.includes(userAnswerLower)) return 'Partially correct';
-            return 'Incorrect';
-        });
-
-        // Trigger AI assessment when in review mode and we have both answers
-        watch(() => props.reviewMode, async (newVal) => {
-            if (newVal && props.userAnswer && props.quizItem.correctAnswer) {
-                await assessAnswerWithAI(props.userAnswer, props.quizItem.correctAnswer);
-            }
-        });
 
         return {
             localAnswer,
             handleInput,
-            isCorrect,
-            assessmentMessage,
-            isLoading
+            isAnswerCorrect,
+            handleCorrectnessChange
         };
     }
 };
@@ -171,7 +101,19 @@ export default {
     @apply border-gray-300 dark:border-gray-600;
 }
 
-.answer-display .answer:last-child {
-    @apply border-green-500 dark:border-green-600 bg-green-50 dark:bg-green-900/20;
+/* Radio button styles */
+.form-radio {
+    @apply border-gray-300 dark:border-gray-600;
+}
+
+.form-radio:checked {
+    @apply bg-blue-600 border-transparent;
+}
+
+/* Dark mode styles for radio text */
+@media (prefers-color-scheme: dark) {
+    .inline-flex span {
+        @apply text-white;
+    }
 }
 </style>

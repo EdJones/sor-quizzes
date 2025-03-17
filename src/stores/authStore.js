@@ -10,26 +10,35 @@ import {
   onAuthStateChanged,
   updateProfile
 } from 'firebase/auth';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, getDoc } from 'firebase/firestore';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
     loading: true,
-    error: null
+    error: null,
+    isAdminUser: false
   }),
 
   getters: {
     isAuthenticated: (state) => !!state.user,
     isAnonymous: (state) => state.user?.isAnonymous ?? true,
     canEdit: (state) => state.user && !state.user.isAnonymous,
+    isAdmin: (state) => state.isAdminUser
   },
 
   actions: {
     async init() {
       return new Promise((resolve) => {
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
           this.user = user;
+          if (user && !user.isAnonymous) {
+            // Check admin status
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            this.isAdminUser = userDoc.exists() && userDoc.data().isAdmin === true;
+          } else {
+            this.isAdminUser = false;
+          }
           this.loading = false;
           resolve(user);
         });

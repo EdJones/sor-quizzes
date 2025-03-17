@@ -38,3 +38,36 @@ export async function requireAuth(to, from, next) {
     });
   }
 }
+
+export async function requireAdmin(to, from, next) {
+  const authStore = useAuthStore();
+
+  try {
+    // Always wait for auth state to be initialized
+    await authStore.init();
+
+    // Log auth state for debugging
+    console.log('Admin guard state:', {
+      loading: authStore.loading,
+      isAuthenticated: authStore.isAuthenticated,
+      isAdmin: authStore.isAdmin,
+      user: authStore.user?.email,
+      targetPath: to.fullPath
+    });
+
+    // Check if user is admin
+    if (!authStore.isAdmin) {
+      console.log('Admin guard: User is not admin, redirecting to home');
+      // Redirect to home page
+      return next({ path: '/' });
+    }
+
+    // User is admin, proceed
+    console.log('Admin guard: User is admin, proceeding to:', to.fullPath);
+    return next();
+  } catch (error) {
+    console.error('Admin guard error:', error);
+    // On error, redirect to home
+    return next({ path: '/' });
+  }
+}

@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { requireAuth } from './guards';
+import { requireAuth, requireAdmin } from './guards';
 import LoginForm from '../components/auth/LoginForm.vue';
 import Home from '../components/Home.vue';
 import GitHubIssues from '../components/GitHubIssues.vue';
@@ -14,19 +14,20 @@ const routes = [
     component: LoginForm
   },
   {
+    path: '/edit-item/new',
+    name: 'NewQuizItem',
+    component: QuizItemEditor,
+    beforeEnter: requireAuth,
+    props: { itemId: null }
+  },
+  {
     path: '/edit-item/:id',
     name: 'edit-item',
     component: QuizItemEditor,
     beforeEnter: requireAuth,
     props: route => ({
-      itemId: route.params.id === 'new' ? null : route.params.id
+      itemId: route.params.id
     })
-  },
-  {
-    path: '/edit-item/new',
-    name: 'NewQuizItem',
-    component: QuizItemEditor,
-    beforeEnter: requireAuth
   },
   {
     path: '/quiz/:id',
@@ -51,7 +52,8 @@ const routes = [
   {
     path: '/admin',
     name: 'admin',
-    component: AdminPage
+    component: AdminPage,
+    beforeEnter: requireAdmin
   },
   // Catch all route for 404 - must be last
   {

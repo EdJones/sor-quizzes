@@ -19,7 +19,7 @@ export const quizSets = [
         setName: "New Items",
         beta: true,
         basicMode: true,
-        items: [43, 44, 45, 46],
+        items: [43, 44, 45, 46, 47, 48],
         displayLevel: 2,
         displayColumn: 1,
         children: []
