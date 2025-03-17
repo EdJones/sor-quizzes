@@ -21,7 +21,7 @@ export default {
         min-height: 300px;
     }
 
-    background: white;
+    background: rgb(31, 41, 55);
     border-radius: 8px;
     padding: 10px;
     overflow: visible;
@@ -48,13 +48,14 @@ export default {
 }
 
 .modal-content {
-    background: white;
+    background: rgb(31, 41, 55);
     padding: 2rem;
     border-radius: 8px;
     max-width: 90vw;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
+    color: white;
 }
 
 .modal-header {
