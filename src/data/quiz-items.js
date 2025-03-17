@@ -1871,7 +1871,7 @@ export const quizEntries = [{
     subtitle: "Deep in the phonetics",
     id: 48,
     Question: "What is a vowel? How is a consonant different?",
-    questionP2: "Additional text here",
+    questionP2: "",
     answer_type: "short_answer",
     option1: "First option",
     option2: "Second option",
