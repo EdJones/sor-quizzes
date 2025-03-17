@@ -12,7 +12,9 @@ import {
     getDocs,
     or,
     orderBy,
-    limit
+    limit,
+    updateDoc,
+    getDoc
 } from 'firebase/firestore';
 import { useAuthStore } from './authStore';
 import { useProgressStore } from './progressStore';
@@ -916,15 +918,63 @@ export const quizStore = defineStore('quiz', {
             }
         },
 
-        async updateQuizItemStatus(quizId, newStatus) {
+        async updateQuizItemStatus(itemId, status) {
             try {
-                const docRef = doc(db, 'quizEntries', quizId);
-                await setDoc(docRef, {
-                    status: newStatus,
+                const quizRef = doc(db, 'quizEntries', itemId);
+                await updateDoc(quizRef, {
+                    status: status,
                     updatedAt: serverTimestamp()
-                }, { merge: true });
+                });
+
+                // Refresh the draft items list
+                await this.fetchDraftQuizItems();
+
+                return true;
             } catch (error) {
                 console.error('Error updating quiz item status:', error);
+                throw error;
+            }
+        },
+
+        async acceptQuizItem(itemId) {
+            try {
+                // Get the quiz item
+                const quizRef = doc(db, 'quizEntries', itemId);
+                const quizDoc = await getDoc(quizRef);
+
+                if (!quizDoc.exists()) {
+                    throw new Error('Quiz item not found');
+                }
+
+                const quizData = quizDoc.data();
+
+                // Verify it's a pending item
+                if (quizData.status !== 'pending') {
+                    throw new Error('Quiz item is not pending review');
+                }
+
+                // Update the status to approved
+                await updateDoc(quizRef, {
+                    status: 'approved',
+                    approvedAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+
+                // Add to permanent quiz entries
+                const permanentRef = doc(db, 'permanentQuizEntries', itemId);
+                await setDoc(permanentRef, {
+                    ...quizData,
+                    status: 'approved',
+                    approvedAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+
+                // Refresh the draft items list
+                await this.fetchDraftQuizItems();
+
+                return true;
+            } catch (error) {
+                console.error('Error accepting quiz item:', error);
                 throw error;
             }
         },

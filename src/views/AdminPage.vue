@@ -41,27 +41,29 @@
                             Author</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                             Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                            Submitted</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date
+                        </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                             Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-700">
-                    <tr v-for="entry in filteredEntries" :key="entry.id" class="hover:bg-gray-700">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            {{ entry.title }}
+                    <tr v-for="entry in filteredEntries" :key="entry.id"
+                        class="hover:bg-gray-700 transition-colors duration-200">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-white">{{ entry.title }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            {{ entry.userEmail || 'Anonymous' }}
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-300">{{ entry.userEmail || 'Anonymous' }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span :class="[
-                                'px-2 py-1 text-xs font-medium rounded-full',
+                                'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full',
                                 {
-                                    'bg-yellow-200 text-yellow-900': entry.status === 'pending',
-                                    'bg-green-200 text-green-900': entry.status === 'approved',
-                                    'bg-red-200 text-red-900': entry.status === 'rejected'
+                                    'bg-yellow-200 text-yellow-800': entry.status === 'pending',
+                                    'bg-green-200 text-green-800': entry.status === 'approved',
+                                    'bg-red-200 text-red-800': entry.status === 'rejected',
+                                    'bg-gray-200 text-gray-800': entry.status === 'draft'
                                 }
                             ]">
                                 {{ entry.status }}
@@ -70,20 +72,21 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                             {{ formatDate(entry.timestamp) }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            <div class="flex space-x-2">
-                                <button @click="viewEntry(entry)" class="text-blue-400 hover:text-blue-300">
-                                    View
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <button @click="viewEntry(entry)"
+                                class="text-blue-400 hover:text-blue-300 transition-colors duration-200">
+                                View
+                            </button>
+                            <template v-if="entry.status === 'pending'">
+                                <button @click="acceptEntry(entry)"
+                                    class="text-green-400 hover:text-green-300 transition-colors duration-200">
+                                    Accept
                                 </button>
-                                <button v-if="entry.status === 'pending'" @click="approveEntry(entry)"
-                                    class="text-green-400 hover:text-green-300">
-                                    Approve
-                                </button>
-                                <button v-if="entry.status === 'pending'" @click="rejectEntry(entry)"
-                                    class="text-red-400 hover:text-red-300">
+                                <button @click="rejectEntry(entry)"
+                                    class="text-red-400 hover:text-red-300 transition-colors duration-200">
                                     Reject
                                 </button>
-                            </div>
+                            </template>
                         </td>
                     </tr>
                 </tbody>
@@ -199,13 +202,15 @@ const viewEntry = (entry) => {
     selectedEntry.value = entry;
 };
 
-// Approve entry
-const approveEntry = async (entry) => {
+// Accept entry
+const acceptEntry = async (entry) => {
     try {
-        await store.updateQuizItemStatus(entry.id, 'approved');
-        await store.fetchDraftQuizItems(); // Refresh the list
+        await store.acceptQuizItem(entry.id);
+        // Show success message
+        alert('Quiz item accepted successfully!');
     } catch (error) {
-        console.error('Error approving entry:', error);
+        console.error('Error accepting entry:', error);
+        alert('Error accepting quiz item: ' + error.message);
     }
 };
 
