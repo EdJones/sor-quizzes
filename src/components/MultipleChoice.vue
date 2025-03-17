@@ -97,11 +97,6 @@ import OptionIcon from "./OptionIcon.vue";
 import fireworksJSON from '../lottie/fireworks.json'
 import { quizStore } from '../stores/quizStore';
 
-// Add error handling for Lottie animations
-const handleLottieError = (error) => {
-    console.error('Error with Lottie animation:', error);
-};
-
 export default {
     name: 'MultipleChoice',
     setup() {
@@ -214,6 +209,9 @@ export default {
             // Logic to update the component's internal state based on quizItem
             console.log("Updated Quiz Item:", this.quizItem);
             // Reset selections or update displayed question based on quizItem
+        },
+        handleLottieError(error) {
+            console.error('Error with Lottie animation:', error);
         }
     }
 }
