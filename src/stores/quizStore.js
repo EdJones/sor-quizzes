@@ -14,6 +14,7 @@ import {
     orderBy,
     limit,
     updateDoc,
+    updateDoc,
     getDoc
 } from 'firebase/firestore';
 import { useAuthStore } from './authStore';
@@ -408,80 +409,52 @@ export const quizStore = defineStore('quiz', {
 
         async saveDraftQuizEntry() {
             try {
-                const user = auth.currentUser;
-                if (!user) throw new Error('No user found');
+                console.log('Saving draft with state:', this.draftQuizEntry);
 
-                // Store the current state before saving
-                const previousState = { ...this.lastSavedDraftQuizEntry };
-
-                // Get the current quiz ID - use the existing ID if available
-                const currentId = this.draftQuizEntry.id;
-
-                // Set up the entry to save
-                const entryToSave = {
-                    ...this.draftQuizEntry,
-                    userId: user.uid,
-                    userEmail: user.email,
-                    isAnonymous: user.isAnonymous,
-                    status: this.draftQuizEntry.status || 'draft',  // Preserve existing status
-                    version: currentId ? (this.draftQuizEntry.version || 1) + 1 : 1,
-                    timestamp: serverTimestamp(),
+                // Create a sanitized copy of the draft entry
+                const sanitizeData = (obj) => {
+                    const result = {};
+                    Object.entries(obj).forEach(([key, value]) => {
+                        if (value === undefined) {
+                            result[key] = null;  // Convert undefined to null for Firestore
+                        } else if (typeof value === 'object' && value !== null) {
+                            result[key] = sanitizeData(value);  // Recursively sanitize nested objects
+                        } else {
+                            result[key] = value;
+                        }
+                    });
+                    return result;
                 };
 
-                let docRef;
-                let savedId;
-
-                // Log the current state
-                console.log('Saving draft with state:', {
-                    currentId,
-                    isNewItem: !currentId,
-                    currentVersion: this.draftQuizEntry.version
-                });
+                const entryToSave = sanitizeData({ ...this.draftQuizEntry });
+                const currentId = entryToSave.id;
+                delete entryToSave.id; // Remove id before saving as it's the document ID
 
                 if (!currentId) {
-                    // Only create new document if we don't have an ID
-                    docRef = await addDoc(collection(db, 'quizEntries'), entryToSave);
-                    savedId = docRef.id;
-                    console.log('Created new quiz item with ID:', savedId, 'and version:', entryToSave.version);
+                    // This is a new entry
+                    const docRef = await addDoc(collection(db, 'quizEntries'), {
+                        ...entryToSave,
+                        status: 'draft',
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp(),
+                        version: 1
+                    });
+
+                    // Update the draft entry with the new ID
+                    this.draftQuizEntry.id = docRef.id;
+                    return docRef.id;
                 } else {
-                    // Update existing document
-                    docRef = doc(db, 'quizEntries', currentId);
-                    await setDoc(docRef, entryToSave);
-                    savedId = currentId;
-                    console.log('Updated existing quiz item:', savedId, 'with version:', entryToSave.version);
+                    // This is an update to an existing entry
+                    const docRef = doc(db, 'quizEntries', currentId);
+                    await updateDoc(docRef, {
+                        ...entryToSave,
+                        updatedAt: serverTimestamp()
+                    });
+                    return currentId;
                 }
-
-                // Update the draft entry with the saved ID and version
-                this.draftQuizEntry = {
-                    ...entryToSave,
-                    id: savedId
-                };
-
-                // Update lastSavedDraftQuizEntry AFTER successful save
-                this.lastSavedDraftQuizEntry = { ...this.draftQuizEntry };
-
-                // Refresh the draft items list
-                await this.fetchDraftQuizItems();
-
-                // Validate the saved entry
-                const validation = this.validateDraftQuizEntry(this.draftQuizEntry);
-                console.log('Validation after save:', validation);
-
-                this.saveStatus = {
-                    message: 'Draft saved successfully!',
-                    type: 'success',
-                    show: true
-                };
-
-                return savedId;
-            } catch (e) {
-                console.error('Error saving draft:', e);
-                this.saveStatus = {
-                    message: e.message || 'Error saving draft',
-                    type: 'error',
-                    show: true
-                };
-                throw e;
+            } catch (error) {
+                console.error('Error saving draft:', error);
+                throw error;
             }
         },
 

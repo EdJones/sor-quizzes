@@ -586,6 +586,7 @@ export default {
     const router = useRouter();
     const showVersionHistory = ref(false);
 
+
     // Function to handle item loading
     const loadItem = async (itemId) => {
       try {
@@ -734,6 +735,8 @@ export default {
       return this.validationState.invalidFields;
     },
     hasExplanationSectionErrors() {
+      if (!this.hasBeenSaved) return false;
+
       const explanationFields = [
         'explanation',
         'explanation2',
@@ -755,6 +758,8 @@ export default {
       return explanationFields.some(field => this.validationState.invalidFields.has(field));
     },
     hasAnswerSectionErrors() {
+      if (!this.hasBeenSaved) return false;
+
       const answerFields = [
         'option1',
         'option2',
@@ -817,6 +822,7 @@ export default {
         errors: [],
         invalidFields: new Set()
       },
+      hasBeenSaved: false,
       defaultValues: {
         title: 'Enter title here',
         subtitle: 'Enter subtitle here',
@@ -961,6 +967,9 @@ export default {
 
         await this.store.recordQuizEdit(versionMessage);
         console.log('Quiz edit recorded successfully');
+
+        // Set hasBeenSaved to true after first successful save
+        this.hasBeenSaved = true;
 
         // Check validation state after saving
         await this.checkValidation();
@@ -1136,6 +1145,29 @@ export default {
       if (!entry.correctAnswers) entry.correctAnswers = [];
 
       this.store.updateDraftQuizEntry(entry);
+    },
+    addCitation() {
+      if (!this.newEntry.citations) {
+        this.newEntry.citations = [];
+      }
+      this.newEntry.citations.push({
+        title: '',
+        author: '',
+        url: '',
+        year: '',
+        imageUrl: ''
+      });
+    },
+    addResource() {
+      if (!this.newEntry.resources) {
+        this.newEntry.resources = [];
+      }
+      this.newEntry.resources.push({
+        title: '',
+        author: '',
+        url: '',
+        description: ''
+      });
     }
   },
   beforeUnmount() {
