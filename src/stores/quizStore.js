@@ -409,8 +409,22 @@ export const quizStore = defineStore('quiz', {
             try {
                 console.log('Saving draft with state:', this.draftQuizEntry);
 
-                // Create a copy of the draft entry without the id field
-                const entryToSave = { ...this.draftQuizEntry };
+                // Create a sanitized copy of the draft entry
+                const sanitizeData = (obj) => {
+                    const result = {};
+                    Object.entries(obj).forEach(([key, value]) => {
+                        if (value === undefined) {
+                            result[key] = null;  // Convert undefined to null for Firestore
+                        } else if (typeof value === 'object' && value !== null) {
+                            result[key] = sanitizeData(value);  // Recursively sanitize nested objects
+                        } else {
+                            result[key] = value;
+                        }
+                    });
+                    return result;
+                };
+
+                const entryToSave = sanitizeData({ ...this.draftQuizEntry });
                 const currentId = entryToSave.id;
                 delete entryToSave.id; // Remove id before saving as it's the document ID
 
