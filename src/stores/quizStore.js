@@ -451,7 +451,7 @@ export const quizStore = defineStore('quiz', {
                 const currentId = entryToSave.id;
                 delete entryToSave.id; // Remove id before saving as it's the document ID
 
-                if (!currentId) {
+                if (currentId === null) {
                     // This is a new entry
                     const docRef = await addDoc(collection(db, 'quizEntries'), {
                         ...entryToSave,
