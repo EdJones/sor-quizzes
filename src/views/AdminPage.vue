@@ -242,7 +242,8 @@ const deleteEntry = async (entry) => {
         await store.updateQuizItemStatus(entry.id, 'deleted');
 
         // Then record this change in the edit history
-        store.draftQuizEntry = { ...entry, id: entry.id };
+        store.draftQuizEntry = { ...entry };
+        store.lastSavedDraftQuizEntry = { ...entry, status: entry.status }; // Store the previous status
         await store.recordQuizEdit('Quiz item marked as deleted');
 
         // Refresh the list

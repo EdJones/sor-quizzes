@@ -316,12 +316,13 @@ export const quizStore = defineStore('quiz', {
                 console.log('Fetching draft quiz items...');
                 const draftsRef = collection(db, 'quizEntries');
                 // Log the query parameters
-                console.log('Querying for status == draft or pending');
+                console.log('Querying for status == draft, pending, or deleted');
 
                 const q = query(draftsRef,
                     or(
                         where('status', '==', 'draft'),
-                        where('status', '==', 'pending')
+                        where('status', '==', 'pending'),
+                        where('status', '==', 'deleted')
                     )
                 );
                 const querySnapshot = await getDocs(q);
@@ -347,7 +348,7 @@ export const quizStore = defineStore('quiz', {
                 });
 
                 // Log processed items with versions
-                console.log('Processed draft/pending items with versions:', this.draftQuizItems.map(item => ({
+                console.log('Processed draft/pending/deleted items with versions:', this.draftQuizItems.map(item => ({
                     id: item.id,
                     status: item.status,
                     version: item.version,
