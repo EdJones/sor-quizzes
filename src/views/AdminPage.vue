@@ -238,8 +238,15 @@ const deleteEntry = async (entry) => {
         return;
     }
     try {
+        // First update the status
         await store.updateQuizItemStatus(entry.id, 'deleted');
-        await store.fetchDraftQuizItems(); // Refresh the list
+
+        // Then record this change in the edit history
+        store.draftQuizEntry = { ...entry, id: entry.id };
+        await store.recordQuizEdit('Quiz item marked as deleted');
+
+        // Refresh the list
+        await store.fetchDraftQuizItems();
     } catch (error) {
         console.error('Error marking entry as deleted:', error);
         alert('Error marking quiz item as deleted: ' + error.message);
