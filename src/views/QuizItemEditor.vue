@@ -957,14 +957,30 @@ export default {
     },
     async handleSaveDraftWithVersion(versionMessage) {
       try {
+        console.log('Starting save process with:', {
+          versionMessage,
+          currentUser: this.auth.user?.uid,
+          draftEntry: this.store.draftQuizEntry,
+          hasBeenSaved: this.hasBeenSaved
+        });
+
+        // Validate the entry before saving
+        const validation = this.store.validateDraftQuizEntry(this.store.draftQuizEntry);
+        console.log('Validation result:', validation);
+
+        if (!validation.isValid) {
+          console.warn('Entry has validation errors:', validation.errors);
+        }
+
         console.log('Saving draft with version message:', versionMessage);
         const draftId = await this.store.saveDraftQuizEntry();
         console.log('Draft saved with ID:', draftId);
 
         if (!draftId) {
-          throw new Error('Failed to save draft');
+          throw new Error('Failed to save draft - no ID returned');
         }
 
+        console.log('Recording quiz edit with version message:', versionMessage);
         await this.store.recordQuizEdit(versionMessage);
         console.log('Quiz edit recorded successfully');
 
@@ -983,8 +999,20 @@ export default {
             ? 'Draft saved successfully!'
             : 'Draft saved with validation errors: ' + this.validationState.errors.join(', ')
         };
+
+        console.log('Save process completed successfully:', {
+          draftId,
+          validationState: this.validationState,
+          submitStatus: this.submitStatus
+        });
       } catch (error) {
-        console.error('Error saving draft:', error);
+        console.error('Error in save process:', {
+          error,
+          errorMessage: error.message,
+          errorStack: error.stack,
+          currentUser: this.auth.user?.uid,
+          draftEntry: this.store.draftQuizEntry
+        });
         this.submitStatus = {
           show: true,
           type: 'error',
@@ -1114,6 +1142,11 @@ export default {
       this.jsonPreviewMode = false;
     },
     initializeNewEntry() {
+      console.log('Initializing new entry with current state:', {
+        draftEntry: this.store.draftQuizEntry,
+        defaultValues: this.defaultValues
+      });
+
       // Get a clean entry from the store
       const entry = this.store.draftQuizEntry;
 
@@ -1143,6 +1176,8 @@ export default {
       if (!entry.citations) entry.citations = [];
       if (!entry.resources) entry.resources = [];
       if (!entry.correctAnswers) entry.correctAnswers = [];
+
+      console.log('Final initialized entry:', entry);
 
       this.store.updateDraftQuizEntry(entry);
     },
