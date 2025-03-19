@@ -71,6 +71,27 @@
                         Reading?</a></li>
             </ul>
         </section>
+
+        <section class="about-section donation-box">
+            <h2>Support Our Mission</h2>
+            <p>
+                Help us continue developing and improving these quizzes by making a donation. Your support helps us:
+            </p>
+            <ul>
+                <li>Add more quiz questions and content</li>
+                <li>Improve the platform's features</li>
+                <li>Maintain and update existing content</li>
+                <li>Support our community-driven development</li>
+            </ul>
+            <div class="paypal-button-container">
+                <form action="https://www.paypal.com/donate" method="post" target="_blank">
+                    <input type="hidden" name="hosted_button_id" value="YOUR_PAYPAL_BUTTON_ID" />
+                    <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0"
+                        name="submit" title="PayPal - The safer, easier way to pay online!"
+                        alt="Donate with PayPal button" />
+                </form>
+            </div>
+        </section>
     </div>
 </template>
 
@@ -127,5 +148,24 @@ a {
 
 a:hover {
     text-decoration: underline;
+}
+
+.donation-box {
+    background-color: #f8fafc;
+    border-radius: 8px;
+    padding: 2rem;
+    margin-top: 3rem;
+    border: 1px solid #e2e8f0;
+}
+
+.paypal-button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.paypal-button-container input[type="image"] {
+    max-width: 200px;
+    height: auto;
 }
 </style>
