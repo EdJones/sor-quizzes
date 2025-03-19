@@ -1,5 +1,5 @@
 <template>
-    <div class="p-4">
+    <div class="p-4 bg-gray-900">
         <div class="flex justify-end gap-2 mb-4">
 
             <button @click="handleNewQuizItem" class="bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center
@@ -785,7 +785,6 @@ const getItemStatus = (item) => {
 
 .modal-body {
     max-height: calc(90vh - 100px);
-    /* Subtract header height and padding */
     overflow-y: auto;
 }
 
@@ -793,7 +792,7 @@ const getItemStatus = (item) => {
     position: relative;
     padding-bottom: 3rem;
     border-bottom: 1px solid rgba(156, 163, 175, 0.2);
-    background-color: white;
+    background-color: rgb(31, 41, 55) !important;
     margin-bottom: 1rem;
     padding: 1rem;
     border-radius: 0.5rem;
@@ -814,11 +813,5 @@ const getItemStatus = (item) => {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-}
-
-@media (prefers-color-scheme: dark) {
-    .quiz-item-container {
-        background-color: rgb(31, 41, 55);
-    }
 }
 </style>

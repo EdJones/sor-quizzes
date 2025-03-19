@@ -316,12 +316,13 @@ export const quizStore = defineStore('quiz', {
                 console.log('Fetching draft quiz items...');
                 const draftsRef = collection(db, 'quizEntries');
                 // Log the query parameters
-                console.log('Querying for status == draft or pending');
+                console.log('Querying for status == draft, pending, or deleted');
 
                 const q = query(draftsRef,
                     or(
                         where('status', '==', 'draft'),
-                        where('status', '==', 'pending')
+                        where('status', '==', 'pending'),
+                        where('status', '==', 'deleted')
                     )
                 );
                 const querySnapshot = await getDocs(q);
@@ -347,7 +348,7 @@ export const quizStore = defineStore('quiz', {
                 });
 
                 // Log processed items with versions
-                console.log('Processed draft/pending items with versions:', this.draftQuizItems.map(item => ({
+                console.log('Processed draft/pending/deleted items with versions:', this.draftQuizItems.map(item => ({
                     id: item.id,
                     status: item.status,
                     version: item.version,
@@ -429,51 +430,104 @@ export const quizStore = defineStore('quiz', {
 
         async saveDraftQuizEntry() {
             try {
-                console.log('Saving draft with state:', this.draftQuizEntry);
+                const authStore = useAuthStore();
+                console.log('Starting saveDraftQuizEntry with:', {
+                    currentUser: authStore.user?.uid,
+                    draftEntry: this.draftQuizEntry,
+                    lastSavedEntry: this.lastSavedDraftQuizEntry
+                });
 
-                // Create a sanitized copy of the draft entry
-                const sanitizeData = (obj) => {
-                    const result = {};
-                    Object.entries(obj).forEach(([key, value]) => {
-                        if (value === undefined) {
-                            result[key] = null;  // Convert undefined to null for Firestore
-                        } else if (typeof value === 'object' && value !== null) {
-                            result[key] = sanitizeData(value);  // Recursively sanitize nested objects
-                        } else {
-                            result[key] = value;
-                        }
-                    });
-                    return result;
+                if (!this.draftQuizEntry) {
+                    throw new Error('No draft entry to save');
+                }
+
+                // Prepare the entry for saving
+                const entryToSave = {
+                    ...this.draftQuizEntry,
+                    updatedAt: serverTimestamp()
                 };
 
-                const entryToSave = sanitizeData({ ...this.draftQuizEntry });
+                // Get the current ID from the entry
                 const currentId = entryToSave.id;
-                delete entryToSave.id; // Remove id before saving as it's the document ID
+                console.log('Preparing to save entry:', {
+                    currentId,
+                    entryToSave: {
+                        id: entryToSave.id,
+                        title: entryToSave.title,
+                        status: entryToSave.status,
+                        version: entryToSave.version,
+                        hasRequiredFields: Boolean(
+                            entryToSave.title &&
+                            entryToSave.Question &&
+                            entryToSave.answer_type &&
+                            entryToSave.correctAnswers?.length > 0
+                        )
+                    }
+                });
 
+                // Check if we have an authenticated user
+                if (!authStore.user) {
+                    console.error('No authenticated user found when trying to save entry');
+                    throw new Error('You must be logged in to save entries');
+                }
+
+                // Create new entry if currentId is null or undefined
                 if (!currentId) {
-                    // This is a new entry
-                    const docRef = await addDoc(collection(db, 'quizEntries'), {
+                    console.log('Creating new entry with user details:', {
+                        userId: authStore.user.uid,
+                        userEmail: authStore.user.email
+                    });
+
+                    const newEntry = {
                         ...entryToSave,
                         status: 'draft',
                         createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp(),
+                        timestamp: serverTimestamp(), // Add timestamp for backward compatibility
+                        userId: authStore.user.uid,
+                        userEmail: authStore.user.email,
                         version: 1
+                    };
+
+                    console.log('Attempting to create new entry in Firestore:', {
+                        collection: 'quizEntries',
+                        entry: {
+                            id: newEntry.id,
+                            title: newEntry.title,
+                            status: newEntry.status,
+                            version: newEntry.version
+                        }
                     });
 
-                    // Update the draft entry with the new ID
-                    this.draftQuizEntry.id = docRef.id;
+                    const docRef = await addDoc(collection(db, 'quizEntries'), newEntry);
+                    console.log('Successfully created new entry with ID:', docRef.id);
+
+                    // Update the draft and last saved entries with the new ID
+                    this.draftQuizEntry = { ...newEntry, id: docRef.id };
+                    this.lastSavedDraftQuizEntry = { ...newEntry, id: docRef.id };
                     return docRef.id;
-                } else {
-                    // This is an update to an existing entry
-                    const docRef = doc(db, 'quizEntries', currentId);
-                    await updateDoc(docRef, {
-                        ...entryToSave,
-                        updatedAt: serverTimestamp()
-                    });
-                    return currentId;
                 }
+
+                // Update existing entry
+                console.log('Updating existing entry:', {
+                    entryId: currentId,
+                    currentVersion: entryToSave.version
+                });
+
+                const docRef = doc(db, 'quizEntries', currentId);
+                await updateDoc(docRef, entryToSave);
+                console.log('Successfully updated existing entry');
+
+                // Update the last saved entry
+                this.lastSavedDraftQuizEntry = { ...entryToSave };
+                return currentId;
             } catch (error) {
-                console.error('Error saving draft:', error);
+                console.error('Error in saveDraftQuizEntry:', {
+                    error,
+                    errorMessage: error.message,
+                    errorStack: error.stack,
+                    currentUser: useAuthStore().user?.uid,
+                    draftEntry: this.draftQuizEntry
+                });
                 throw error;
             }
         },
@@ -739,7 +793,8 @@ export const quizStore = defineStore('quiz', {
                 entryId: entry.id,
                 entryVersion: entry.version,
                 entryTitle: entry.title,
-                currentId: this.draftQuizEntry.id  // Log current ID for debugging
+                currentId: this.draftQuizEntry.id,  // Log current ID for debugging
+                currentEntry: this.draftQuizEntry
             });
 
             // When copying from a template, we want to create a new entry
@@ -760,7 +815,14 @@ export const quizStore = defineStore('quiz', {
                 version: updatedEntry.version,
                 title: updatedEntry.title,
                 status: updatedEntry.status,
-                previousId: this.draftQuizEntry.id  // Log previous ID for debugging
+                previousId: this.draftQuizEntry.id,  // Log previous ID for debugging
+                hasRequiredFields: {
+                    title: !!updatedEntry.title,
+                    Question: !!updatedEntry.Question,
+                    answer_type: !!updatedEntry.answer_type,
+                    correctAnswer: !!updatedEntry.correctAnswer,
+                    explanation: !!updatedEntry.explanation
+                }
             });
 
             // Update both the draft entry and the last saved entry

@@ -12,6 +12,7 @@
                         <option value="pending">Pending Review</option>
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
+                        <option value="deleted">Deleted</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -63,7 +64,8 @@
                                     'bg-yellow-200 text-yellow-800': entry.status === 'pending',
                                     'bg-green-200 text-green-800': entry.status === 'approved',
                                     'bg-red-200 text-red-800': entry.status === 'rejected',
-                                    'bg-gray-200 text-gray-800': entry.status === 'draft'
+                                    'bg-gray-200 text-gray-800': entry.status === 'draft',
+                                    'bg-purple-200 text-purple-800': entry.status === 'deleted'
                                 }
                             ]">
                                 {{ entry.status }}
@@ -85,6 +87,12 @@
                                 <button @click="rejectEntry(entry)"
                                     class="text-red-400 hover:text-red-300 transition-colors duration-200">
                                     Reject
+                                </button>
+                            </template>
+                            <template v-if="entry.status !== 'deleted'">
+                                <button @click="deleteEntry(entry)"
+                                    class="text-purple-400 hover:text-purple-300 transition-colors duration-200">
+                                    Delete
                                 </button>
                             </template>
                         </td>
@@ -221,6 +229,28 @@ const rejectEntry = async (entry) => {
         await store.fetchDraftQuizItems(); // Refresh the list
     } catch (error) {
         console.error('Error rejecting entry:', error);
+    }
+};
+
+// Delete entry
+const deleteEntry = async (entry) => {
+    if (!confirm('Are you sure you want to mark this quiz item as deleted?')) {
+        return;
+    }
+    try {
+        // First update the status
+        await store.updateQuizItemStatus(entry.id, 'deleted');
+
+        // Then record this change in the edit history
+        store.draftQuizEntry = { ...entry };
+        store.lastSavedDraftQuizEntry = { ...entry, status: entry.status }; // Store the previous status
+        await store.recordQuizEdit('Quiz item marked as deleted');
+
+        // Refresh the list
+        await store.fetchDraftQuizItems();
+    } catch (error) {
+        console.error('Error marking entry as deleted:', error);
+        alert('Error marking quiz item as deleted: ' + error.message);
     }
 };
 </script>
