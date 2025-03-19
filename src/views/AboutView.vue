@@ -1,23 +1,33 @@
 <template>
     <div class="about-container">
-        <h1>About SOR Quizzes</h1>
+        <h1>About</h1>
 
         <section class="about-section">
             <h2>A community-driven, open-source effort</h2>
             <p>
-                The Science of Reading Quiz is designed to help educators and literacy professionals deepen their
-                understanding of evidence-based reading instruction. Our goal is to promote the widespread adoption of
-                research-backed teaching practices that help all children learn to read effectively.
+                This app will only make sense when validated and refined by the community. <img
+                    src="../public/images/partners.png" alt="Community" class="community-image">
             </p>
         </section>
 
         <section class="about-section">
             <h2>Origins</h2>
             <p>
-                SOR Quizzes aims to help solve the source of truth problem for the science of reading.
+                The Science of Reading community has a source of truth problem:
+            <ul>
+                <li>
+                    <a href="https://www.aei.org/education/the-science-of-reading-is-on-a-winning-streak-and-thats-a-problem/"
+                        target="_blank">The “Science of Reading” Is on a Winning
+                        Streak. And That’s a Problem.</a> Robert Pondiscio
+                </li>
+                <li>
+                    <a href="https://seidenbergreading.net/2024/06/24/where-does-the-science-of-reading-go-from-here-2/"
+                        target="_blank">Where does the Science of Reading go from here?</a> Mark Seidenberg
+                </li>
+            </ul>
 
-                Today, teachers are hard-pressed to find the most current, evidence-based information about the science
-                of reading and structured literacy practices.
+            Today, teachers are hard-pressed to find the most current, evidence-based information about the science
+            of reading and structured literacy practices.
             </p>
         </section>
 
@@ -30,62 +40,33 @@
             </p>
         </section>
 
-        <section class="about-section">
-            <h2>How to Use This Quiz</h2>
-            <p>
-                This quiz is designed to:
-            </p>
-            <ul>
-                <li>Test your knowledge of key concepts in the Science of Reading</li>
-                <li>Provide immediate feedback and explanations for each question</li>
-                <li>Include references to research and additional resources</li>
-                <li>Help identify areas where you might want to deepen your understanding</li>
-            </ul>
-        </section>
+
 
         <section class="about-section">
             <h2>Contributing</h2>
             <p>
-                We welcome contributions from educators, researchers, and literacy experts. If you'd like to:
+                Please consider <router-link to="/QuizSetView" class="">making this better</router-link>.
             </p>
-            <ul>
-                <li>Submit new questions</li>
-                <li>Improve existing questions</li>
-                <li>Add research citations</li>
-                <li>Suggest improvements to the platform</li>
-            </ul>
-            <p>
-                Please contact us at [contact information].
-            </p>
+
         </section>
 
-        <section class="about-section">
-            <h2>Resources</h2>
-            <p>
-                For more information about the Science of Reading, we recommend:
-            </p>
-            <ul>
-                <li><a href="https://www.thereadingleague.org/" target="_blank">The Reading League</a></li>
-                <li><a href="https://www.nctq.org/" target="_blank">National Council on Teacher Quality</a></li>
-                <li><a href="https://www.whatisthescienceofreading.org/" target="_blank">What is the Science of
-                        Reading?</a></li>
-            </ul>
-        </section>
+
+
 
         <section class="about-section donation-box">
             <h2>Support Our Mission</h2>
             <p>
-                Help us continue developing and improving these quizzes by making a donation. Your support helps us:
+                This app is built by Ed Jones, as a gift to the Science of reading community. I've has never been paid
+                for work in K12.
             </p>
-            <ul>
-                <li>Add more quiz questions and content</li>
-                <li>Improve the platform's features</li>
-                <li>Maintain and update existing content</li>
-                <li>Support our community-driven development</li>
-            </ul>
+            <p>
+                If you are able, help me attend Research Ed events, and pay the expenses of this app.
+            </p>
+
             <div class="paypal-button-container">
                 <form action="https://www.paypal.com/donate" method="post" target="_blank">
-                    <input type="hidden" name="hosted_button_id" value="YOUR_PAYPAL_BUTTON_ID" />
+                    <input type="hidden" name="hosted_button_id"
+                        value="https://www.paypal.com/donate/?hosted_button_id=55QUG7FD4HTN4" />
                     <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0"
                         name="submit" title="PayPal - The safer, easier way to pay online!"
                         alt="Donate with PayPal button" />
@@ -106,26 +87,36 @@ export default {
     max-width: 800px;
     margin: 0 auto;
     padding: 2rem;
+    background-color: #222;
 }
 
 .about-section {
     margin-bottom: 2rem;
+    color: ivory;
+    background-color: #222;
+    padding: 1rem;
+    text-align: left;
+}
+
+.about-section h2 {
+    color: ivory;
 }
 
 h1 {
-    color: #2c3e50;
+    color: ivory;
     margin-bottom: 2rem;
     text-align: center;
+    font-size: 1.5rem;
 }
 
 h2 {
-    color: #2c3e50;
+    color: ivory;
     margin-bottom: 1rem;
 }
 
 p {
     line-height: 1.6;
-    color: #34495e;
+    color: ivory;
     margin-bottom: 1rem;
 }
 
@@ -137,7 +128,7 @@ ul {
 
 li {
     line-height: 1.6;
-    color: #34495e;
+    color: ivory;
     margin-bottom: 0.5rem;
 }
 
@@ -156,12 +147,26 @@ a:hover {
     padding: 2rem;
     margin-top: 3rem;
     border: 1px solid #e2e8f0;
+    color: black;
+}
+
+.donation-box h2 {
+    color: black;
+}
+
+.donation-box p {
+    color: black;
 }
 
 .paypal-button-container {
     display: flex;
     justify-content: center;
     margin-top: 1.5rem;
+    color: black;
+}
+
+.paypal-button-container p {
+    color: black;
 }
 
 .paypal-button-container input[type="image"] {
