@@ -5,8 +5,8 @@
         <section class="about-section">
             <h2>A community-driven, open-source effort</h2>
             <p>
-                This app will only make sense when validated and refined by the community. <img
-                    src="../public/images/partners.png" alt="Community" class="community-image">
+                This app will only make sense when validated and refined by the community. <!--img
+                    src="../src/assets/images/partners.png" alt="Community" class="community-image"-->
             </p>
         </section>
 
