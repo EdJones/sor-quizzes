@@ -17,8 +17,8 @@
             <ul>
                 <li>
                     <a href="https://www.aei.org/education/the-science-of-reading-is-on-a-winning-streak-and-thats-a-problem/"
-                        target="_blank">The “Science of Reading” Is on a Winning
-                        Streak. And That’s a Problem.</a> Robert Pondiscio
+                        target="_blank">The "Science of Reading" Is on a Winning
+                        Streak. And That's a Problem.</a> Robert Pondiscio
                 </li>
                 <li>
                     <a href="https://seidenbergreading.net/2024/06/24/where-does-the-science-of-reading-go-from-here-2/"
@@ -65,8 +65,7 @@
 
             <div class="paypal-button-container">
                 <form action="https://www.paypal.com/donate" method="post" target="_blank">
-                    <input type="hidden" name="hosted_button_id"
-                        value="https://www.paypal.com/donate/?hosted_button_id=55QUG7FD4HTN4" />
+                    <input type="hidden" name="hosted_button_id" value="55QUG7FD4HTN4" />
                     <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0"
                         name="submit" title="PayPal - The safer, easier way to pay online!"
                         alt="Donate with PayPal button" />
