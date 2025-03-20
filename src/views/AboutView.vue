@@ -8,6 +8,9 @@
                 <li class="list-none">Repository: <a
                         href="https://github.com/EdJones/sor-quizzes">https://github.com/EdJones/sor-quizzes</a>
                 </li>
+                <li class="list-none">
+                    What is a <RouterLink to="/OpenSource">Culture of Open Source</RouterLink>?
+                </li>
             </ul>
 
             <p>
@@ -20,6 +23,7 @@
             <h2>Origins</h2>
             <p>
                 The Science of Reading community has a source of truth problem:
+            </p>
             <ul>
                 <li>
                     <a href="https://www.aei.org/education/the-science-of-reading-is-on-a-winning-streak-and-thats-a-problem/"
@@ -34,7 +38,7 @@
 
             Today, teachers are hard-pressed to find the most current, evidence-based information about the science
             of reading and structured literacy practices.
-            </p>
+
         </section>
 
         <section class="about-section">
@@ -49,9 +53,10 @@
 
 
         <section class="about-section donation-box">
-            <h2>Support Our Mission</h2>
+            <h2>Support This App</h2>
             <p>
-                This app is built by Ed Jones, as a gift to the Science of reading community.
+                I built this as a gift to the structured literacy community and the young learners it can still
+                help.
             </p>
             <p>
                 While mine is the vision behind
@@ -61,8 +66,16 @@
                 for work in K12.
             </p>
             <p>
-                If you are able, help me attend Research Ed events, and pay the expenses of this app.
+                Can you help me attend Research Ed events or pay the expenses of this app?
             </p>
+            <div class="flex justify-end mr-10">
+                <div class="shrink-0 right-4">
+                    <img class="size-10 rounded-full" src="/images/ed_on_superbus.jpg" alt="Avatar">
+                </div>
+                <div class="ms-4">
+                    <div class="text-base font-semibold text-gray-800 dark:text-neutral-400">Ed Jones</div>
+                </div>
+            </div>
 
             <div class="paypal-button-container">
                 <form action="https://www.paypal.com/donate" method="post" target="_blank">
