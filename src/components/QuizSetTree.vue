@@ -266,7 +266,7 @@ const drawQuizIcon = (x, y, size, color) => {
     ctx.restore();
 };
 
-// Update drawNode function to reduce internal spacing
+// Update drawNode function to move content closer to top
 const drawNode = (x, y, text, style, set = null) => {
     if (!ctx) return;
 
@@ -274,7 +274,7 @@ const drawNode = (x, y, text, style, set = null) => {
     ctx.font = style.font;
     const textMetrics = ctx.measureText(text);
     const textWidth = textMetrics.width;
-    const nodeWidth = textWidth + (style.padding * 3) + style.iconSize; // Reduced total padding
+    const nodeWidth = textWidth + (style.padding * 2.5) + style.iconSize; // Further reduced padding
     const nodeHeight = style.height;
 
     // Calculate node position (centered on x)
@@ -318,16 +318,19 @@ const drawNode = (x, y, text, style, set = null) => {
     ctx.stroke();
     ctx.setLineDash([]); // Reset dash pattern
 
-    // Draw icon (moved closer to left edge)
-    const iconSize = style.iconSize;
-    drawQuizIcon(nodeX + style.padding + iconSize / 2, y, iconSize, style.color);
+    // Calculate vertical offset for top alignment (about 30% from top)
+    const verticalOffset = nodeHeight * 0.3;
 
-    // Draw text (closer to icon)
+    // Draw icon (moved closer to top)
+    const iconSize = style.iconSize;
+    drawQuizIcon(nodeX + style.padding + iconSize / 2, nodeY + verticalOffset, iconSize, style.color);
+
+    // Draw text (closer to top, aligned with icon)
     ctx.fillStyle = style.color;
     ctx.font = style.font;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, nodeX + style.padding * 1.5 + iconSize, y - 2); // Moved text up slightly and closer to icon
+    ctx.fillText(text, nodeX + style.padding * 1.2 + iconSize, nodeY + verticalOffset);
 
     // Draw item count if available (adjusted position)
     if (set && set.items) {
@@ -336,7 +339,7 @@ const drawNode = (x, y, text, style, set = null) => {
         ctx.font = itemCountFont;
         ctx.fillStyle = style.color;
         ctx.globalAlpha = 0.7;
-        ctx.fillText(itemCount, nodeX + style.padding * 1.5 + iconSize, y + nodeHeight / 3 - 2); // Adjusted vertical position
+        ctx.fillText(itemCount, nodeX + style.padding * 1.2 + iconSize, nodeY + nodeHeight * 0.7); // Moved count down to bottom portion
         ctx.globalAlpha = 1;
     }
 };
