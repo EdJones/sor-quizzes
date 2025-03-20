@@ -152,19 +152,23 @@ const styles = {
     },
     publishedNode: {
         color: '#3B82F6',
-        height: window.innerWidth <= 768 ? 30 : 40,
+        height: window.innerWidth <= 768 ? 40 : 50,
         padding: window.innerWidth <= 768 ? 12 : 16,
         borderRadius: 10,
         font: window.innerWidth <= 768 ? '11px Inter' : '12px Inter',
-        borderStyle: 'solid'
+        borderStyle: 'solid',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        iconSize: window.innerWidth <= 768 ? 16 : 20
     },
     proposedNode: {
         color: '#F59E0B',
-        height: window.innerWidth <= 768 ? 30 : 40,
+        height: window.innerWidth <= 768 ? 40 : 50,
         padding: window.innerWidth <= 768 ? 12 : 16,
         borderRadius: 10,
         font: window.innerWidth <= 768 ? '11px Inter' : '12px Inter',
-        borderStyle: 'dashed'
+        borderStyle: 'dashed',
+        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+        iconSize: window.innerWidth <= 768 ? 16 : 20
     },
     line: {
         color: '#E5E7EB',
@@ -174,13 +178,15 @@ const styles = {
 
 // Add a resize handler to update styles when window size changes
 window.addEventListener('resize', () => {
-    styles.publishedNode.height = window.innerWidth <= 768 ? 30 : 40;
+    styles.publishedNode.height = window.innerWidth <= 768 ? 40 : 50;
     styles.publishedNode.padding = window.innerWidth <= 768 ? 12 : 16;
     styles.publishedNode.font = window.innerWidth <= 768 ? '11px Inter' : '12px Inter';
+    styles.publishedNode.iconSize = window.innerWidth <= 768 ? 16 : 20;
 
-    styles.proposedNode.height = window.innerWidth <= 768 ? 30 : 40;
+    styles.proposedNode.height = window.innerWidth <= 768 ? 40 : 50;
     styles.proposedNode.padding = window.innerWidth <= 768 ? 12 : 16;
     styles.proposedNode.font = window.innerWidth <= 768 ? '11px Inter' : '12px Inter';
+    styles.proposedNode.iconSize = window.innerWidth <= 768 ? 16 : 20;
 
     if (canvas.value) {
         drawTree();
@@ -225,7 +231,42 @@ const handleCanvasClick = (event) => {
     }
 };
 
-// Modified drawNode function to store clickable areas
+// Add new function to draw quiz set icon
+const drawQuizIcon = (x, y, size, color) => {
+    if (!ctx) return;
+
+    // Save current context state
+    ctx.save();
+
+    // Set icon styles
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.fillStyle = color;
+
+    // Draw a simplified quiz/document icon
+    const iconX = x - size / 2;
+    const iconY = y - size / 2;
+
+    // Draw main rectangle (document body)
+    ctx.beginPath();
+    ctx.rect(iconX, iconY, size * 0.8, size);
+    ctx.stroke();
+
+    // Draw lines representing text
+    const lineSpacing = size * 0.2;
+    const lineWidth = size * 0.5;
+    for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(iconX + size * 0.15, iconY + size * 0.25 + (i * lineSpacing));
+        ctx.lineTo(iconX + size * 0.15 + lineWidth, iconY + size * 0.25 + (i * lineSpacing));
+        ctx.stroke();
+    }
+
+    // Restore context state
+    ctx.restore();
+};
+
+// Update drawNode function to include icon and enhanced styling
 const drawNode = (x, y, text, style, set = null) => {
     if (!ctx) return;
 
@@ -233,7 +274,7 @@ const drawNode = (x, y, text, style, set = null) => {
     ctx.font = style.font;
     const textMetrics = ctx.measureText(text);
     const textWidth = textMetrics.width;
-    const nodeWidth = textWidth + (style.padding * 2);
+    const nodeWidth = textWidth + (style.padding * 4); // Increased padding for icon
     const nodeHeight = style.height;
 
     // Calculate node position (centered on x)
@@ -251,11 +292,18 @@ const drawNode = (x, y, text, style, set = null) => {
         });
     }
 
-    // Draw background
-    ctx.fillStyle = style.color;
-    ctx.globalAlpha = 0.2;
+    // Draw background with shadow
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+    ctx.shadowBlur = 5;
+    ctx.shadowOffsetY = 2;
+    ctx.fillStyle = style.backgroundColor || 'rgba(255, 255, 255, 0.1)';
     drawRoundedRect(nodeX, nodeY, nodeWidth, nodeHeight, style.borderRadius, style);
     ctx.fill();
+
+    // Reset shadow
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
 
     // Draw border
     ctx.globalAlpha = 1;
@@ -270,12 +318,26 @@ const drawNode = (x, y, text, style, set = null) => {
     ctx.stroke();
     ctx.setLineDash([]); // Reset dash pattern
 
-    // Draw text
+    // Draw icon
+    const iconSize = style.iconSize || 20;
+    drawQuizIcon(nodeX + style.padding + iconSize / 2, y, iconSize, style.color);
+
+    // Draw text (shifted right to accommodate icon)
     ctx.fillStyle = style.color;
     ctx.font = style.font;
-    ctx.textAlign = 'center';
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, x, y);
+    ctx.fillText(text, nodeX + style.padding * 2 + iconSize, y);
+
+    // Draw item count if available
+    if (set && set.items) {
+        const itemCount = `${set.items.length} items`;
+        ctx.font = `${parseInt(style.font) - 2}px Inter`;
+        ctx.fillStyle = style.color;
+        ctx.globalAlpha = 0.7;
+        ctx.fillText(itemCount, nodeX + style.padding * 2 + iconSize, y + nodeHeight / 4);
+        ctx.globalAlpha = 1;
+    }
 };
 
 // Draw a line between two points
