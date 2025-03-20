@@ -145,48 +145,48 @@ let nodePositions = []; // Store clickable areas
 const styles = {
     rootNode: {
         color: '#4B5563',
-        height: 30,
-        padding: 20,
+        height: 40,
+        padding: 24,
         borderRadius: 12,
-        font: 'bold 16px Inter'
+        font: 'bold 20px Inter'
     },
     publishedNode: {
         color: '#3B82F6',
-        height: window.innerWidth <= 768 ? 40 : 50,
-        padding: window.innerWidth <= 768 ? 12 : 16,
-        borderRadius: 10,
-        font: window.innerWidth <= 768 ? '11px Inter' : '12px Inter',
+        height: window.innerWidth <= 768 ? 60 : 70,
+        padding: window.innerWidth <= 768 ? 16 : 20,
+        borderRadius: 12,
+        font: window.innerWidth <= 768 ? '16px Inter' : '18px Inter',
         borderStyle: 'solid',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        iconSize: window.innerWidth <= 768 ? 16 : 20
+        iconSize: window.innerWidth <= 768 ? 24 : 32
     },
     proposedNode: {
         color: '#F59E0B',
-        height: window.innerWidth <= 768 ? 40 : 50,
-        padding: window.innerWidth <= 768 ? 12 : 16,
-        borderRadius: 10,
-        font: window.innerWidth <= 768 ? '11px Inter' : '12px Inter',
+        height: window.innerWidth <= 768 ? 60 : 70,
+        padding: window.innerWidth <= 768 ? 16 : 20,
+        borderRadius: 12,
+        font: window.innerWidth <= 768 ? '16px Inter' : '18px Inter',
         borderStyle: 'dashed',
         backgroundColor: 'rgba(245, 158, 11, 0.1)',
-        iconSize: window.innerWidth <= 768 ? 16 : 20
+        iconSize: window.innerWidth <= 768 ? 24 : 32
     },
     line: {
         color: '#E5E7EB',
-        width: 1.5
+        width: 2
     }
 };
 
-// Add a resize handler to update styles when window size changes
+// Update resize handler with new dimensions
 window.addEventListener('resize', () => {
-    styles.publishedNode.height = window.innerWidth <= 768 ? 40 : 50;
-    styles.publishedNode.padding = window.innerWidth <= 768 ? 12 : 16;
-    styles.publishedNode.font = window.innerWidth <= 768 ? '11px Inter' : '12px Inter';
-    styles.publishedNode.iconSize = window.innerWidth <= 768 ? 16 : 20;
+    styles.publishedNode.height = window.innerWidth <= 768 ? 60 : 70;
+    styles.publishedNode.padding = window.innerWidth <= 768 ? 16 : 20;
+    styles.publishedNode.font = window.innerWidth <= 768 ? '16px Inter' : '18px Inter';
+    styles.publishedNode.iconSize = window.innerWidth <= 768 ? 24 : 32;
 
-    styles.proposedNode.height = window.innerWidth <= 768 ? 40 : 50;
-    styles.proposedNode.padding = window.innerWidth <= 768 ? 12 : 16;
-    styles.proposedNode.font = window.innerWidth <= 768 ? '11px Inter' : '12px Inter';
-    styles.proposedNode.iconSize = window.innerWidth <= 768 ? 16 : 20;
+    styles.proposedNode.height = window.innerWidth <= 768 ? 60 : 70;
+    styles.proposedNode.padding = window.innerWidth <= 768 ? 16 : 20;
+    styles.proposedNode.font = window.innerWidth <= 768 ? '16px Inter' : '18px Inter';
+    styles.proposedNode.iconSize = window.innerWidth <= 768 ? 24 : 32;
 
     if (canvas.value) {
         drawTree();
@@ -332,7 +332,8 @@ const drawNode = (x, y, text, style, set = null) => {
     // Draw item count if available
     if (set && set.items) {
         const itemCount = `${set.items.length} items`;
-        ctx.font = `${parseInt(style.font) - 2}px Inter`;
+        const itemCountFont = window.innerWidth <= 768 ? '14px Inter' : '16px Inter';
+        ctx.font = itemCountFont;
         ctx.fillStyle = style.color;
         ctx.globalAlpha = 0.7;
         ctx.fillText(itemCount, nodeX + style.padding * 2 + iconSize, y + nodeHeight / 4);
@@ -369,8 +370,8 @@ const drawTree = () => {
     // Calculate dimensions
     const width = canvas.value.width;
     const columnWidth = width / 3;
-    const minNodeSpacing = window.innerWidth <= 768 ? 15 : 20;
-    const startY = window.innerWidth <= 768 ? 30 : 40;
+    const minNodeSpacing = window.innerWidth <= 768 ? 10 : 12; // Reduced spacing
+    const startY = window.innerWidth <= 768 ? 20 : 25; // Reduced top margin
 
     // Group and filter sets
     const levelGroups = new Map();
@@ -462,7 +463,7 @@ const drawTree = () => {
                     set: set
                 });
 
-                // Update Y position for next node
+                // Update Y position for next node with reduced spacing
                 nodeY += styles.publishedNode.height + minNodeSpacing;
             });
         });
