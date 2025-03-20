@@ -374,7 +374,7 @@ const drawTree = () => {
     const width = canvas.value.width;
     const columnWidth = width / 3;
     const minNodeSpacing = window.innerWidth <= 768 ? 10 : 12; // Reduced spacing
-    const startY = window.innerWidth <= 768 ? 20 : 25; // Reduced top margin
+    const startY = window.innerWidth <= 768 ? 35 : 40; // Increased top margin to accommodate root node
 
     // Group and filter sets
     const levelGroups = new Map();
@@ -391,7 +391,7 @@ const drawTree = () => {
     const sortedLevels = Array.from(levelGroups.keys()).sort((a, b) => a - b);
 
     // Calculate total height needed
-    let maxHeight = startY;
+    let maxHeight = startY * 1.5; // Increased initial height for top padding
     const levelHeights = new Map(); // Store height needed for each level
 
     // First pass: calculate height needed for each level
@@ -495,15 +495,15 @@ const drawTree = () => {
     });
 };
 
-// Handle canvas resize
+// Update resizeCanvas function to ensure minimum height
 const resizeCanvas = () => {
     if (!canvas.value) return;
 
     const container = canvas.value.parentElement;
     canvas.value.width = container.clientWidth;
 
-    // Set initial height to a smaller value
-    canvas.value.height = Math.max(200, container.clientHeight);
+    // Set initial height to accommodate top nodes
+    canvas.value.height = Math.max(300, container.clientHeight); // Increased minimum height
 
     // Update context and redraw
     ctx = canvas.value.getContext('2d');
@@ -513,6 +513,9 @@ const resizeCanvas = () => {
 // Initialize canvas
 onMounted(() => {
     window.addEventListener('resize', resizeCanvas);
+    if (canvas.value) {
+        canvas.value.parentElement.style.minHeight = '300px'; // Ensure minimum container height
+    }
     resizeCanvas();
 });
 
