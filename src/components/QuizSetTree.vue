@@ -148,14 +148,15 @@ const styles = {
         height: 40,
         padding: 12,
         borderRadius: 12,
-        font: 'bold 20px Inter'
+        font: 'bold 20px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     },
     publishedNode: {
         color: '#3B82F6',
         height: window.innerWidth <= 768 ? 50 : 60,
         padding: window.innerWidth <= 768 ? 10 : 12,
         borderRadius: 12,
-        font: window.innerWidth <= 768 ? '16px Inter' : '18px Inter',
+        font: window.innerWidth <= 768 ? '16px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            : '18px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         borderStyle: 'solid',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         iconSize: window.innerWidth <= 768 ? 20 : 24
@@ -165,7 +166,8 @@ const styles = {
         height: window.innerWidth <= 768 ? 50 : 60,
         padding: window.innerWidth <= 768 ? 10 : 12,
         borderRadius: 12,
-        font: window.innerWidth <= 768 ? '16px Inter' : '18px Inter',
+        font: window.innerWidth <= 768 ? '16px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            : '18px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         borderStyle: 'dashed',
         backgroundColor: 'rgba(245, 158, 11, 0.1)',
         iconSize: window.innerWidth <= 768 ? 20 : 24
@@ -180,12 +182,16 @@ const styles = {
 window.addEventListener('resize', () => {
     styles.publishedNode.height = window.innerWidth <= 768 ? 50 : 60;
     styles.publishedNode.padding = window.innerWidth <= 768 ? 10 : 12;
-    styles.publishedNode.font = window.innerWidth <= 768 ? '16px Inter' : '18px Inter';
+    styles.publishedNode.font = window.innerWidth <= 768
+        ? '16px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        : '18px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     styles.publishedNode.iconSize = window.innerWidth <= 768 ? 20 : 24;
 
     styles.proposedNode.height = window.innerWidth <= 768 ? 50 : 60;
     styles.proposedNode.padding = window.innerWidth <= 768 ? 10 : 12;
-    styles.proposedNode.font = window.innerWidth <= 768 ? '16px Inter' : '18px Inter';
+    styles.proposedNode.font = window.innerWidth <= 768
+        ? '16px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        : '18px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     styles.proposedNode.iconSize = window.innerWidth <= 768 ? 20 : 24;
 
     if (canvas.value) {
@@ -335,11 +341,13 @@ const drawNode = (x, y, text, style, set = null) => {
     // Draw item count if available (adjusted position)
     if (set && set.items) {
         const itemCount = `${set.items.length} items`;
-        const itemCountFont = window.innerWidth <= 768 ? '14px Inter' : '16px Inter';
+        const itemCountFont = window.innerWidth <= 768
+            ? '14px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            : '16px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         ctx.font = itemCountFont;
         ctx.fillStyle = style.color;
         ctx.globalAlpha = 0.7;
-        ctx.fillText(itemCount, nodeX + style.padding * 1.2 + iconSize, nodeY + nodeHeight * 0.7); // Moved count down to bottom portion
+        ctx.fillText(itemCount, nodeX + style.padding * 1.2 + iconSize, nodeY + nodeHeight * 0.7);
         ctx.globalAlpha = 1;
     }
 };
