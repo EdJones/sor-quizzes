@@ -146,29 +146,29 @@ const styles = {
     rootNode: {
         color: '#4B5563',
         height: 40,
-        padding: 24,
+        padding: 12,
         borderRadius: 12,
         font: 'bold 20px Inter'
     },
     publishedNode: {
         color: '#3B82F6',
-        height: window.innerWidth <= 768 ? 60 : 70,
-        padding: window.innerWidth <= 768 ? 16 : 20,
+        height: window.innerWidth <= 768 ? 50 : 60,
+        padding: window.innerWidth <= 768 ? 10 : 12,
         borderRadius: 12,
         font: window.innerWidth <= 768 ? '16px Inter' : '18px Inter',
         borderStyle: 'solid',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        iconSize: window.innerWidth <= 768 ? 24 : 32
+        iconSize: window.innerWidth <= 768 ? 20 : 24
     },
     proposedNode: {
         color: '#F59E0B',
-        height: window.innerWidth <= 768 ? 60 : 70,
-        padding: window.innerWidth <= 768 ? 16 : 20,
+        height: window.innerWidth <= 768 ? 50 : 60,
+        padding: window.innerWidth <= 768 ? 10 : 12,
         borderRadius: 12,
         font: window.innerWidth <= 768 ? '16px Inter' : '18px Inter',
         borderStyle: 'dashed',
         backgroundColor: 'rgba(245, 158, 11, 0.1)',
-        iconSize: window.innerWidth <= 768 ? 24 : 32
+        iconSize: window.innerWidth <= 768 ? 20 : 24
     },
     line: {
         color: '#E5E7EB',
@@ -178,15 +178,15 @@ const styles = {
 
 // Update resize handler with new dimensions
 window.addEventListener('resize', () => {
-    styles.publishedNode.height = window.innerWidth <= 768 ? 60 : 70;
-    styles.publishedNode.padding = window.innerWidth <= 768 ? 16 : 20;
+    styles.publishedNode.height = window.innerWidth <= 768 ? 50 : 60;
+    styles.publishedNode.padding = window.innerWidth <= 768 ? 10 : 12;
     styles.publishedNode.font = window.innerWidth <= 768 ? '16px Inter' : '18px Inter';
-    styles.publishedNode.iconSize = window.innerWidth <= 768 ? 24 : 32;
+    styles.publishedNode.iconSize = window.innerWidth <= 768 ? 20 : 24;
 
-    styles.proposedNode.height = window.innerWidth <= 768 ? 60 : 70;
-    styles.proposedNode.padding = window.innerWidth <= 768 ? 16 : 20;
+    styles.proposedNode.height = window.innerWidth <= 768 ? 50 : 60;
+    styles.proposedNode.padding = window.innerWidth <= 768 ? 10 : 12;
     styles.proposedNode.font = window.innerWidth <= 768 ? '16px Inter' : '18px Inter';
-    styles.proposedNode.iconSize = window.innerWidth <= 768 ? 24 : 32;
+    styles.proposedNode.iconSize = window.innerWidth <= 768 ? 20 : 24;
 
     if (canvas.value) {
         drawTree();
@@ -266,7 +266,7 @@ const drawQuizIcon = (x, y, size, color) => {
     ctx.restore();
 };
 
-// Update drawNode function to include icon and enhanced styling
+// Update drawNode function to reduce internal spacing
 const drawNode = (x, y, text, style, set = null) => {
     if (!ctx) return;
 
@@ -274,7 +274,7 @@ const drawNode = (x, y, text, style, set = null) => {
     ctx.font = style.font;
     const textMetrics = ctx.measureText(text);
     const textWidth = textMetrics.width;
-    const nodeWidth = textWidth + (style.padding * 4); // Increased padding for icon
+    const nodeWidth = textWidth + (style.padding * 3) + style.iconSize; // Reduced total padding
     const nodeHeight = style.height;
 
     // Calculate node position (centered on x)
@@ -318,25 +318,25 @@ const drawNode = (x, y, text, style, set = null) => {
     ctx.stroke();
     ctx.setLineDash([]); // Reset dash pattern
 
-    // Draw icon
-    const iconSize = style.iconSize || 20;
+    // Draw icon (moved closer to left edge)
+    const iconSize = style.iconSize;
     drawQuizIcon(nodeX + style.padding + iconSize / 2, y, iconSize, style.color);
 
-    // Draw text (shifted right to accommodate icon)
+    // Draw text (closer to icon)
     ctx.fillStyle = style.color;
     ctx.font = style.font;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, nodeX + style.padding * 2 + iconSize, y);
+    ctx.fillText(text, nodeX + style.padding * 1.5 + iconSize, y - 2); // Moved text up slightly and closer to icon
 
-    // Draw item count if available
+    // Draw item count if available (adjusted position)
     if (set && set.items) {
         const itemCount = `${set.items.length} items`;
         const itemCountFont = window.innerWidth <= 768 ? '14px Inter' : '16px Inter';
         ctx.font = itemCountFont;
         ctx.fillStyle = style.color;
         ctx.globalAlpha = 0.7;
-        ctx.fillText(itemCount, nodeX + style.padding * 2 + iconSize, y + nodeHeight / 4);
+        ctx.fillText(itemCount, nodeX + style.padding * 1.5 + iconSize, y + nodeHeight / 3 - 2); // Adjusted vertical position
         ctx.globalAlpha = 1;
     }
 };
