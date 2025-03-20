@@ -50,9 +50,7 @@
                             driven
                             effort</router-link>.</p>
                 </div>
-                <p class="h3 mt-4">SOR Quizzes is a <a href="https://github.com/EdJones/sor-quizzes">community
-                        driven
-                        effort</a>, created by <a href="https://skunkworks-edu.com">Skunkworks\edu</a>.</p>
+
 
             </div>
         </div>

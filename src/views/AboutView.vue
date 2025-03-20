@@ -3,7 +3,13 @@
         <h1>About</h1>
 
         <section class="about-section">
-            <h2>A community-driven, open-source effort</h2>
+            <h2>A community-driven, open-source effort.</h2>
+            <ul>
+                <li class="list-none">Repository: <a
+                        href="https://github.com/EdJones/sor-quizzes">https://github.com/EdJones/sor-quizzes</a>
+                </li>
+            </ul>
+
             <p>
                 This app will only make sense when validated and refined by the community. <!--img
                     src="../src/assets/images/partners.png" alt="Community" class="community-image"-->
@@ -32,17 +38,6 @@
         </section>
 
         <section class="about-section">
-            <h2>What is the Science of Reading?</h2>
-            <p>
-                Conducted across six decades, by research labs around the world, the science of reading is derived from
-                thousands of studies in many related fields. The research has revealed how the brain learns to read and
-                the most effective methods for teaching reading.
-            </p>
-        </section>
-
-
-
-        <section class="about-section">
             <h2>Contributing</h2>
             <p>
                 Please consider <router-link to="/QuizSetView" class="">making this better</router-link>.
@@ -56,7 +51,13 @@
         <section class="about-section donation-box">
             <h2>Support Our Mission</h2>
             <p>
-                This app is built by Ed Jones, as a gift to the Science of reading community. I've has never been paid
+                This app is built by Ed Jones, as a gift to the Science of reading community.
+            </p>
+            <p>
+                While mine is the vision behind
+                <a href="https://skunkworks-edu.com">Skunkworks\edu</a>,
+                I've never
+                been paid
                 for work in K12.
             </p>
             <p>
@@ -90,7 +91,7 @@ export default {
 }
 
 .about-section {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     color: ivory;
     background-color: #222;
     padding: 1rem;
@@ -99,6 +100,7 @@ export default {
 
 .about-section h2 {
     color: ivory;
+    font-weight: 600;
 }
 
 h1 {
