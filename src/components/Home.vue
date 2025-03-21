@@ -4,19 +4,19 @@
 
             <div class="sm:w-full md:w-9/12 lg:w-5/6 lg:px-4 quizzes-container text-center">
                 <div
-                    class="mt-8 sm:mt-16 grid quiz-item w-full border-4 place-self-center place-content-center text-center">
-                    <p class="h2 mt-8">We're just getting started, but for now...</p>
+                    class="mt-4 sm:mt-8 md:mt-16 grid quiz-item w-full border-4 place-self-center place-content-center text-center">
+                    <p class="h2 mt-4 sm:mt-8">We're just getting started, but for now...</p>
                     <p class="font-bold text-sky-900 h2">Choose a role / level of difficulty:</p>
-                    <div class="mt-4 mb-2 gap-8 columns-1">
+                    <div class="mt-2 sm:mt-4 mb-1 sm:mb-2 gap-4 sm:gap-8 columns-1">
                         <div><button @click="showQuiz(6)" class="lg:text-3xl sm:text-2xl px-4 py-1">Why Care?</button>
                         </div>
                     </div>
-                    <div class="mt-2 mb-2 gap-8 columns-2">
+                    <div class="mt-1 sm:mt-2 mb-1 sm:mb-2 gap-4 sm:gap-8 columns-2">
                         <div><button @click="showQuiz(1)" class="lg:text-3xl sm:text-2xl px-4 py-1">Expert</button>
                         </div>
                         <div><button @click="showQuiz(0)" class="lg:text-3xl sm:text-2xl px-4 py-1">Basic</button></div>
                     </div>
-                    <div class="mt-2 mb-2 gap-8 columns-2">
+                    <div class="mt-1 sm:mt-2 mb-1 sm:mb-2 gap-4 sm:gap-8 columns-2">
                         <div><button @click="showQuiz(3)"
                                 class="place-self-center place-content-center lg:text-3xl sm:text-2xl px-4 py-1">Kinder-First</button>
                         </div>
@@ -25,29 +25,30 @@
                                 Board
                                 Members</button></div>
                     </div>
-                    <div v-if="debug" class="mt-2 mb-8">
+                    <div v-if="debug" class="mt-1 sm:mt-2 mb-4 sm:mb-8">
                         <button @click="showQuiz(5)"
                             class="place-self-center place-content-center lg:text-3xl sm:text-2xl">Test
                             Expert</button>
                     </div>
-                    <div class="mt-2 mb-2">
+                    <div class="mt-1 sm:mt-2 mb-1 sm:mb-2">
                         <button @click="showQuiz(7)"
                             class="place-self-center place-content-center lg:text-2xl sm:text-xl  px-4 py-1">Learning
                             Science</button>
                     </div>
-                    <div class="mt-2 mb-8">
+                    <div class="mt-1 sm:mt-2 mb-4 sm:mb-8">
                         <button @click="showQuiz(2)"
                             class="place-self-center place-content-center lg:text-2xl sm:text-xl  px-4 py-1">New Quiz
                             Items</button>
                     </div>
                 </div>
             </div>
-            <div class="mt-8 w-full place-content-center">
+            <div class="mt-4 sm:mt-8 w-full place-content-center">
                 <div class="router-link-container">
                     <router-link to="/QuizSetView" class="button-75">Contribute to these quizzes</router-link>
                 </div>
-                <div class="router-link-container mt-4 mb-8">
-                    <p class="h3 mt-4">SOR Quizzes is a <router-link to="/about" class=" hover:text-sky-700">community
+                <div class="router-link-container mt-2 sm:mt-4 mb-4 sm:mb-8">
+                    <p class="h3 mt-2 sm:mt-4">SOR Quizzes is a <router-link to="/about"
+                            class=" hover:text-sky-700">community
                             driven
                             effort</router-link>.</p>
                 </div>
