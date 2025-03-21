@@ -145,42 +145,54 @@ let nodePositions = []; // Store clickable areas
 const styles = {
     rootNode: {
         color: '#4B5563',
-        height: 30,
-        padding: 20,
+        height: 40,
+        padding: 12,
         borderRadius: 12,
-        font: 'bold 16px Inter'
+        font: 'bold 20px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     },
     publishedNode: {
         color: '#3B82F6',
-        height: window.innerWidth <= 768 ? 30 : 40,
-        padding: window.innerWidth <= 768 ? 12 : 16,
-        borderRadius: 10,
-        font: window.innerWidth <= 768 ? '11px Inter' : '12px Inter',
-        borderStyle: 'solid'
+        height: window.innerWidth <= 768 ? 50 : 60,
+        padding: window.innerWidth <= 768 ? 10 : 12,
+        borderRadius: 12,
+        font: window.innerWidth <= 768 ? '16px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            : '18px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        borderStyle: 'solid',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        iconSize: window.innerWidth <= 768 ? 20 : 24
     },
     proposedNode: {
         color: '#F59E0B',
-        height: window.innerWidth <= 768 ? 30 : 40,
-        padding: window.innerWidth <= 768 ? 12 : 16,
-        borderRadius: 10,
-        font: window.innerWidth <= 768 ? '11px Inter' : '12px Inter',
-        borderStyle: 'dashed'
+        height: window.innerWidth <= 768 ? 50 : 60,
+        padding: window.innerWidth <= 768 ? 10 : 12,
+        borderRadius: 12,
+        font: window.innerWidth <= 768 ? '16px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            : '18px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        borderStyle: 'dashed',
+        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+        iconSize: window.innerWidth <= 768 ? 20 : 24
     },
     line: {
         color: '#E5E7EB',
-        width: 1.5
+        width: 2
     }
 };
 
-// Add a resize handler to update styles when window size changes
+// Update resize handler with new dimensions
 window.addEventListener('resize', () => {
-    styles.publishedNode.height = window.innerWidth <= 768 ? 30 : 40;
-    styles.publishedNode.padding = window.innerWidth <= 768 ? 12 : 16;
-    styles.publishedNode.font = window.innerWidth <= 768 ? '11px Inter' : '12px Inter';
+    styles.publishedNode.height = window.innerWidth <= 768 ? 50 : 60;
+    styles.publishedNode.padding = window.innerWidth <= 768 ? 10 : 12;
+    styles.publishedNode.font = window.innerWidth <= 768
+        ? '16px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        : '18px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    styles.publishedNode.iconSize = window.innerWidth <= 768 ? 20 : 24;
 
-    styles.proposedNode.height = window.innerWidth <= 768 ? 30 : 40;
-    styles.proposedNode.padding = window.innerWidth <= 768 ? 12 : 16;
-    styles.proposedNode.font = window.innerWidth <= 768 ? '11px Inter' : '12px Inter';
+    styles.proposedNode.height = window.innerWidth <= 768 ? 50 : 60;
+    styles.proposedNode.padding = window.innerWidth <= 768 ? 10 : 12;
+    styles.proposedNode.font = window.innerWidth <= 768
+        ? '16px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        : '18px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    styles.proposedNode.iconSize = window.innerWidth <= 768 ? 20 : 24;
 
     if (canvas.value) {
         drawTree();
@@ -225,7 +237,42 @@ const handleCanvasClick = (event) => {
     }
 };
 
-// Modified drawNode function to store clickable areas
+// Add new function to draw quiz set icon
+const drawQuizIcon = (x, y, size, color) => {
+    if (!ctx) return;
+
+    // Save current context state
+    ctx.save();
+
+    // Set icon styles
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.fillStyle = color;
+
+    // Draw a simplified quiz/document icon
+    const iconX = x - size / 2;
+    const iconY = y - size / 2;
+
+    // Draw main rectangle (document body)
+    ctx.beginPath();
+    ctx.rect(iconX, iconY, size * 0.8, size);
+    ctx.stroke();
+
+    // Draw lines representing text
+    const lineSpacing = size * 0.2;
+    const lineWidth = size * 0.5;
+    for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(iconX + size * 0.15, iconY + size * 0.25 + (i * lineSpacing));
+        ctx.lineTo(iconX + size * 0.15 + lineWidth, iconY + size * 0.25 + (i * lineSpacing));
+        ctx.stroke();
+    }
+
+    // Restore context state
+    ctx.restore();
+};
+
+// Update drawNode function to move content closer to top
 const drawNode = (x, y, text, style, set = null) => {
     if (!ctx) return;
 
@@ -233,7 +280,7 @@ const drawNode = (x, y, text, style, set = null) => {
     ctx.font = style.font;
     const textMetrics = ctx.measureText(text);
     const textWidth = textMetrics.width;
-    const nodeWidth = textWidth + (style.padding * 2);
+    const nodeWidth = textWidth + (style.padding * 2.5) + style.iconSize; // Further reduced padding
     const nodeHeight = style.height;
 
     // Calculate node position (centered on x)
@@ -251,11 +298,18 @@ const drawNode = (x, y, text, style, set = null) => {
         });
     }
 
-    // Draw background
-    ctx.fillStyle = style.color;
-    ctx.globalAlpha = 0.2;
+    // Draw background with shadow
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+    ctx.shadowBlur = 5;
+    ctx.shadowOffsetY = 2;
+    ctx.fillStyle = style.backgroundColor || 'rgba(255, 255, 255, 0.1)';
     drawRoundedRect(nodeX, nodeY, nodeWidth, nodeHeight, style.borderRadius, style);
     ctx.fill();
+
+    // Reset shadow
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
 
     // Draw border
     ctx.globalAlpha = 1;
@@ -270,12 +324,32 @@ const drawNode = (x, y, text, style, set = null) => {
     ctx.stroke();
     ctx.setLineDash([]); // Reset dash pattern
 
-    // Draw text
+    // Calculate vertical offset for top alignment (about 30% from top)
+    const verticalOffset = nodeHeight * 0.3;
+
+    // Draw icon (moved closer to top)
+    const iconSize = style.iconSize;
+    drawQuizIcon(nodeX + style.padding + iconSize / 2, nodeY + verticalOffset, iconSize, style.color);
+
+    // Draw text (closer to top, aligned with icon)
     ctx.fillStyle = style.color;
     ctx.font = style.font;
-    ctx.textAlign = 'center';
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, x, y);
+    ctx.fillText(text, nodeX + style.padding * 1.2 + iconSize, nodeY + verticalOffset);
+
+    // Draw item count if available (adjusted position)
+    if (set && set.items) {
+        const itemCount = `${set.items.length} items`;
+        const itemCountFont = window.innerWidth <= 768
+            ? '14px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            : '16px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.font = itemCountFont;
+        ctx.fillStyle = style.color;
+        ctx.globalAlpha = 0.7;
+        ctx.fillText(itemCount, nodeX + style.padding * 1.2 + iconSize, nodeY + nodeHeight * 0.7);
+        ctx.globalAlpha = 1;
+    }
 };
 
 // Draw a line between two points
@@ -306,9 +380,10 @@ const drawTree = () => {
 
     // Calculate dimensions
     const width = canvas.value.width;
-    const columnWidth = width / 3;
-    const minNodeSpacing = window.innerWidth <= 768 ? 15 : 20;
-    const startY = window.innerWidth <= 768 ? 30 : 40;
+    const isMobile = window.innerWidth <= 768;
+    const columnWidth = width / 3; // Keep three columns
+    const minNodeSpacing = isMobile ? 12 : 12;
+    const startY = isMobile ? 35 : 40;
 
     // Group and filter sets
     const levelGroups = new Map();
@@ -325,13 +400,13 @@ const drawTree = () => {
     const sortedLevels = Array.from(levelGroups.keys()).sort((a, b) => a - b);
 
     // Calculate total height needed
-    let maxHeight = startY;
-    const levelHeights = new Map(); // Store height needed for each level
+    let maxHeight = startY * 1.5;
+    const levelHeights = new Map();
 
     // First pass: calculate height needed for each level
     sortedLevels.forEach(level => {
         const setsInLevel = levelGroups.get(level);
-        const columnHeights = [0, 0, 0]; // Track height for each column
+        const columnHeights = [0, 0, 0];
 
         // Calculate height needed for each column in this level
         setsInLevel.forEach(set => {
@@ -351,7 +426,6 @@ const drawTree = () => {
     // Update canvas height if needed
     if (canvas.value.height < maxHeight) {
         canvas.value.height = maxHeight;
-        // Also update container height to match content
         canvas.value.parentElement.style.height = `${maxHeight}px`;
     }
 
@@ -379,14 +453,14 @@ const drawTree = () => {
 
             sets.forEach(set => {
                 // Calculate node dimensions
-                ctx.font = styles.publishedNode.font;
+                ctx.font = isMobile ? '14px system-ui' : styles.publishedNode.font;
                 const textMetrics = ctx.measureText(set.setName);
-                const nodeWidth = textMetrics.width + (styles.publishedNode.padding * 2);
-
-                // Check if node would overflow column width
-                if (nodeWidth > columnWidth - 20) {
-                    ctx.font = '10px Inter';
-                }
+                const textWidth = textMetrics.width;
+                const iconPadding = styles.publishedNode.padding + styles.publishedNode.iconSize;
+                const nodeWidth = Math.min(
+                    textWidth + (iconPadding * 2),
+                    columnWidth - (isMobile ? 10 : 20)
+                );
 
                 // Draw node
                 const isProposed = props.proposedQuizSets.includes(set);
@@ -429,15 +503,15 @@ const drawTree = () => {
     });
 };
 
-// Handle canvas resize
+// Update resizeCanvas function to ensure minimum height
 const resizeCanvas = () => {
     if (!canvas.value) return;
 
     const container = canvas.value.parentElement;
     canvas.value.width = container.clientWidth;
 
-    // Set initial height to a smaller value
-    canvas.value.height = Math.max(200, container.clientHeight);
+    // Set initial height to accommodate top nodes
+    canvas.value.height = Math.max(300, container.clientHeight); // Increased minimum height
 
     // Update context and redraw
     ctx = canvas.value.getContext('2d');
@@ -447,6 +521,9 @@ const resizeCanvas = () => {
 // Initialize canvas
 onMounted(() => {
     window.addEventListener('resize', resizeCanvas);
+    if (canvas.value) {
+        canvas.value.parentElement.style.minHeight = '300px'; // Ensure minimum container height
+    }
     resizeCanvas();
 });
 

@@ -6,6 +6,8 @@ import GitHubIssues from '../components/GitHubIssues.vue';
 import QuizSetView from '../views/QuizSetView.vue';
 import QuizItemEditor from '../views/QuizItemEditor.vue';
 import AdminPage from '../views/AdminPage.vue';
+import AboutView from '../views/AboutView.vue';
+import OpenSourceView from '../views/OpenSourceView.vue';
 
 const routes = [
   {
@@ -43,6 +45,16 @@ const routes = [
     path: '/quizSetView',
     name: 'QuizSetView',
     component: QuizSetView
+  },
+  {
+    path: '/about',
+    name: 'About',
+    component: AboutView
+  },
+  {
+    path: '/OpenSource',
+    name: 'OpenSource',
+    component: OpenSourceView
   },
   {
     path: '/',
