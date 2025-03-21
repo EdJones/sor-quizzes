@@ -1,6 +1,10 @@
 <template>
     <div class="about-container">
-        <h1>About</h1>
+        <div class="flex justify-between">
+            <h1>&nbsp;</h1>
+            <h1 class="flex justify-center">About </h1> <img src="/public/images/partners.png" alt="SOR"
+                class="flex justify-end w-32 h-32 mr-20 object-scale-down">
+        </div>
 
         <section class="about-section">
             <h2>A community-driven, open-source effort.</h2>
@@ -104,7 +108,7 @@ export default {
 }
 
 .about-section {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     color: ivory;
     background-color: #222;
     padding: 1rem;
@@ -156,12 +160,12 @@ a:hover {
 }
 
 .donation-box {
-    background-color: #f8fafc;
+    background-color: #e7eaeb;
     border-radius: 8px;
     padding: 2rem;
-    margin-top: 3rem;
-    border: 1px solid #e2e8f0;
-    color: black;
+    margin-top: 2rem;
+    border: 1px solid #212327;
+    color: rgb(55, 19, 19);
 }
 
 .donation-box h2 {
