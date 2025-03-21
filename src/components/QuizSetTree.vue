@@ -381,8 +381,8 @@ const drawTree = () => {
     // Calculate dimensions
     const width = canvas.value.width;
     const isMobile = window.innerWidth <= 768;
-    const columnWidth = isMobile ? width : width / 3;
-    const minNodeSpacing = isMobile ? 15 : 12; // Increased spacing for mobile
+    const columnWidth = width / 3; // Keep three columns
+    const minNodeSpacing = isMobile ? 12 : 12;
     const startY = isMobile ? 35 : 40;
 
     // Group and filter sets
@@ -448,23 +448,19 @@ const drawTree = () => {
         Object.entries(itemsInColumns).forEach(([column, sets]) => {
             if (sets.length === 0) return;
 
-            // Adjust column positioning for mobile
-            const columnX = isMobile
-                ? width / 2  // Center all nodes on mobile
-                : columnWidth * (parseInt(column) - 0.5);
-
+            const columnX = columnWidth * (parseInt(column) - 0.5);
             let nodeY = currentY;
 
             sets.forEach(set => {
                 // Calculate node dimensions
-                ctx.font = styles.publishedNode.font;
+                ctx.font = isMobile ? '14px system-ui' : styles.publishedNode.font;
                 const textMetrics = ctx.measureText(set.setName);
-                const nodeWidth = textMetrics.width + (styles.publishedNode.padding * 2);
-
-                // Check if node would overflow column width
-                if (nodeWidth > (isMobile ? width - 40 : columnWidth - 20)) {
-                    ctx.font = isMobile ? '14px system-ui' : '10px Inter';
-                }
+                const textWidth = textMetrics.width;
+                const iconPadding = styles.publishedNode.padding + styles.publishedNode.iconSize;
+                const nodeWidth = Math.min(
+                    textWidth + (iconPadding * 2),
+                    columnWidth - (isMobile ? 10 : 20)
+                );
 
                 // Draw node
                 const isProposed = props.proposedQuizSets.includes(set);
