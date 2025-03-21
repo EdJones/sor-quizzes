@@ -46,7 +46,7 @@
                 <div class="router-link-container">
                     <router-link to="/QuizSetView" class="button-75">Contribute to these quizzes</router-link>
                 </div>
-                <div class="router-link-container mt-4">
+                <div class="router-link-container mt-4 mb-8">
                     <p class="h3 mt-4">SOR Quizzes is a <router-link to="/about" class=" hover:text-sky-700">community
                             driven
                             effort</router-link>.</p>
