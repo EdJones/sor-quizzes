@@ -6,7 +6,7 @@
                 <div class="mt-16 grid quiz-item w-full border-4 place-self-center place-content-center text-center">
                     <p class="h2 mt-8">We're just getting started, but for now...</p>
                     <p class="font-bold text-sky-900 h2">Choose a role / level of difficulty:</p>
-                    <div class="mt-4 mb-2 gap-8 columns-1">
+                    <div class="sm:mt-4 mt-2 mb-2 gap-8 columns-1">
                         <div><button @click="showQuiz(6)" class="lg:text-3xl sm:text-2xl px-4 py-1">Why Care?</button>
                         </div>
                     </div>
