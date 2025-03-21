@@ -90,6 +90,10 @@
                 </form>
             </div>
         </section>
+        <div class="text-xs text-gray-500 mt-8">
+            <a href="https://www.flaticon.com/free-icons/collaboration" title="collaboration icons"
+                class="text-gray-500">Collaboration icons created by small.smiles - Flaticon</a>
+        </div>
     </div>
 </template>
 
