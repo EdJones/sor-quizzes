@@ -51,6 +51,7 @@
                             class=" hover:text-sky-700">community
                             driven
                             effort</router-link>.</p>
+                    <img src="../assets/partners.png" alt="Partners" class="w-10 h-10 ml-2" />
                 </div>
 
 
@@ -199,6 +200,7 @@ export default {
 .router-link-container {
     display: flex;
     justify-content: center;
+    align-items: center;
     margin-top: 10px;
 }
 </style>

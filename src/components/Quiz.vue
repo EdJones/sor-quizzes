@@ -106,10 +106,7 @@
   </div>
   <span v-show="false">{{ reviewModeTracker }}</span>
 
-  <div class="text-xs text-gray-500 mt-8">
-    <a href="https://www.flaticon.com/free-icons/collaboration" title="collaboration icons"
-      class="text-gray-500">Collaboration icons created by small.smiles - Flaticon</a>
-  </div>
+
 
   <!-- Add the progress popup component -->
   <ProgressDetailsPopup ref="progressPopup" :show="showProgressPopup" @close="showProgressPopup = false" />
