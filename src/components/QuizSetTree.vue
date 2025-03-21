@@ -380,9 +380,10 @@ const drawTree = () => {
 
     // Calculate dimensions
     const width = canvas.value.width;
-    const columnWidth = width / 3;
-    const minNodeSpacing = window.innerWidth <= 768 ? 10 : 12; // Reduced spacing
-    const startY = window.innerWidth <= 768 ? 35 : 40; // Increased top margin to accommodate root node
+    const isMobile = window.innerWidth <= 768;
+    const columnWidth = isMobile ? width : width / 3;
+    const minNodeSpacing = isMobile ? 15 : 12; // Increased spacing for mobile
+    const startY = isMobile ? 35 : 40;
 
     // Group and filter sets
     const levelGroups = new Map();
@@ -399,13 +400,13 @@ const drawTree = () => {
     const sortedLevels = Array.from(levelGroups.keys()).sort((a, b) => a - b);
 
     // Calculate total height needed
-    let maxHeight = startY * 1.5; // Increased initial height for top padding
-    const levelHeights = new Map(); // Store height needed for each level
+    let maxHeight = startY * 1.5;
+    const levelHeights = new Map();
 
     // First pass: calculate height needed for each level
     sortedLevels.forEach(level => {
         const setsInLevel = levelGroups.get(level);
-        const columnHeights = [0, 0, 0]; // Track height for each column
+        const columnHeights = [0, 0, 0];
 
         // Calculate height needed for each column in this level
         setsInLevel.forEach(set => {
@@ -425,7 +426,6 @@ const drawTree = () => {
     // Update canvas height if needed
     if (canvas.value.height < maxHeight) {
         canvas.value.height = maxHeight;
-        // Also update container height to match content
         canvas.value.parentElement.style.height = `${maxHeight}px`;
     }
 
@@ -448,7 +448,11 @@ const drawTree = () => {
         Object.entries(itemsInColumns).forEach(([column, sets]) => {
             if (sets.length === 0) return;
 
-            const columnX = columnWidth * (parseInt(column) - 0.5);
+            // Adjust column positioning for mobile
+            const columnX = isMobile
+                ? width / 2  // Center all nodes on mobile
+                : columnWidth * (parseInt(column) - 0.5);
+
             let nodeY = currentY;
 
             sets.forEach(set => {
@@ -458,8 +462,8 @@ const drawTree = () => {
                 const nodeWidth = textMetrics.width + (styles.publishedNode.padding * 2);
 
                 // Check if node would overflow column width
-                if (nodeWidth > columnWidth - 20) {
-                    ctx.font = '10px Inter';
+                if (nodeWidth > (isMobile ? width - 40 : columnWidth - 20)) {
+                    ctx.font = isMobile ? '14px system-ui' : '10px Inter';
                 }
 
                 // Draw node
@@ -474,7 +478,7 @@ const drawTree = () => {
                     set: set
                 });
 
-                // Update Y position for next node with reduced spacing
+                // Update Y position for next node
                 nodeY += styles.publishedNode.height + minNodeSpacing;
             });
         });
