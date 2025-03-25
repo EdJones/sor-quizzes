@@ -451,29 +451,8 @@ export const quizStore = defineStore('quiz', {
                     throw new Error('No draft entry to save');
                 }
 
-                // Prepare the entry for saving
-                const entryToSave = {
-                    ...this.draftQuizEntry,
-                    updatedAt: serverTimestamp()
-                };
-
                 // Get the current ID from the entry
-                const currentId = entryToSave.id;
-                console.log('Preparing to save entry:', {
-                    currentId,
-                    entryToSave: {
-                        id: entryToSave.id,
-                        title: entryToSave.title,
-                        status: entryToSave.status,
-                        version: entryToSave.version,
-                        hasRequiredFields: Boolean(
-                            entryToSave.title &&
-                            entryToSave.Question &&
-                            entryToSave.answer_type &&
-                            entryToSave.correctAnswers?.length > 0
-                        )
-                    }
-                });
+                const currentId = this.draftQuizEntry.id;
 
                 // Check if we have an authenticated user
                 if (!authStore.user) {
@@ -481,7 +460,7 @@ export const quizStore = defineStore('quiz', {
                     throw new Error('You must be logged in to save entries');
                 }
 
-                // Create new entry if currentId is null or undefined
+                // If this is a new entry (no ID)
                 if (!currentId) {
                     console.log('Creating new entry with user details:', {
                         userId: authStore.user.uid,
@@ -489,19 +468,18 @@ export const quizStore = defineStore('quiz', {
                     });
 
                     const newEntry = {
-                        ...entryToSave,
+                        ...this.draftQuizEntry,
                         status: 'draft',
                         createdAt: serverTimestamp(),
-                        timestamp: serverTimestamp(), // Add timestamp for backward compatibility
+                        timestamp: serverTimestamp(),
                         userId: authStore.user.uid,
                         userEmail: authStore.user.email,
-                        version: 1
+                        version: 1 // Start at version 1 for new entries
                     };
 
                     console.log('Attempting to create new entry in Firestore:', {
                         collection: 'quizEntries',
                         entry: {
-                            id: newEntry.id,
                             title: newEntry.title,
                             status: newEntry.status,
                             version: newEntry.version
@@ -517,10 +495,19 @@ export const quizStore = defineStore('quiz', {
                     return docRef.id;
                 }
 
-                // Update existing entry
+                // For existing entries, increment the version
+                const currentVersion = this.draftQuizEntry.version || 1;
+                const entryToSave = {
+                    ...this.draftQuizEntry,
+                    updatedAt: serverTimestamp(),
+                    timestamp: serverTimestamp(), // Update timestamp for sorting
+                    version: currentVersion + 1 // Increment version
+                };
+
                 console.log('Updating existing entry:', {
                     entryId: currentId,
-                    currentVersion: entryToSave.version
+                    currentVersion: currentVersion,
+                    newVersion: entryToSave.version
                 });
 
                 const docRef = doc(db, 'quizEntries', currentId);
@@ -529,6 +516,7 @@ export const quizStore = defineStore('quiz', {
 
                 // Update the last saved entry
                 this.lastSavedDraftQuizEntry = { ...entryToSave };
+                this.draftQuizEntry = { ...entryToSave }; // Also update current draft
                 return currentId;
             } catch (error) {
                 console.error('Error in saveDraftQuizEntry:', {
@@ -807,14 +795,17 @@ export const quizStore = defineStore('quiz', {
                 currentEntry: this.draftQuizEntry
             });
 
-            // When copying from a template, we want to create a new entry
-            // So we explicitly set id to null (not undefined)
+            // When copying from a template (no id), we want to create a new entry
+            // Otherwise, maintain the existing version
+            const isNewFromTemplate = !entry.id && !entry.originalId;
+
             const updatedEntry = {
                 ...this.draftQuizEntry,  // Start with current draft to preserve existing values
                 ...entry,                 // Override with new values
-                id: null,                 // For new entries from templates, explicitly set id to null
-                version: 1,              // Start version at 1 for new entries
-                status: 'draft',         // Ensure status is draft
+                // Only reset ID and version for new items from templates
+                id: isNewFromTemplate ? null : entry.id,
+                version: isNewFromTemplate ? 1 : (entry.version || 1),
+                status: entry.status || 'draft',
                 // Initialize correctAnswers array for multiple select questions
                 correctAnswers: entry.answer_type === 'ms' ? (entry.correctAnswers || []) : []
             };
@@ -825,6 +816,7 @@ export const quizStore = defineStore('quiz', {
                 version: updatedEntry.version,
                 title: updatedEntry.title,
                 status: updatedEntry.status,
+                isNewFromTemplate: isNewFromTemplate,
                 previousId: this.draftQuizEntry.id,  // Log previous ID for debugging
                 hasRequiredFields: {
                     title: !!updatedEntry.title,
