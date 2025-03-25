@@ -569,6 +569,8 @@ import { useRoute, useRouter } from 'vue-router';
 import QuizSelector from '../components/QuizSelector.vue';
 import VersionInfoModal from '../components/VersionInfoModal.vue';
 import VersionHistoryModal from '../components/VersionHistoryModal.vue';
+import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 
 export default {
   components: {
@@ -633,7 +635,41 @@ export default {
 
           if (draftItem) {
             console.log('Found draft item:', draftItem.id);
-            store.updateDraftQuizEntry(draftItem);
+
+            // Fetch the latest revision from quizEditHistory
+            const editHistoryRef = collection(db, 'quizEditHistory');
+            const q = query(
+              editHistoryRef,
+              where('quizItemId', '==', itemId),
+              orderBy('revisionNumber', 'desc'),
+              limit(1)
+            );
+
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+              const latestRevision = querySnapshot.docs[0].data();
+              console.log('Found latest revision:', latestRevision);
+
+              // Use the 'after' state from the latest revision
+              if (latestRevision.changes && latestRevision.changes.after) {
+                console.log('Using latest revision state');
+                store.updateDraftQuizEntry({
+                  ...latestRevision.changes.after,
+                  id: itemId, // Ensure we keep the original ID
+                  version: latestRevision.revisionNumber, // Use the revision number as version
+                  status: draftItem.status // Keep the current status
+                });
+                return;
+              }
+            }
+
+            // If no revision history or no 'after' state, use the draft item
+            // but ensure we're using the latest version from the store
+            console.log('Using latest draft item state');
+            store.updateDraftQuizEntry({
+              ...draftItem,
+              version: draftItem.version || 1
+            });
             return;
           }
 

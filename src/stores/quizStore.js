@@ -323,36 +323,46 @@ export const quizStore = defineStore('quiz', {
                         where('status', '==', 'draft'),
                         where('status', '==', 'pending'),
                         where('status', '==', 'deleted')
-                    )
+                    ),
+                    orderBy('timestamp', 'desc') // Order by timestamp descending
                 );
                 const querySnapshot = await getDocs(q);
 
-                // Log the raw results with version numbers
-                console.log('Raw query results with versions:', querySnapshot.docs.map(doc => {
+                // Group items by title to handle multiple versions
+                const itemsByTitle = new Map();
+                querySnapshot.docs.forEach(doc => {
                     const data = doc.data();
-                    return {
-                        id: doc.id,
-                        status: data.status,
-                        version: data.version || 1, // Ensure version is at least 1
-                        title: data.title
-                    };
-                }));
-
-                this.draftQuizItems = querySnapshot.docs.map(doc => {
-                    const data = doc.data();
-                    return {
+                    const title = data.title;
+                    if (!itemsByTitle.has(title)) {
+                        itemsByTitle.set(title, []);
+                    }
+                    itemsByTitle.get(title).push({
                         id: doc.id,
                         ...data,
                         version: data.version || 1 // Ensure version is at least 1
-                    };
+                    });
                 });
+
+                // For each title, keep only the latest version
+                this.draftQuizItems = Array.from(itemsByTitle.values())
+                    .map(versions => {
+                        // Sort by version number (descending) and then by timestamp (descending)
+                        versions.sort((a, b) => {
+                            if (a.version !== b.version) {
+                                return b.version - a.version;
+                            }
+                            return (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0);
+                        });
+                        return versions[0]; // Return the latest version
+                    });
 
                 // Log processed items with versions
                 console.log('Processed draft/pending/deleted items with versions:', this.draftQuizItems.map(item => ({
                     id: item.id,
                     status: item.status,
                     version: item.version,
-                    title: item.title
+                    title: item.title,
+                    timestamp: item.timestamp
                 })));
 
                 return this.draftQuizItems;
