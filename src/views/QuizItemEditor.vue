@@ -976,7 +976,14 @@ export default {
           console.warn('Entry has validation errors:', validation.errors);
         }
 
-        console.log('Saving draft with version message:', versionMessage);
+        // Increment version if this is not the first save
+        if (this.hasBeenSaved) {
+          this.store.draftQuizEntry.version = (this.store.draftQuizEntry.version || 1) + 1;
+        } else {
+          this.store.draftQuizEntry.version = 1;
+        }
+
+        console.log('Saving draft with version:', this.store.draftQuizEntry.version);
         const draftId = await this.store.saveDraftQuizEntry();
         console.log('Draft saved with ID:', draftId);
 
@@ -1000,12 +1007,13 @@ export default {
           show: true,
           type: this.validationState.isValid ? 'success' : 'caution',
           message: this.validationState.isValid
-            ? 'Draft saved successfully!'
-            : 'Draft saved with validation errors: ' + this.validationState.errors.join(', ')
+            ? `Draft saved successfully! (Version ${this.store.draftQuizEntry.version})`
+            : `Draft saved with validation errors: ${this.validationState.errors.join(', ')} (Version ${this.store.draftQuizEntry.version})`
         };
 
         console.log('Save process completed successfully:', {
           draftId,
+          version: this.store.draftQuizEntry.version,
           validationState: this.validationState,
           submitStatus: this.submitStatus
         });
