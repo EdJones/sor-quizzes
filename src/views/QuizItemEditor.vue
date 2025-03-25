@@ -603,7 +603,7 @@ export default {
         if (itemId && itemId !== 'new') {
           // First check if it's a permanent quiz item
           const permanentItem = quizEntries.find(item =>
-            item.id.toString() === itemId.toString()
+            item.id && item.id.toString() === itemId.toString()
           );
 
           if (permanentItem) {
@@ -621,11 +621,15 @@ export default {
           await store.fetchDraftQuizItems();
 
           // Log all draft items for debugging
-          const draftIds = store.draftQuizItems.map(d => d.id);
+          const draftIds = store.draftQuizItems.map(d => d.id).filter(id => id !== null);
           console.log('Available drafts:', draftIds);
 
-          // Check if it's a draft item
-          const draftItem = store.draftQuizItems.find(item => item.id === itemId);
+          // Check if it's a draft item and not deleted
+          const draftItem = store.draftQuizItems.find(item =>
+            item.id &&
+            item.id.toString() === itemId.toString() &&
+            item.status !== 'deleted'
+          );
 
           if (draftItem) {
             console.log('Found draft item:', draftItem.id);
@@ -633,12 +637,12 @@ export default {
             return;
           }
 
-          // If we get here, the item was not found in either permanent or draft items
-          console.warn('Item not found:', itemId);
+          // If we get here, the item was not found or is deleted
+          console.warn('Item not found or deleted:', itemId);
           store.saveStatus = {
             show: true,
             type: 'error',
-            message: `Quiz item ${itemId} was not found in either permanent or draft items.`
+            message: `Quiz item ${itemId} was not found or has been deleted.`
           };
         }
 
