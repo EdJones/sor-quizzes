@@ -1035,6 +1035,44 @@ export const quizStore = defineStore('quiz', {
                     throw new Error('Quiz item is not pending review');
                 }
 
+                // Update the status to accepted
+                await updateDoc(quizRef, {
+                    status: 'accepted',
+                    acceptedAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+
+                // Record this change in version history
+                this.draftQuizEntry = { ...quizData, id: itemId };
+                await this.recordQuizEdit('Quiz item accepted');
+
+                // Refresh the draft items list
+                await this.fetchDraftQuizItems();
+
+                return true;
+            } catch (error) {
+                console.error('Error accepting quiz item:', error);
+                throw error;
+            }
+        },
+
+        async approveQuizItem(itemId) {
+            try {
+                // Get the quiz item
+                const quizRef = doc(db, 'quizEntries', itemId);
+                const quizDoc = await getDoc(quizRef);
+
+                if (!quizDoc.exists()) {
+                    throw new Error('Quiz item not found');
+                }
+
+                const quizData = quizDoc.data();
+
+                // Verify it's an accepted item
+                if (quizData.status !== 'accepted') {
+                    throw new Error('Quiz item must be accepted before it can be approved');
+                }
+
                 // Update the status to approved
                 await updateDoc(quizRef, {
                     status: 'approved',
@@ -1060,7 +1098,7 @@ export const quizStore = defineStore('quiz', {
 
                 return true;
             } catch (error) {
-                console.error('Error accepting quiz item:', error);
+                console.error('Error approving quiz item:', error);
                 throw error;
             }
         },

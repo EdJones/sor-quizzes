@@ -91,6 +91,12 @@
                                     Reject
                                 </button>
                             </template>
+                            <template v-if="entry.status === 'accepted'">
+                                <button @click="approveEntry(entry)"
+                                    class="text-blue-400 hover:text-blue-300 transition-colors duration-200">
+                                    Approve
+                                </button>
+                            </template>
                             <template v-if="entry.status !== 'deleted'">
                                 <button @click="deleteEntry(entry)"
                                     class="text-purple-400 hover:text-purple-300 transition-colors duration-200">
@@ -231,6 +237,18 @@ const rejectEntry = async (entry) => {
         await store.fetchDraftQuizItems(); // Refresh the list
     } catch (error) {
         console.error('Error rejecting entry:', error);
+    }
+};
+
+// Approve entry
+const approveEntry = async (entry) => {
+    try {
+        await store.approveQuizItem(entry.id);
+        // Show success message
+        alert('Quiz item approved successfully!');
+    } catch (error) {
+        console.error('Error approving entry:', error);
+        alert('Error approving quiz item: ' + error.message);
     }
 };
 
