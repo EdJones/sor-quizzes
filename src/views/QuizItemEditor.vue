@@ -654,6 +654,7 @@ export default {
               if (latestRevision.changes && latestRevision.changes.after) {
                 console.log('Using latest revision state');
                 const afterState = latestRevision.changes.after;
+
                 // Ensure citations array exists and is properly initialized
                 if (!afterState.citations) {
                   afterState.citations = [];
@@ -666,6 +667,19 @@ export default {
                   year: citation.year || '',
                   imageUrl: citation.imageUrl || '',
                   ...citation // Preserve any additional fields
+                }));
+
+                // Ensure resources array exists and is properly initialized
+                if (!afterState.resources) {
+                  afterState.resources = [];
+                }
+                // Ensure each resource has all required fields
+                afterState.resources = afterState.resources.map(resource => ({
+                  title: resource.title || '',
+                  author: resource.author || '',
+                  url: resource.url || '',
+                  description: resource.description || '',
+                  ...resource // Preserve any additional fields
                 }));
 
                 store.updateDraftQuizEntry({
