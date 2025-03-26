@@ -653,8 +653,23 @@ export default {
               // Use the 'after' state from the latest revision
               if (latestRevision.changes && latestRevision.changes.after) {
                 console.log('Using latest revision state');
+                const afterState = latestRevision.changes.after;
+                // Ensure citations array exists and is properly initialized
+                if (!afterState.citations) {
+                  afterState.citations = [];
+                }
+                // Ensure each citation has all required fields
+                afterState.citations = afterState.citations.map(citation => ({
+                  title: citation.title || '',
+                  author: citation.author || '',
+                  url: citation.url || '',
+                  year: citation.year || '',
+                  imageUrl: citation.imageUrl || '',
+                  ...citation // Preserve any additional fields
+                }));
+
                 store.updateDraftQuizEntry({
-                  ...latestRevision.changes.after,
+                  ...afterState,
                   id: itemId, // Ensure we keep the original ID
                   version: latestRevision.revisionNumber, // Use the revision number as version
                   status: draftItem.status // Keep the current status
