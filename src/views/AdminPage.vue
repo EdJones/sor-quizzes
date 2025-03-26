@@ -10,6 +10,7 @@
                     <select v-model="filters.status" class="w-full bg-gray-700 text-white rounded-md border-gray-600">
                         <option value="all">All</option>
                         <option value="pending">Pending Review</option>
+                        <option value="accepted">Accepted</option>
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
                         <option value="deleted">Deleted</option>
@@ -63,6 +64,7 @@
                                 {
                                     'bg-yellow-200 text-yellow-800': entry.status === 'pending',
                                     'bg-green-200 text-green-800': entry.status === 'approved',
+                                    'bg-blue-200 text-blue-800': entry.status === 'accepted',
                                     'bg-red-200 text-red-800': entry.status === 'rejected',
                                     'bg-gray-200 text-gray-800': entry.status === 'draft',
                                     'bg-purple-200 text-purple-800': entry.status === 'deleted'

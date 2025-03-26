@@ -315,31 +315,53 @@ export const quizStore = defineStore('quiz', {
             try {
                 console.log('Fetching draft quiz items...');
                 const draftsRef = collection(db, 'quizEntries');
+                const permanentRef = collection(db, 'permanentQuizEntries');
+
                 // Log the query parameters
                 console.log('Querying for status == draft, pending, or deleted');
 
-                const q = query(draftsRef,
+                // Fetch draft items
+                const draftsQuery = query(draftsRef,
                     or(
                         where('status', '==', 'draft'),
                         where('status', '==', 'pending'),
                         where('status', '==', 'deleted')
                     ),
-                    orderBy('timestamp', 'desc') // Order by timestamp descending
+                    orderBy('timestamp', 'desc')
                 );
-                const querySnapshot = await getDocs(q);
+                const draftsSnapshot = await getDocs(draftsQuery);
+
+                // Fetch permanent (approved) items
+                const permanentQuery = query(permanentRef,
+                    where('status', '==', 'approved'),
+                    orderBy('timestamp', 'desc')
+                );
+                const permanentSnapshot = await getDocs(permanentQuery);
+
+                // Combine both sets of items
+                const allItems = [
+                    ...draftsSnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                        isPermanent: false
+                    })),
+                    ...permanentSnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                        isPermanent: true
+                    }))
+                ];
 
                 // Group items by title to handle multiple versions
                 const itemsByTitle = new Map();
-                querySnapshot.docs.forEach(doc => {
-                    const data = doc.data();
-                    const title = data.title;
+                allItems.forEach(item => {
+                    const title = item.title;
                     if (!itemsByTitle.has(title)) {
                         itemsByTitle.set(title, []);
                     }
                     itemsByTitle.get(title).push({
-                        id: doc.id,
-                        ...data,
-                        version: data.version || 1 // Ensure version is at least 1
+                        ...item,
+                        version: item.version || 1 // Ensure version is at least 1
                     });
                 });
 
@@ -357,12 +379,13 @@ export const quizStore = defineStore('quiz', {
                     });
 
                 // Log processed items with versions
-                console.log('Processed draft/pending/deleted items with versions:', this.draftQuizItems.map(item => ({
+                console.log('Processed items with versions:', this.draftQuizItems.map(item => ({
                     id: item.id,
                     status: item.status,
                     version: item.version,
                     title: item.title,
-                    timestamp: item.timestamp
+                    timestamp: item.timestamp,
+                    isPermanent: item.isPermanent
                 })));
 
                 return this.draftQuizItems;
