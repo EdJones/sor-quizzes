@@ -569,6 +569,8 @@ import { useRoute, useRouter } from 'vue-router';
 import QuizSelector from '../components/QuizSelector.vue';
 import VersionInfoModal from '../components/VersionInfoModal.vue';
 import VersionHistoryModal from '../components/VersionHistoryModal.vue';
+import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 
 export default {
   components: {
@@ -603,7 +605,7 @@ export default {
         if (itemId && itemId !== 'new') {
           // First check if it's a permanent quiz item
           const permanentItem = quizEntries.find(item =>
-            item.id.toString() === itemId.toString()
+            item.id && item.id.toString() === itemId.toString()
           );
 
           if (permanentItem) {
@@ -621,24 +623,91 @@ export default {
           await store.fetchDraftQuizItems();
 
           // Log all draft items for debugging
-          const draftIds = store.draftQuizItems.map(d => d.id);
+          const draftIds = store.draftQuizItems.map(d => d.id).filter(id => id !== null);
           console.log('Available drafts:', draftIds);
 
-          // Check if it's a draft item
-          const draftItem = store.draftQuizItems.find(item => item.id === itemId);
+          // Check if it's a draft item and not deleted
+          const draftItem = store.draftQuizItems.find(item =>
+            item.id &&
+            item.id.toString() === itemId.toString() &&
+            item.status !== 'deleted'
+          );
 
           if (draftItem) {
             console.log('Found draft item:', draftItem.id);
-            store.updateDraftQuizEntry(draftItem);
+
+            // Fetch the latest revision from quizEditHistory
+            const editHistoryRef = collection(db, 'quizEditHistory');
+            const q = query(
+              editHistoryRef,
+              where('quizItemId', '==', itemId),
+              orderBy('revisionNumber', 'desc'),
+              limit(1)
+            );
+
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+              const latestRevision = querySnapshot.docs[0].data();
+              console.log('Found latest revision:', latestRevision);
+
+              // Use the 'after' state from the latest revision
+              if (latestRevision.changes && latestRevision.changes.after) {
+                console.log('Using latest revision state');
+                const afterState = latestRevision.changes.after;
+
+                // Ensure citations array exists and is properly initialized
+                if (!afterState.citations) {
+                  afterState.citations = [];
+                }
+                // Ensure each citation has all required fields
+                afterState.citations = afterState.citations.map(citation => ({
+                  title: citation.title || '',
+                  author: citation.author || '',
+                  url: citation.url || '',
+                  year: citation.year || '',
+                  imageUrl: citation.imageUrl || '',
+                  ...citation // Preserve any additional fields
+                }));
+
+                // Ensure resources array exists and is properly initialized
+                if (!afterState.resources) {
+                  afterState.resources = [];
+                }
+                // Ensure each resource has all required fields
+                afterState.resources = afterState.resources.map(resource => ({
+                  title: resource.title || '',
+                  author: resource.author || '',
+                  url: resource.url || '',
+                  description: resource.description || '',
+                  ...resource // Preserve any additional fields
+                }));
+
+                store.updateDraftQuizEntry({
+                  ...afterState,
+                  id: itemId, // Ensure we keep the original ID
+                  version: latestRevision.revisionNumber, // Use the revision number as version
+                  status: draftItem.status // Keep the current status
+                });
+                return;
+              }
+            }
+
+            // If no revision history or no 'after' state, use the draft item
+            // but ensure we're using the latest version from the store
+            console.log('Using latest draft item state');
+            store.updateDraftQuizEntry({
+              ...draftItem,
+              version: draftItem.version || 1
+            });
             return;
           }
 
-          // If we get here, the item was not found in either permanent or draft items
-          console.warn('Item not found:', itemId);
+          // If we get here, the item was not found or is deleted
+          console.warn('Item not found or deleted:', itemId);
           store.saveStatus = {
             show: true,
             type: 'error',
-            message: `Quiz item ${itemId} was not found in either permanent or draft items.`
+            message: `Quiz item ${itemId} was not found or has been deleted.`
           };
         }
 
@@ -972,7 +1041,14 @@ export default {
           console.warn('Entry has validation errors:', validation.errors);
         }
 
-        console.log('Saving draft with version message:', versionMessage);
+        // Increment version if this is not the first save
+        if (this.hasBeenSaved) {
+          this.store.draftQuizEntry.version = (this.store.draftQuizEntry.version || 1) + 1;
+        } else {
+          this.store.draftQuizEntry.version = 1;
+        }
+
+        console.log('Saving draft with version:', this.store.draftQuizEntry.version);
         const draftId = await this.store.saveDraftQuizEntry();
         console.log('Draft saved with ID:', draftId);
 
@@ -996,12 +1072,13 @@ export default {
           show: true,
           type: this.validationState.isValid ? 'success' : 'caution',
           message: this.validationState.isValid
-            ? 'Draft saved successfully!'
-            : 'Draft saved with validation errors: ' + this.validationState.errors.join(', ')
+            ? `Draft saved successfully! (Version ${this.store.draftQuizEntry.version})`
+            : `Draft saved with validation errors: ${this.validationState.errors.join(', ')} (Version ${this.store.draftQuizEntry.version})`
         };
 
         console.log('Save process completed successfully:', {
           draftId,
+          version: this.store.draftQuizEntry.version,
           validationState: this.validationState,
           submitStatus: this.submitStatus
         });

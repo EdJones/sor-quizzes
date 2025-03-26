@@ -5,6 +5,7 @@ import Home from '../components/Home.vue';
 import GitHubIssues from '../components/GitHubIssues.vue';
 import QuizSetView from '../views/QuizSetView.vue';
 import QuizItemEditor from '../views/QuizItemEditor.vue';
+import QuizItemSelectorView from '../views/QuizItemSelectorView.vue';
 import AdminPage from '../views/AdminPage.vue';
 import AboutView from '../views/AboutView.vue';
 import OpenSourceView from '../views/OpenSourceView.vue';
@@ -66,6 +67,18 @@ const routes = [
     name: 'admin',
     component: AdminPage,
     beforeEnter: requireAdmin
+  },
+  {
+    path: '/quiz-item-selector',
+    name: 'quizItemSelector',
+    component: QuizItemSelectorView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/quiz-item-editor/:id?',
+    name: 'quizItemEditor',
+    component: QuizItemEditor,
+    meta: { requiresAuth: true }
   },
   // Catch all route for 404 - must be last
   {

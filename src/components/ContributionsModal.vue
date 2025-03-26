@@ -63,7 +63,7 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <h3 class="font-medium text-gray-900 dark:text-white">{{ item.title || 'Untitled Question'
-                            }}</h3>
+                                }}</h3>
                             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ item.Question }}</p>
                         </div>
                         <div class="flex items-center gap-2">
@@ -93,7 +93,7 @@
                         </div>
                     </div>
                     <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                        Created {{ item.timestamp.toDate().toLocaleDateString() }}
+                        Created {{ item?.timestamp?.toDate?.()?.toLocaleDateString() || 'Unknown date' }}
                     </div>
                 </div>
             </div>

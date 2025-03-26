@@ -642,53 +642,12 @@ const toggleQuestions = (setName) => {
 
 // handle new quiz item
 const handleNewQuizItem = () => {
-    quizStore().resetDraftQuizEntry();
-    router.push({
-        path: '/edit-item/new',
-        query: { new: 'true' }
-    });
+    router.push({ name: 'quizItemSelector' });
 };
 
 // Update handleEditClick function
 const handleEditClick = async (quizSetOrItemId) => {
-    // If the argument is a string, it's a quiz item ID
-    if (typeof quizSetOrItemId === 'string' || typeof quizSetOrItemId === 'number') {
-        router.push(`/edit-item/${quizSetOrItemId}`);
-        return;
-    }
-
-    // Otherwise, it's a quiz set
-    const quizSet = quizSetOrItemId;
-    if (isUserOwnedDraft(quizSet)) {
-        // Navigate directly to edit the draft
-        router.push(`/edit-item/${quizSet.id}`);
-    } else {
-        try {
-            // Create a copy of the quiz set for proposing changes
-            const quizSetCopy = {
-                setName: quizSet.setName,
-                basicMode: quizSet.basicMode,
-                items: [...quizSet.items],
-                podcastEpisodes: quizSet.podcastEpisodes || [],
-                resource: quizSet.resource || null,
-                originalId: quizSet.id || quizSet.setName,
-                isDraft: true,
-                inProgress: true,
-                createdBy: auth.user?.uid || 'anonymous',
-                createdAt: new Date().toISOString(),
-                status: 'proposed'
-            };
-
-            // Save to Firebase
-            const docRef = await addDoc(collection(db, 'quizSets'), quizSetCopy);
-
-            // Navigate to edit the new copy
-            router.push(`/edit-item/${docRef.id}`);
-        } catch (error) {
-            console.error('Error creating proposal:', error);
-            alert('Failed to create proposal. Please try again.');
-        }
-    }
+    router.push({ name: 'quizItemSelector' });
 };
 
 // Function to check if a quiz set is user-owned and in draft status

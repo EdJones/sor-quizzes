@@ -315,44 +315,77 @@ export const quizStore = defineStore('quiz', {
             try {
                 console.log('Fetching draft quiz items...');
                 const draftsRef = collection(db, 'quizEntries');
+                const permanentRef = collection(db, 'permanentQuizEntries');
+
                 // Log the query parameters
                 console.log('Querying for status == draft, pending, or deleted');
 
-                const q = query(draftsRef,
+                // Fetch draft items
+                const draftsQuery = query(draftsRef,
                     or(
                         where('status', '==', 'draft'),
                         where('status', '==', 'pending'),
                         where('status', '==', 'deleted')
-                    )
+                    ),
+                    orderBy('timestamp', 'desc')
                 );
-                const querySnapshot = await getDocs(q);
+                const draftsSnapshot = await getDocs(draftsQuery);
 
-                // Log the raw results with version numbers
-                console.log('Raw query results with versions:', querySnapshot.docs.map(doc => {
-                    const data = doc.data();
-                    return {
-                        id: doc.id,
-                        status: data.status,
-                        version: data.version || 1, // Ensure version is at least 1
-                        title: data.title
-                    };
-                }));
+                // Fetch permanent (approved) items
+                const permanentQuery = query(permanentRef,
+                    where('status', '==', 'approved'),
+                    orderBy('timestamp', 'desc')
+                );
+                const permanentSnapshot = await getDocs(permanentQuery);
 
-                this.draftQuizItems = querySnapshot.docs.map(doc => {
-                    const data = doc.data();
-                    return {
+                // Combine both sets of items
+                const allItems = [
+                    ...draftsSnapshot.docs.map(doc => ({
                         id: doc.id,
-                        ...data,
-                        version: data.version || 1 // Ensure version is at least 1
-                    };
+                        ...doc.data(),
+                        isPermanent: false
+                    })),
+                    ...permanentSnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                        isPermanent: true
+                    }))
+                ];
+
+                // Group items by title to handle multiple versions
+                const itemsByTitle = new Map();
+                allItems.forEach(item => {
+                    const title = item.title;
+                    if (!itemsByTitle.has(title)) {
+                        itemsByTitle.set(title, []);
+                    }
+                    itemsByTitle.get(title).push({
+                        ...item,
+                        version: item.version || 1 // Ensure version is at least 1
+                    });
                 });
 
+                // For each title, keep only the latest version
+                this.draftQuizItems = Array.from(itemsByTitle.values())
+                    .map(versions => {
+                        // Sort by version number (descending) and then by timestamp (descending)
+                        versions.sort((a, b) => {
+                            if (a.version !== b.version) {
+                                return b.version - a.version;
+                            }
+                            return (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0);
+                        });
+                        return versions[0]; // Return the latest version
+                    });
+
                 // Log processed items with versions
-                console.log('Processed draft/pending/deleted items with versions:', this.draftQuizItems.map(item => ({
+                console.log('Processed items with versions:', this.draftQuizItems.map(item => ({
                     id: item.id,
                     status: item.status,
                     version: item.version,
-                    title: item.title
+                    title: item.title,
+                    timestamp: item.timestamp,
+                    isPermanent: item.isPermanent
                 })));
 
                 return this.draftQuizItems;
@@ -441,29 +474,8 @@ export const quizStore = defineStore('quiz', {
                     throw new Error('No draft entry to save');
                 }
 
-                // Prepare the entry for saving
-                const entryToSave = {
-                    ...this.draftQuizEntry,
-                    updatedAt: serverTimestamp()
-                };
-
                 // Get the current ID from the entry
-                const currentId = entryToSave.id;
-                console.log('Preparing to save entry:', {
-                    currentId,
-                    entryToSave: {
-                        id: entryToSave.id,
-                        title: entryToSave.title,
-                        status: entryToSave.status,
-                        version: entryToSave.version,
-                        hasRequiredFields: Boolean(
-                            entryToSave.title &&
-                            entryToSave.Question &&
-                            entryToSave.answer_type &&
-                            entryToSave.correctAnswers?.length > 0
-                        )
-                    }
-                });
+                const currentId = this.draftQuizEntry.id;
 
                 // Check if we have an authenticated user
                 if (!authStore.user) {
@@ -471,7 +483,7 @@ export const quizStore = defineStore('quiz', {
                     throw new Error('You must be logged in to save entries');
                 }
 
-                // Create new entry if currentId is null or undefined
+                // If this is a new entry (no ID)
                 if (!currentId) {
                     console.log('Creating new entry with user details:', {
                         userId: authStore.user.uid,
@@ -479,19 +491,18 @@ export const quizStore = defineStore('quiz', {
                     });
 
                     const newEntry = {
-                        ...entryToSave,
+                        ...this.draftQuizEntry,
                         status: 'draft',
                         createdAt: serverTimestamp(),
-                        timestamp: serverTimestamp(), // Add timestamp for backward compatibility
+                        timestamp: serverTimestamp(),
                         userId: authStore.user.uid,
                         userEmail: authStore.user.email,
-                        version: 1
+                        version: 1 // Start at version 1 for new entries
                     };
 
                     console.log('Attempting to create new entry in Firestore:', {
                         collection: 'quizEntries',
                         entry: {
-                            id: newEntry.id,
                             title: newEntry.title,
                             status: newEntry.status,
                             version: newEntry.version
@@ -507,10 +518,19 @@ export const quizStore = defineStore('quiz', {
                     return docRef.id;
                 }
 
-                // Update existing entry
+                // For existing entries, increment the version
+                const currentVersion = this.draftQuizEntry.version || 1;
+                const entryToSave = {
+                    ...this.draftQuizEntry,
+                    updatedAt: serverTimestamp(),
+                    timestamp: serverTimestamp(), // Update timestamp for sorting
+                    version: currentVersion + 1 // Increment version
+                };
+
                 console.log('Updating existing entry:', {
                     entryId: currentId,
-                    currentVersion: entryToSave.version
+                    currentVersion: currentVersion,
+                    newVersion: entryToSave.version
                 });
 
                 const docRef = doc(db, 'quizEntries', currentId);
@@ -519,6 +539,7 @@ export const quizStore = defineStore('quiz', {
 
                 // Update the last saved entry
                 this.lastSavedDraftQuizEntry = { ...entryToSave };
+                this.draftQuizEntry = { ...entryToSave }; // Also update current draft
                 return currentId;
             } catch (error) {
                 console.error('Error in saveDraftQuizEntry:', {
@@ -797,14 +818,17 @@ export const quizStore = defineStore('quiz', {
                 currentEntry: this.draftQuizEntry
             });
 
-            // When copying from a template, we want to create a new entry
-            // So we explicitly set id to null (not undefined)
+            // When copying from a template (no id), we want to create a new entry
+            // Otherwise, maintain the existing version
+            const isNewFromTemplate = !entry.id && !entry.originalId;
+
             const updatedEntry = {
                 ...this.draftQuizEntry,  // Start with current draft to preserve existing values
                 ...entry,                 // Override with new values
-                id: null,                 // For new entries from templates, explicitly set id to null
-                version: 1,              // Start version at 1 for new entries
-                status: 'draft',         // Ensure status is draft
+                // Only reset ID and version for new items from templates
+                id: isNewFromTemplate ? null : entry.id,
+                version: isNewFromTemplate ? 1 : (entry.version || 1),
+                status: entry.status || 'draft',
                 // Initialize correctAnswers array for multiple select questions
                 correctAnswers: entry.answer_type === 'ms' ? (entry.correctAnswers || []) : []
             };
@@ -815,6 +839,7 @@ export const quizStore = defineStore('quiz', {
                 version: updatedEntry.version,
                 title: updatedEntry.title,
                 status: updatedEntry.status,
+                isNewFromTemplate: isNewFromTemplate,
                 previousId: this.draftQuizEntry.id,  // Log previous ID for debugging
                 hasRequiredFields: {
                     title: !!updatedEntry.title,
