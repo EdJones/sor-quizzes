@@ -2000,6 +2000,77 @@ export const quizEntries = [{
     }
 },
 {
+    title: "Linguistics",
+    subtitle: "",
+    id: 50,
+    Question: "Which of the following best describes the concept of allomorphs?",
+    questionP2: "",
+    answer_type: "mc",
+    option1: "Different words that have the same meaning in different languages.",
+    option2: "Variations of a morpheme that appear in different phonological or grammatical contexts.",
+    option3: "Words that share the same root but have different affixes.",
+    option4: "The smallest units of meaning in a language that cannot be broken down further.",
+    option5: "Fifth option",
+    correctAnswer: 2,
+    correctAnswers: [],
+    explanation: "Allomorphy refers to the different forms a morpheme can take depending on its surroundings.\n\nFor example, ‘syn’, like in ‘synchrony’ means ‘together’ but is changed to ‘sym’ before certain letters (to ease pronunciation) resulting in words like ‘symphony’ and ‘sympathetic’. - @RyonWLeyshon on X.\n",
+    explanation2: "",
+    videoUrl: "",
+    videoId: "",
+    image: "",
+    imageUrl: "",
+    imageAltText: "",
+    podcastEpisode: {
+        audioUrl: "",
+        title: "Episode Title",
+        description: "",
+        EpisodeUrl: "",
+        podcastStartTime: 0
+    },
+    podcastEpisode2: {
+        description: "",
+        EpisodeUrl: "",
+        audioUrl: "",
+        title: "",
+        podcastStartTime: 0
+    },
+    cautionLevel: "",
+    caution: "",
+    citations: [],
+    ref1: "",
+    ref2: "",
+    resources: [
+        {
+            title: "Do morphemes always behave themselves?",
+            url: "https://x.com/RyonWLeyshon/status/1904799593826517291",
+            description: "Brilliant intro to allomorphs.",
+            author: "@RyonWLeyshon"
+        }
+    ],
+    closingText: "",
+    closingText2: "",
+    modal: "",
+    status: "draft",
+    version: 3,
+    id: null,
+    userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+    updatedAt: {
+        seconds: 1742991528,
+        nanoseconds: 633000000
+    },
+    userEmail: "ed.jones@gmail.com",
+    createdAt: {
+        seconds: 1742991528,
+        nanoseconds: 633000000
+    },
+    timestamp: {
+        seconds: 1742991528,
+        nanoseconds: 633000000
+    },
+    isPermanent: false,
+    originalId: "twUREPJ0nvIhbQXAeHRj"
+},
+{
     title: "Learning Science",
     subtitle: "",
     id: 2000, // New ID for the new quiz entry
