@@ -1878,7 +1878,7 @@ export const quizEntries = [{
     option3: "Third option",
     option4: "Fourth option",
     option5: "Fifth option",
-    correctAnswer: 1,
+    correctAnswer: 2,
     correctAnswers: [],
     explanation: "It's these details that can often hang up teachers working with struggling students. Hopefully experts will weigh in here with what teachers should know.",
     explanation2: "Did you answer: \"A continuous, voiced speech sound produced by an open mouth with airflow unobstructed by your teeth, lips, tongue or airflow\"?",
@@ -1925,6 +1925,79 @@ export const quizEntries = [{
     userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
     originalId: "mZVtSMFOgWfHyoQGgM3x",
     isAnonymous: false
+},
+{
+    title: "Causes of Dyslexia",
+    subtitle: "",
+    id: 49,
+    Question: "T/F: Researchers have a solid understanding of the neurobiological mechanisms which underly dyslexia.",
+    questionP2: "",
+    answer_type: "mc",
+    option1: "True",
+    option2: "False",
+    option3: "Third option",
+    option4: "Fourth option",
+    option5: "Fifth option",
+    correctAnswer: 1,
+    explanation: "Today, the Phonological Deficit Hypothesis (PDH) is the primary--and quite successful--scientific explanation behind dyslexia. However, the underlying neurobiological components of PDH are less well understood.",
+    explanation2: "It's critical to remember that Phonology is far more than just phonemic awareness. As Share says, \"There have unquestionably been genuine breakthroughs in the understanding the neurobiological circuitry of reading and dyslexia. However, the initial hype that neuroimaging would soon uncover the true “cause” of dyslexia has since been tempered by an appreciation of neuroplasticity—the brain became a dependent (and not only independent) variable and no longer a constant in the dyslexia equation.\"",
+    videoUrl: "",
+    videoId: "",
+    image: "",
+    imageUrl: "",
+    imageAltText: "",
+    podcastEpisode: {
+        podcastStartTime: 0,
+        title: "Episode Title",
+        audioUrl: "",
+        description: "",
+        EpisodeUrl: ""
+    },
+    podcastEpisode2: {
+        title: "",
+        description: "",
+        audioUrl: "",
+        EpisodeUrl: "",
+        podcastStartTime: 0
+    },
+    cautionLevel: "",
+    caution: "",
+    citations: {
+        0: {
+            url: "https://www.mdpi.com/2076-3425/11/11/1510",
+            imageUrl: "",
+            year: "2021",
+            author: "David L. Share",
+            title: "Common Misconceptions about the Phonological Deficit Theory of Dyslexia"
+        }
+    },
+    ref1: "",
+    ref2: "",
+    resources: {},
+    closingText: "",
+    closingText2: "",
+    modal: "",
+    status: "approved",
+    version: 8,
+    userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+    submittedAt: {
+        seconds: 1742905868,
+        nanoseconds: 257000000
+    },
+    timestamp: {
+        nanoseconds: 257000000,
+        seconds: 1742905868
+    },
+    createdAt: {
+        _methodName: "serverTimestamp"
+    },
+    id: "juynlQ5gDiMdbkXvLTQk",
+    userEmail: "ed.jones@gmail.com",
+    correctAnswers: [],
+    updatedAt: {
+        nanoseconds: 257000000,
+        seconds: 1742905868
+    }
 },
 {
     title: "Learning Science",
