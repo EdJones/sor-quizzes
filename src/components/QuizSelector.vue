@@ -15,8 +15,8 @@
         <div class="flex flex-col gap-2">
             <label for="template-select" class="text-stone-400">Choose a starting point:</label>
             <CustomDropdown v-model="selectedTemplate" @change="useTemplate" :userDrafts="userDraftQuizItems"
-                :pendingItems="pendingQuizItems" :otherDrafts="otherDraftQuizItems" :permanentItems="permanentQuizItems"
-                :isLoading="isLoadingDrafts" :error="draftLoadError" />
+                :pendingItems="pendingQuizItems" :otherDrafts="otherDraftQuizItems" :acceptedItems="acceptedQuizItems"
+                :permanentItems="permanentQuizItems" :isLoading="isLoadingDrafts" :error="draftLoadError" />
         </div>
     </template>
 </template>
@@ -72,6 +72,12 @@ const pendingQuizItems = computed(() => {
 
     console.log('Pending items:', items);
     return items;
+});
+
+const acceptedQuizItems = computed(() => {
+    return store.draftQuizItems
+        .filter(item => item.status === 'accepted')
+        .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
 });
 
 const permanentQuizItems = computed(() => {

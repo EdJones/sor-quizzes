@@ -135,6 +135,9 @@ const getStatusClass = (status) => {
     const classes = {
         draft: 'bg-blue-900 text-blue-200',
         pending: 'bg-yellow-900 text-yellow-200',
+        accepted: 'bg-blue-900 text-blue-200',
+        approved: 'bg-green-900 text-green-200',
+        rejected: 'bg-red-900 text-red-200',
         deleted: 'bg-red-900 text-red-200'
     };
     return classes[status] || 'bg-gray-900 text-gray-200';

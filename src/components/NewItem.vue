@@ -629,11 +629,17 @@ export default {
         .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
     });
 
+    const acceptedQuizItems = computed(() => {
+      return store.draftQuizItems
+        .filter(item => item.status === 'accepted')
+        .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+    });
+
     onMounted(async () => {
       await store.fetchDraftQuizItems();
     });
 
-    return { store, auth, userDraftQuizItems, otherDraftQuizItems, pendingQuizItems };
+    return { store, auth, userDraftQuizItems, otherDraftQuizItems, pendingQuizItems, acceptedQuizItems };
   },
   computed: {
     newEntry: {

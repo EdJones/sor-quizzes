@@ -19,6 +19,7 @@
                     {
                         'bg-gray-200 text-gray-800': quizItemStatus === 'draft',
                         'bg-yellow-200 text-yellow-800': quizItemStatus === 'pending',
+                        'bg-blue-200 text-blue-800': quizItemStatus === 'accepted',
                         'bg-green-200 text-green-800': quizItemStatus === 'approved',
                         'bg-red-200 text-red-800': quizItemStatus === 'rejected'
                     }
