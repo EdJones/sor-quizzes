@@ -108,7 +108,7 @@
                         <!-- Quiz Items List -->
                         <div class="mt-3 space-y-1">
                             <div class="flex justify-between items-center">
-                                <h4 class="text-sm font-medium text-gray-700 text-left">Quiz
+                                <h4 class="text-sm font-medium text-gray-500 text-left">Quiz
                                     Items:
                                 </h4>
                                 <button @click="toggleQuestions(quizSet.setName)"
@@ -123,7 +123,7 @@
                                     </svg>
                                 </button>
                             </div>
-                            <ul class="text-sm text-gray-600 list-disc pl-5 text-left">
+                            <ul class="text-sm text-gray-400 list-disc pl-5 text-left">
                                 <li v-for="itemId in quizSet.items" :key="itemId" class="mb-2">
                                     <div class="truncate relative">
                                         <span class="cursor-pointer hover:text-blue-500"
