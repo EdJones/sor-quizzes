@@ -9,18 +9,11 @@
         <section class="about-section">
             <h2>A community-driven, open-source effort.</h2>
             <ul>
-                <li class="list-none">Repository: <a
-                        href="https://github.com/EdJones/sor-quizzes">https://github.com/EdJones/sor-quizzes</a>
-                </li>
                 <li class="list-none">
                     What is a <RouterLink to="/OpenSource">Culture of Open Source</RouterLink>?
                 </li>
             </ul>
 
-            <p>
-                This app will only make sense when validated and refined by the community. <!--img
-                    src="../src/assets/images/partners.png" alt="Community" class="community-image"-->
-            </p>
         </section>
 
         <section class="about-section">
@@ -49,6 +42,14 @@
             <h2>Contributing</h2>
             <p>
                 Please consider <router-link to="/QuizSetView" class="">making this better</router-link>.
+            </p>
+            <ul>
+                <li class="list-none">Repository: <a
+                        href="https://github.com/EdJones/sor-quizzes">https://github.com/EdJones/sor-quizzes</a>
+                </li>
+            </ul>
+            <p>
+                This app will only make sense when validated and refined by the community.
             </p>
 
         </section>
@@ -112,7 +113,7 @@ export default {
 }
 
 .about-section {
-    margin-bottom: 1rem;
+    margin-bottom: .2rem;
     color: ivory;
     background-color: #222;
     padding: 1rem;
