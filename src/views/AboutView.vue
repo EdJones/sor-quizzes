@@ -11,7 +11,7 @@
             <ul>
                 <li class="list-none">
                     <p @click="showOpenSourceModal" class="text-blue-400 hover:text-blue-300">
-                        What is a Culture of Open Source?
+                        <span class="text-blue-400 hover:text-blue-300">What is a Culture of Open Source?</span>
                     </p>
                 </li>
             </ul>
@@ -49,16 +49,16 @@
         <section class="about-section">
             <h2>Contributing</h2>
             <p>
+                This app will only make sense when validated and refined by the community.
+            </p>
+            <p>
                 Please consider <router-link to="/QuizSetView" class="">making this better</router-link>.
             </p>
             <ul>
-                <li class="list-none">Repository: <a
-                        href="https://github.com/EdJones/sor-quizzes">https://github.com/EdJones/sor-quizzes</a>
+                <li class="list-none text-xs">Repository: <a
+                        href="https://github.com/EdJones/sor-quizzes">github.com/EdJones/sor-quizzes</a>
                 </li>
             </ul>
-            <p>
-                This app will only make sense when validated and refined by the community.
-            </p>
 
         </section>
 
