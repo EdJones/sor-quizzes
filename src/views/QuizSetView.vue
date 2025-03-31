@@ -71,6 +71,14 @@
                     ]">
                         Proposed
                     </button>
+                    <button @click="currentTab = 'new'" :class="[
+                        currentTab === 'new'
+                            ? 'border-blue-500 text-blue-400'
+                            : 'border-transparent text-gray-400 hover:text-gray-300',
+                        'px-4 py-2 text-center border-b-2 font-medium text-sm transition-colors duration-200'
+                    ]">
+                        New Quiz Items
+                    </button>
                 </div>
             </nav>
         </div>
@@ -299,7 +307,7 @@
             </div>
 
             <!-- Proposed Quiz Sets -->
-            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div v-else-if="currentTab === 'proposed'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div v-for="quizSet in proposedQuizSets" :key="quizSet.setName"
                     class="bg-gray-800 rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-200">
                     <div class="flex justify-between items-start mb-3">
@@ -433,6 +441,82 @@
                                 </svg>
                             </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Quiz Items -->
+            <div v-else-if="currentTab === 'new'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-gray-800 rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-200">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="text-lg font-semibold text-white">
+                            New Quiz Items
+                        </h3>
+                        <span class="text-sm text-gray-400">
+                            {{ newQuizItems.length }} items
+                        </span>
+                    </div>
+
+                    <!-- Quiz Items List -->
+                    <div class="mt-3 space-y-1">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-sm font-medium text-gray-300 text-left">Quiz Items:</h4>
+                            <button @click="toggleQuestions('new')"
+                                class="text-sm text-blue-500 hover:text-blue-600 flex items-center">
+                                <span class="mr-1">{{ expandedSets.has('new') ? 'Hide' : 'Show' }}
+                                    Questions</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
+                                    :class="{ 'transform rotate-180': expandedSets.has('new') }" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
+                        <ul class="mt-2 space-y-2">
+                            <li v-for="itemId in newQuizItems" :key="itemId" class="mb-2">
+                                <div class="truncate relative">
+                                    <span class="cursor-pointer hover:text-blue-500" @click="handleEditClick(itemId)"
+                                        @mouseenter="showQuizDetails(itemId)" @mouseleave="hideQuizDetails">
+                                        {{ getQuizItemTitle(itemId) || 'Untitled Question' }}
+                                    </span>
+                                    <!-- Quiz Details Hover Modal -->
+                                    <div v-show="hoveredQuizId === itemId"
+                                        class="fixed z-[9999] ml-4 w-[600px] max-w-[90vw] bg-gray-800 rounded-lg shadow-xl border border-gray-700 p-6"
+                                        style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                        <div class="space-y-4">
+                                            <h4 class="font-medium text-white text-lg break-words">
+                                                {{ getQuizItemTitle(itemId) }}
+                                            </h4>
+                                            <div class="text-gray-300">
+                                                <p class="font-medium mb-2">Question:</p>
+                                                <p class="mb-4 whitespace-normal break-words">{{
+                                                    getQuizItemQuestion(itemId) }}</p>
+                                                <p class="font-medium mb-2">Options:</p>
+                                                <ul class="space-y-2 ml-4">
+                                                    <li v-for="(option, index) in getQuizItemOptions(itemId)"
+                                                        :key="index"
+                                                        class="whitespace-normal break-words flex items-center gap-1"
+                                                        :class="{ 'text-green-600 font-medium': isCorrectAnswer(itemId, index + 1) }">
+                                                        <svg v-if="isCorrectAnswer(itemId, index + 1)"
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            class="h-4 w-4 text-green-600 flex-shrink-0"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                        {{ index + 1 }}. {{ option }}
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-if="expandedSets.has('new')" class="mt-1 pl-4 text-sm text-gray-400 italic">
+                                    {{ getQuizItemQuestion(itemId) }}
+                                </div>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -619,13 +703,13 @@ const createQuizSet = async () => {
 
 // Function to get quiz item title by ID
 const getQuizItemTitle = (id) => {
-    const quizItem = quizEntries.find(item => item.id === id);
+    const quizItem = quizEntries[id];
     return quizItem?.title || `Question ${id}`;
 };
 
 // Function to get quiz item question by ID
 const getQuizItemQuestion = (id) => {
-    const quizItem = quizEntries.find(item => item.id === id);
+    const quizItem = quizEntries[id];
     return quizItem?.Question || 'No question available';
 };
 
@@ -677,7 +761,7 @@ const hideQuizDetails = () => {
 
 // Function to get quiz item options
 const getQuizItemOptions = (id) => {
-    const quizItem = quizEntries.find(item => item.id === id);
+    const quizItem = quizEntries[id];
     if (!quizItem) return [];
     return [
         quizItem.option1,
@@ -691,7 +775,7 @@ const getQuizItemOptions = (id) => {
 
 // Function to check if an option is the correct answer
 const isCorrectAnswer = (id, optionNumber) => {
-    const quizItem = quizEntries.find(item => item.id === id);
+    const quizItem = quizEntries[id];
     return quizItem?.correctAnswer === optionNumber;
 };
 
@@ -702,7 +786,7 @@ const handleQuizSetClick = (quizSet) => {
 
 // Add getQuizItem function
 const getQuizItem = (id) => {
-    return quizEntries.find(item => item.id === id);
+    return quizEntries[id];
 };
 
 const userPublishedItems = computed(() => {
@@ -721,6 +805,18 @@ const getItemStatus = (item) => {
     }
     return item.status || 'draft';
 };
+
+// Add this computed property in the script section
+const newQuizItems = computed(() => {
+    const newItemsSet = quizSets.find(set => set.setName === "New Items");
+    if (!newItemsSet) return [];
+
+    console.log('New Items Set:', newItemsSet);
+    console.log('All Items:', newItemsSet.items);
+
+    // Return all items from the New Items set
+    return newItemsSet.items;
+});
 </script>
 
 <style scoped>
