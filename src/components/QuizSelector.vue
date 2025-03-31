@@ -101,7 +101,7 @@ const useTemplate = () => {
     }
 
     // First check if it's a permanent quiz item
-    const permanentItem = permanentQuizItems.value.find(item => item.id === selectedTemplate.value);
+    const permanentItem = quizEntries[selectedTemplate.value];
     if (permanentItem) {
         console.log('Using permanent item as template:', permanentItem);
         const copyItem = { ...permanentItem };
