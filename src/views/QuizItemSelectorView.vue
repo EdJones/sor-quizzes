@@ -22,14 +22,14 @@
                     <span class="text-sm text-purple-200">Continue working on a draft</span>
                 </button>
 
-                <!-- Fork Item Button -->
+                <!-- Fork Item Button --
                 <button class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-4 px-6 rounded-lg 
                        transition duration-200 ease-in-out transform hover:scale-105
                        flex flex-col items-center justify-center gap-2
                        opacity-50 cursor-not-allowed">
                     <span class="text-xl">Fork Item</span>
                     <span class="text-sm text-gray-300">Coming soon...</span>
-                </button>
+                </button> -->
             </div>
 
             <!-- My Drafts Modal -->
