@@ -604,9 +604,7 @@ export default {
         // If we have an itemId, try to load it
         if (itemId && itemId !== 'new') {
           // First check if it's a permanent quiz item
-          const permanentItem = quizEntries.find(item =>
-            item.id && item.id.toString() === itemId.toString()
-          );
+          const permanentItem = quizEntries[itemId];
 
           if (permanentItem) {
             console.log('Found permanent item:', permanentItem.id);

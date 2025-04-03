@@ -9,18 +9,13 @@
         <section class="about-section">
             <h2>A community-driven, open-source effort.</h2>
             <ul>
-                <li class="list-none">Repository: <a
-                        href="https://github.com/EdJones/sor-quizzes">https://github.com/EdJones/sor-quizzes</a>
-                </li>
                 <li class="list-none">
-                    What is a <RouterLink to="/OpenSource">Culture of Open Source</RouterLink>?
+                    <p @click="showOpenSourceModal" class="text-blue-400 hover:text-blue-300">
+                        <span class="text-blue-400 hover:text-blue-300">What is a Culture of Open Source?</span>
+                    </p>
                 </li>
             </ul>
 
-            <p>
-                This app will only make sense when validated and refined by the community. <!--img
-                    src="../src/assets/images/partners.png" alt="Community" class="community-image"-->
-            </p>
         </section>
 
         <section class="about-section">
@@ -30,13 +25,19 @@
             </p>
             <ul>
                 <li>
+                    <a href="https://righttoreadproject.com/2024/07/06/hoping-for-the-best-is-not-a-viable-strategy/"
+                        target="_blank">Hoping for the Best Is Not a Viable Strategy</a> <span
+                        class="text-sm text-gray-300">Margaret Goldberg</span>
+                </li>
+                <li>
                     <a href="https://www.aei.org/education/the-science-of-reading-is-on-a-winning-streak-and-thats-a-problem/"
                         target="_blank">The "Science of Reading" Is on a Winning
-                        Streak. And That's a Problem.</a> Robert Pondiscio
+                        Streak. And That's a Problem.</a> <span class="text-sm text-gray-300">Robert Pondiscio</span>
                 </li>
                 <li>
                     <a href="https://seidenbergreading.net/2024/06/24/where-does-the-science-of-reading-go-from-here-2/"
-                        target="_blank">Where does the Science of Reading go from here?</a> Mark Seidenberg
+                        target="_blank">Where does the Science of Reading go from here?</a> <span
+                        class="text-sm text-gray-300">Mark Seidenberg</span>
                 </li>
             </ul>
 
@@ -48,8 +49,16 @@
         <section class="about-section">
             <h2>Contributing</h2>
             <p>
+                This app will only make sense when validated and refined by the community.
+            </p>
+            <p>
                 Please consider <router-link to="/QuizSetView" class="">making this better</router-link>.
             </p>
+            <ul>
+                <li class="list-none text-xs">Repository: <a
+                        href="https://github.com/EdJones/sor-quizzes">github.com/EdJones/sor-quizzes</a>
+                </li>
+            </ul>
 
         </section>
 
@@ -59,8 +68,7 @@
         <section class="about-section donation-box">
             <h2>Support This App</h2>
             <p>
-                I built this as a gift to the structured literacy community and the young learners it can still
-                help.
+                I built this as a gift to the structured literacy community and the young learners it can help.
             </p>
             <p>
                 While mine is the vision behind
@@ -94,13 +102,19 @@
             <a href="https://www.flaticon.com/free-icons/collaboration" title="collaboration icons"
                 class="text-gray-500">Collaboration icons created by small.smiles - Flaticon</a>
         </div>
+        <OpenSourceModal ref="openSourceModal" />
     </div>
 </template>
 
-<script>
-export default {
-    name: 'AboutView'
-}
+<script setup>
+import { ref } from 'vue';
+import OpenSourceModal from '../components/OpenSourceModal.vue';
+
+const openSourceModal = ref(null);
+
+const showOpenSourceModal = () => {
+    openSourceModal.value?.show();
+};
 </script>
 
 <style scoped>
@@ -112,7 +126,7 @@ export default {
 }
 
 .about-section {
-    margin-bottom: 1rem;
+    margin-bottom: .2rem;
     color: ivory;
     background-color: #222;
     padding: 1rem;
@@ -164,7 +178,7 @@ a:hover {
 }
 
 .donation-box {
-    background-color: #e7eaeb;
+    background-color: #c8cbcd;
     border-radius: 8px;
     padding: 2rem;
     margin-top: 2rem;

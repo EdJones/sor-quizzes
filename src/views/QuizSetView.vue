@@ -31,7 +31,7 @@
                 <span class="hidden md:inline">Issues</span>
             </button>
 
-            <Discuss :quiz-sets="[...publishedQuizSets, ...betaQuizSets, ...proposedQuizSets]" />
+            <Discuss :quiz-sets="[...publishedQuizSets, ...proposedQuizSets]" />
         </div>
         <div> <span class="text-sm text-orange-300">Quiz Set editor is in fluid developent. Caveat emptor.</span></div>
         <!-- Quiz Sets Overview Visualization with Tree -->
@@ -53,15 +53,7 @@
                             : 'border-transparent text-gray-400 hover:text-gray-300',
                         'px-4 py-2 text-center border-b-2 font-medium text-sm transition-colors duration-200'
                     ]">
-                        Current
-                    </button>
-                    <button @click="currentTab = 'beta'" :class="[
-                        currentTab === 'beta'
-                            ? 'border-blue-500 text-blue-400'
-                            : 'border-transparent text-gray-400 hover:text-gray-300',
-                        'px-4 py-2 text-center border-b-2 font-medium text-sm transition-colors duration-200'
-                    ]">
-                        Beta
+                        Current Quiz Sets
                     </button>
                     <button @click="currentTab = 'proposed'" :class="[
                         currentTab === 'proposed'
@@ -69,7 +61,15 @@
                             : 'border-transparent text-gray-400 hover:text-gray-300',
                         'px-4 py-2 text-center border-b-2 font-medium text-sm transition-colors duration-200'
                     ]">
-                        Proposed
+                        Proposed Quiz Sets
+                    </button>
+                    <button @click="currentTab = 'new'" :class="[
+                        currentTab === 'new'
+                            ? 'border-blue-500 text-blue-400'
+                            : 'border-transparent text-gray-400 hover:text-gray-300',
+                        'px-4 py-2 text-center border-b-2 font-medium text-sm transition-colors duration-200 '
+                    ]">
+                        New Quiz Items
                     </button>
                 </div>
             </nav>
@@ -108,7 +108,7 @@
                         <!-- Quiz Items List -->
                         <div class="mt-3 space-y-1">
                             <div class="flex justify-between items-center">
-                                <h4 class="text-sm font-medium text-gray-700 text-left">Quiz
+                                <h4 class="text-sm font-medium text-gray-500 text-left">Quiz
                                     Items:
                                 </h4>
                                 <button @click="toggleQuestions(quizSet.setName)"
@@ -123,7 +123,7 @@
                                     </svg>
                                 </button>
                             </div>
-                            <ul class="text-sm text-gray-600 list-disc pl-5 text-left">
+                            <ul class="text-sm text-gray-400 list-disc pl-5 text-left">
                                 <li v-for="itemId in quizSet.items" :key="itemId" class="mb-2">
                                     <div class="truncate relative">
                                         <span class="cursor-pointer hover:text-blue-500"
@@ -211,95 +211,8 @@
                 </div>
             </div>
 
-            <!-- Beta Quiz Sets -->
-            <div v-else-if="currentTab === 'beta'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div v-for="quizSet in betaQuizSets" :key="quizSet.setName"
-                    class="bg-gray-800 rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-200">
-                    <div class="flex justify-between items-start mb-3">
-                        <h3 class="text-lg font-semibold text-white">
-                            {{ quizSet.setName }}
-                        </h3>
-                        <span class="text-sm text-gray-400">
-                            {{ quizSet.items.length }} items
-                        </span>
-                    </div>
-
-                    <!-- Quiz Set Details -->
-                    <div class="space-y-2">
-                        <!-- Basic/Expert Mode -->
-                        <div class="flex items-center text-sm">
-                            <span class="text-gray-300">Mode:</span>
-                            <span :class="[
-                                'ml-2 px-2 py-1 rounded text-xs font-medium',
-                                quizSet.basicMode
-                                    ? 'bg-green-900 text-green-200'
-                                    : 'bg-purple-900 text-purple-200'
-                            ]">
-                                {{ quizSet.basicMode ? 'Basic' : 'Expert' }}
-                            </span>
-                        </div>
-
-                        <!-- Beta Badge -->
-                        <div class="flex items-center text-sm">
-                            <span
-                                class="bg-yellow-900 text-yellow-200 px-2 py-1 rounded text-xs font-medium">Beta</span>
-                        </div>
-
-                        <!-- Quiz Items List -->
-                        <div class="mt-3 space-y-1">
-                            <div class="flex justify-between items-center">
-                                <h4 class="text-sm font-medium text-gray-300 text-left">Quiz Items:</h4>
-                                <button @click="toggleQuestions(quizSet.setName)"
-                                    class="text-sm text-blue-500 hover:text-blue-600 flex items-center">
-                                    <span class="mr-1">{{ expandedSets.has(quizSet.setName) ? 'Hide' : 'Show' }}
-                                        Questions</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
-                                        :class="{ 'transform rotate-180': expandedSets.has(quizSet.setName) }"
-                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-                            </div>
-                            <ul class="text-sm text-gray-400 list-disc pl-5 text-left">
-                                <li v-for="itemId in quizSet.items" :key="itemId" class="mb-2">
-                                    <div class="truncate relative">
-                                        <span class="cursor-pointer hover:text-blue-500"
-                                            @click="handleEditClick(itemId)" @mouseenter="showQuizDetails(itemId)"
-                                            @mouseleave="hideQuizDetails">
-                                            {{ getQuizItemTitle(itemId) || 'Untitled Question' }}
-                                        </span>
-                                    </div>
-                                    <div v-if="expandedSets.has(quizSet.setName)"
-                                        class="mt-1 pl-4 text-sm text-gray-400 italic">
-                                        {{ getQuizItemQuestion(itemId) }}
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <!-- Edit Button -->
-                        <div class="flex justify-end mt-4">
-                            <button @click="handleQuizSetClick(quizSet)" :class="[
-                                'px-3 py-1 text-sm rounded transition-colors duration-200 flex items-center text-white',
-                                isUserOwnedDraft(quizSet) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'
-                            ]">
-                                <span>View Details</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Proposed Quiz Sets -->
-            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div v-else-if="currentTab === 'proposed'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div v-for="quizSet in proposedQuizSets" :key="quizSet.setName"
                     class="bg-gray-800 rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-200">
                     <div class="flex justify-between items-start mb-3">
@@ -436,6 +349,82 @@
                     </div>
                 </div>
             </div>
+
+            <!-- New Quiz Items -->
+            <div v-else-if="currentTab === 'new'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-gray-800 rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-200">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="text-lg font-semibold text-white">
+                            New Quiz Items
+                        </h3>
+                        <span class="text-sm text-gray-400">
+                            {{ newQuizItems.length }} items
+                        </span>
+                    </div>
+
+                    <!-- Quiz Items List -->
+                    <div class="mt-3 space-y-1">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-sm font-medium text-gray-300 text-left">Quiz Items:</h4>
+                            <button @click="toggleQuestions('new')"
+                                class="text-sm text-blue-500 hover:text-blue-600 flex items-center">
+                                <span class="mr-1">{{ expandedSets.has('new') ? 'Hide' : 'Show' }}
+                                    Questions</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
+                                    :class="{ 'transform rotate-180': expandedSets.has('new') }" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
+                        <ul class="mt-2 space-y-2">
+                            <li v-for="itemId in newQuizItems" :key="itemId" class="mb-2">
+                                <div class="truncate relative">
+                                    <span class="cursor-pointer hover:text-blue-500" @click="handleEditClick(itemId)"
+                                        @mouseenter="showQuizDetails(itemId)" @mouseleave="hideQuizDetails">
+                                        {{ getQuizItemTitle(itemId) || 'Untitled Question' }}
+                                    </span>
+                                    <!-- Quiz Details Hover Modal -->
+                                    <div v-show="hoveredQuizId === itemId"
+                                        class="fixed z-[9999] ml-4 w-[600px] max-w-[90vw] bg-gray-800 rounded-lg shadow-xl border border-gray-700 p-6"
+                                        style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                        <div class="space-y-4">
+                                            <h4 class="font-medium text-white text-lg break-words">
+                                                {{ getQuizItemTitle(itemId) }}
+                                            </h4>
+                                            <div class="text-gray-300">
+                                                <p class="font-medium mb-2">Question:</p>
+                                                <p class="mb-4 whitespace-normal break-words">{{
+                                                    getQuizItemQuestion(itemId) }}</p>
+                                                <p class="font-medium mb-2">Options:</p>
+                                                <ul class="space-y-2 ml-4">
+                                                    <li v-for="(option, index) in getQuizItemOptions(itemId)"
+                                                        :key="index"
+                                                        class="whitespace-normal break-words flex items-center gap-1"
+                                                        :class="{ 'text-green-600 font-medium': isCorrectAnswer(itemId, index + 1) }">
+                                                        <svg v-if="isCorrectAnswer(itemId, index + 1)"
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            class="h-4 w-4 text-green-600 flex-shrink-0"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                        {{ index + 1 }}. {{ option }}
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-if="expandedSets.has('new')" class="mt-1 pl-4 text-sm text-gray-400 italic">
+                                    {{ getQuizItemQuestion(itemId) }}
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Create Quiz Set Modal -->
@@ -564,8 +553,7 @@ const newQuizSet = reactive({
 });
 
 // Filtered quiz sets
-const publishedQuizSets = quizSets.filter(set => !set.inProgress && !set.beta);
-const betaQuizSets = quizSets.filter(set => !set.inProgress && set.beta);
+const publishedQuizSets = quizSets.filter(set => !set.inProgress);
 const proposedQuizSets = quizSets.filter(set => set.inProgress);
 
 // Use a ref to track the selected quiz set (for previewing the InProgress component)
@@ -619,13 +607,13 @@ const createQuizSet = async () => {
 
 // Function to get quiz item title by ID
 const getQuizItemTitle = (id) => {
-    const quizItem = quizEntries.find(item => item.id === id);
+    const quizItem = quizEntries[id];
     return quizItem?.title || `Question ${id}`;
 };
 
 // Function to get quiz item question by ID
 const getQuizItemQuestion = (id) => {
-    const quizItem = quizEntries.find(item => item.id === id);
+    const quizItem = quizEntries[id];
     return quizItem?.Question || 'No question available';
 };
 
@@ -677,7 +665,7 @@ const hideQuizDetails = () => {
 
 // Function to get quiz item options
 const getQuizItemOptions = (id) => {
-    const quizItem = quizEntries.find(item => item.id === id);
+    const quizItem = quizEntries[id];
     if (!quizItem) return [];
     return [
         quizItem.option1,
@@ -691,7 +679,7 @@ const getQuizItemOptions = (id) => {
 
 // Function to check if an option is the correct answer
 const isCorrectAnswer = (id, optionNumber) => {
-    const quizItem = quizEntries.find(item => item.id === id);
+    const quizItem = quizEntries[id];
     return quizItem?.correctAnswer === optionNumber;
 };
 
@@ -702,7 +690,7 @@ const handleQuizSetClick = (quizSet) => {
 
 // Add getQuizItem function
 const getQuizItem = (id) => {
-    return quizEntries.find(item => item.id === id);
+    return quizEntries[id];
 };
 
 const userPublishedItems = computed(() => {
@@ -721,6 +709,18 @@ const getItemStatus = (item) => {
     }
     return item.status || 'draft';
 };
+
+// Add this computed property in the script section
+const newQuizItems = computed(() => {
+    const newItemsSet = quizSets.find(set => set.setName === "New Items");
+    if (!newItemsSet) return [];
+
+    console.log('New Items Set:', newItemsSet);
+    console.log('All Items:', newItemsSet.items);
+
+    // Return all items from the New Items set
+    return newItemsSet.items;
+});
 </script>
 
 <style scoped>

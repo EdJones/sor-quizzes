@@ -803,7 +803,7 @@ export const quizEntries = [{
     modal: ""
 },
 {
-    title: "",
+    title: "Systems Change",
     subtitle: "",
     id: 28,
     Question: "To move a school to a SOR/Structured Literacy approach, six systems must be addressed.",

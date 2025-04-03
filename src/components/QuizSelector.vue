@@ -15,8 +15,8 @@
         <div class="flex flex-col gap-2">
             <label for="template-select" class="text-stone-400">Choose a starting point:</label>
             <CustomDropdown v-model="selectedTemplate" @change="useTemplate" :userDrafts="userDraftQuizItems"
-                :pendingItems="pendingQuizItems" :otherDrafts="otherDraftQuizItems" :permanentItems="permanentQuizItems"
-                :isLoading="isLoadingDrafts" :error="draftLoadError" />
+                :pendingItems="pendingQuizItems" :otherDrafts="otherDraftQuizItems" :acceptedItems="acceptedQuizItems"
+                :permanentItems="permanentQuizItems" :isLoading="isLoadingDrafts" :error="draftLoadError" />
         </div>
     </template>
 </template>
@@ -74,6 +74,12 @@ const pendingQuizItems = computed(() => {
     return items;
 });
 
+const acceptedQuizItems = computed(() => {
+    return store.draftQuizItems
+        .filter(item => item.status === 'accepted')
+        .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+});
+
 const permanentQuizItems = computed(() => {
     return [...quizEntries].sort((a, b) => {
         const aId = typeof a.id === 'string' ? parseInt(a.id, 10) : a.id;
@@ -95,7 +101,7 @@ const useTemplate = () => {
     }
 
     // First check if it's a permanent quiz item
-    const permanentItem = permanentQuizItems.value.find(item => item.id === selectedTemplate.value);
+    const permanentItem = quizEntries[selectedTemplate.value];
     if (permanentItem) {
         console.log('Using permanent item as template:', permanentItem);
         const copyItem = { ...permanentItem };

@@ -22,14 +22,14 @@
                     <span class="text-sm text-purple-200">Continue working on a draft</span>
                 </button>
 
-                <!-- Fork Item Button -->
+                <!-- Fork Item Button --
                 <button class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-4 px-6 rounded-lg 
                        transition duration-200 ease-in-out transform hover:scale-105
                        flex flex-col items-center justify-center gap-2
                        opacity-50 cursor-not-allowed">
                     <span class="text-xl">Fork Item</span>
                     <span class="text-sm text-gray-300">Coming soon...</span>
-                </button>
+                </button> -->
             </div>
 
             <!-- My Drafts Modal -->
@@ -135,6 +135,9 @@ const getStatusClass = (status) => {
     const classes = {
         draft: 'bg-blue-900 text-blue-200',
         pending: 'bg-yellow-900 text-yellow-200',
+        accepted: 'bg-blue-900 text-blue-200',
+        approved: 'bg-green-900 text-green-200',
+        rejected: 'bg-red-900 text-red-200',
         deleted: 'bg-red-900 text-red-200'
     };
     return classes[status] || 'bg-gray-900 text-gray-200';
