@@ -2,7 +2,7 @@
     <div class="about-container">
         <div class="flex justify-between">
             <h1>&nbsp;</h1>
-            <h1 class="flex justify-center">About </h1> <img src="/public/images/partners.png" alt="SOR"
+            <h1 class="flex justify-center">About </h1> <img src="../assets/partners.png" alt="SOR"
                 class="flex justify-end w-32 h-32 mr-20 object-scale-down">
         </div>
 
@@ -108,7 +108,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import partners from '../assets/images/partners.png';
+import partners from '../assets/partners.png';
 import OpenSourceModal from '../components/OpenSourceModal.vue';
 
 const openSourceModal = ref(null);
