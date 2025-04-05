@@ -108,6 +108,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import partners from '../assets/images/partners.png';
 import OpenSourceModal from '../components/OpenSourceModal.vue';
 
 const openSourceModal = ref(null);
