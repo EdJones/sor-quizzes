@@ -635,7 +635,7 @@ const handleNewQuizItem = () => {
 
 // Update handleEditClick function
 const handleEditClick = async (quizSetOrItemId) => {
-    router.push({ name: 'quizItemSelector' });
+    router.push(`/quiz-item-editor/${quizSetOrItemId}`);
 };
 
 // Function to check if a quiz set is user-owned and in draft status
