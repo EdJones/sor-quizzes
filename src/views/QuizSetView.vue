@@ -630,12 +630,15 @@ const toggleQuestions = (setName) => {
 
 // handle new quiz item
 const handleNewQuizItem = () => {
-    router.push({ name: 'quizItemSelector' });
+    router.push({ name: 'quizItemEditor', query: { new: 'true' } });
 };
 
 // Update handleEditClick function
 const handleEditClick = async (quizSetOrItemId) => {
-    router.push(`/quiz-item-editor/${quizSetOrItemId}`);
+    router.push({
+        name: 'quizItemEditor',
+        params: { id: quizSetOrItemId }
+    });
 };
 
 // Function to check if a quiz set is user-owned and in draft status

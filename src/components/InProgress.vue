@@ -25,7 +25,8 @@
                 </div>
 
                 <div class="router-link-container">
-                    <router-link to="/edit-item/new" class="button-77">Add/Edit a New Quiz Entry</router-link>
+                    <router-link :to="{ name: 'quizItemEditor', query: { new: 'true' } }" class="button-77">Add/Edit a
+                        New Quiz Entry</router-link>
                 </div>
                 <div class="feedback-section">
                     <p class="mt-4 mb-4">OR </p>

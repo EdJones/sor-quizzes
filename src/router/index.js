@@ -16,19 +16,13 @@ const routes = [
     component: LoginForm
   },
   {
-    path: '/edit-item/new',
-    name: 'NewQuizItem',
-    component: QuizItemEditor,
-    beforeEnter: requireAuth,
-    props: { itemId: null }
-  },
-  {
-    path: '/edit-item/:id',
-    name: 'edit-item',
+    path: '/quiz-item-editor/:id?',
+    name: 'quizItemEditor',
     component: QuizItemEditor,
     beforeEnter: requireAuth,
     props: route => ({
-      itemId: route.params.id
+      itemId: route.params.id,
+      isNew: route.query.new === 'true'
     })
   },
   {
@@ -66,12 +60,6 @@ const routes = [
     path: '/quiz-item-selector',
     name: 'quizItemSelector',
     component: QuizItemSelectorView,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/quiz-item-editor/:id?',
-    name: 'quizItemEditor',
-    component: QuizItemEditor,
     meta: { requiresAuth: true }
   },
   // Catch all route for 404 - must be last
