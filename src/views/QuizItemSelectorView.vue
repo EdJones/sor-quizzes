@@ -145,11 +145,17 @@ const getStatusClass = (status) => {
 
 // Navigation functions
 const createNewItem = () => {
-    router.push({ name: 'quizItemEditor', query: { new: 'true' } });
+    router.push({
+        name: 'quizItemEditor',
+        query: { new: 'true' }
+    });
 };
 
 const editDraft = (draft) => {
     showDrafts.value = false;
-    router.push({ name: 'quizItemEditor', params: { id: draft.id } });
+    router.push({
+        name: 'quizItemEditor',
+        params: { id: draft.id }
+    });
 };
 </script>

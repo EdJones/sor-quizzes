@@ -552,7 +552,10 @@ const handleEditClick = async (itemId) => {
 
     if (isUserOwnedDraft(itemId)) {
         // Navigate directly to edit the draft
-        router.push(`/edit-item/${itemId}`);
+        router.push({
+            name: 'quizItemEditor',
+            params: { id: itemId }
+        });
     } else {
         try {
             // Create a copy of the item for proposing changes
@@ -569,7 +572,10 @@ const handleEditClick = async (itemId) => {
             const docRef = await addDoc(collection(db, 'proposedQuizItems'), itemCopy);
 
             // Navigate to edit the new copy
-            router.push(`/edit-item/${docRef.id}`);
+            router.push({
+                name: 'quizItemEditor',
+                params: { id: docRef.id }
+            });
         } catch (error) {
             console.error('Error creating proposal:', error);
             alert('Failed to create proposal. Please try again.');

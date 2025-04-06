@@ -264,7 +264,7 @@ const handleEditItem = async (itemId) => {
             // Redirect to login with return URL
             await router.push({
                 path: '/login',
-                query: { redirect: `/edit-item/${itemId}` }
+                query: { redirect: `/quiz-item-editor/${itemId}` }
             });
             emit('close');
             return;
@@ -279,7 +279,7 @@ const handleEditItem = async (itemId) => {
         // Then navigate using name and wait for it to complete
         try {
             await router.push({
-                name: 'edit-item',
+                name: 'quizItemEditor',
                 params: { id: itemId },
                 // Force navigation even if we're already on a similar path
                 replace: false,
@@ -288,7 +288,7 @@ const handleEditItem = async (itemId) => {
             });
 
             // Double check that we ended up where we expected
-            const expectedPath = `/edit-item/${itemId}`;
+            const expectedPath = `/quiz-item-editor/${itemId}`;
             if (router.currentRoute.value.path !== expectedPath) {
                 console.warn('Navigation may have been intercepted, retrying with path...');
                 await router.push(expectedPath);
@@ -308,7 +308,10 @@ const handleNewContribution = () => {
     // Close the modal first
     emit('close');
     // Then navigate
-    router.push({ name: 'NewQuizItem' });
+    router.push({
+        name: 'quizItemEditor',
+        query: { new: 'true' }
+    });
 };
 
 const showVersionHistoryModal = ref(false);
