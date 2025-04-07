@@ -34,6 +34,23 @@
                 </div>
             </div>
 
+            <!-- Toggle for Published Items -->
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Show Published Items</span>
+                </div>
+                <button @click="showPublishedItems = !showPublishedItems"
+                    class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                    :class="showPublishedItems ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-600'">
+                    <span class="sr-only">Toggle published items</span>
+                    <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                        :class="showPublishedItems ? 'translate-x-6' : 'translate-x-1'"></span>
+                </button>
+            </div>
+
             <!-- Quiz Items List -->
             <div class="space-y-4 max-h-[60vh] overflow-y-auto">
                 <!-- Loading State -->
@@ -57,43 +74,101 @@
                     </button>
                 </div>
 
-                <!-- Quiz Items -->
-                <div v-else v-for="item in userQuizItems" :key="item.id"
-                    class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="font-medium text-gray-900 dark:text-white">{{ item.title || 'Untitled Question'
-                                }}</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ item.Question }}</p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span :class="[
-                                'px-2 py-1 text-xs rounded-full',
-                                getItemStatus(item) === 'published'
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                    : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
-                            ]">
-                                {{ getItemStatus(item) === 'published' ? 'Published' : 'Draft' }}
-                            </span>
-                            <button @click="showVersionHistory(item.id)"
-                                class="p-1 text-gray-500 hover:text-purple-500 dark:text-gray-400 dark:hover:text-purple-400"
-                                title="View Version History">
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </button>
-                            <button @click="handleEditItem(item.id)"
-                                class="p-1 text-gray-500 hover:text-purple-500 dark:text-gray-400 dark:hover:text-purple-400">
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                            </button>
+                <!-- Draft Items -->
+                <div v-else>
+                    <div v-if="draftItems.length > 0" class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <svg class="h-5 w-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Draft Items
+                        </h3>
+                        <div class="space-y-4">
+                            <div v-for="item in draftItems" :key="item.id"
+                                class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <!-- biome-ignore format: off -->
+                                        <h3 class="font-medium text-gray-900 dark:text-white">{{ item.title || 'UntitledQuestion' }}
+                                        </h3>
+                                        <!-- biome-ignore format: off -->
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ item.Question }}</p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            class="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                                            Draft
+                                        </span>
+                                        <button @click="showVersionHistory(item.id)"
+                                            class="p-1 text-gray-500 hover:text-purple-500 dark:text-gray-400 dark:hover:text-purple-400"
+                                            title="View Version History">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </button>
+                                        <button @click="handleEditItem(item.id)"
+                                            class="p-1 text-gray-500 hover:text-purple-500 dark:text-gray-400 dark:hover:text-purple-400">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                                    Created {{ item?.timestamp?.toDate?.()?.toLocaleDateString() || 'Unknown date' }}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                        Created {{ item?.timestamp?.toDate?.()?.toLocaleDateString() || 'Unknown date' }}
+
+                    <!-- Published Items -->
+                    <div v-if="showPublishedItems && publishedItems.length > 0">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Published Items
+                        </h3>
+                        <div class="space-y-4">
+                            <div v-for="item in publishedItems" :key="item.id"
+                                class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="font-medium text-gray-900 dark:text-white"> {{ item.title ||
+                                            'Untitled Question' }}</h3>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ item.Question }}</p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                            Published
+                                        </span>
+                                        <button @click="showVersionHistory(item.id)"
+                                            class="p-1 text-gray-500 hover:text-purple-500 dark:text-gray-400 dark:hover:text-purple-400"
+                                            title="View Version History">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </button>
+                                        <button @click="handleEditItem(item.id)"
+                                            class="p-1 text-gray-500 hover:text-purple-500 dark:text-gray-400 dark:hover:text-purple-400">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                                    Created {{ item?.timestamp?.toDate?.()?.toLocaleDateString() || 'Unknown date' }}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -218,7 +293,7 @@ const fetchUserQuizItems = async () => {
 
         // Remove duplicates and create final items array
         const combinedItems = new Map();
-        allDocs.forEach(doc => {
+        for (const doc of allDocs) {
             if (!combinedItems.has(doc.id)) {
                 const data = doc.data();
                 combinedItems.set(doc.id, {
@@ -227,7 +302,7 @@ const fetchUserQuizItems = async () => {
                     status: data.isDraft ? 'draft' : 'published'
                 });
             }
-        });
+        }
 
         userQuizItems.value = Array.from(combinedItems.values());
         console.log('Final combined items:', userQuizItems.value);
@@ -323,6 +398,17 @@ const showVersionHistory = (itemId) => {
         showVersionHistoryModal.value = true;
     }
 };
+
+const showPublishedItems = ref(false);
+
+// Add computed properties for draft and published items
+const draftItems = computed(() =>
+    userQuizItems.value.filter(item => !publishedItemTitles.value.has(item.title))
+);
+
+const publishedItems = computed(() =>
+    userQuizItems.value.filter(item => publishedItemTitles.value.has(item.title))
+);
 
 onMounted(() => {
     if (props.show) {

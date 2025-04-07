@@ -1655,7 +1655,6 @@ export const quizEntries = [{
     closingText2: "",
     modal: "",
     status: "pending",
-    id: "3kjWPhc3tXh0v5pLVZm4",
     timestamp: {
         seconds: 1741094726,
         nanoseconds: 725000000
@@ -1763,7 +1762,6 @@ export const quizEntries = [{
     isAnonymous: false,
     userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
     correctAnswers: [2],
-
     podcastEpisode: {
         title: "Episode Title",
         EpisodeUrl: "",
@@ -1794,8 +1792,24 @@ export const quizEntries = [{
     ],
     closingText: "If you can help us add the research to this section, we'd be very appreciative.",
     closingText2: "",
-    id: "GZp2cdkYhuskL28ENRbb",
-    originalId: "K9G4hnDT4RyVxwE9c7T8"
+    status: "draft",
+    version: 3,
+    userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+    updatedAt: {
+        seconds: 1742991528,
+        nanoseconds: 633000000
+    },
+    userEmail: "ed.jones@gmail.com",
+    createdAt: {
+        seconds: 1742991528,
+        nanoseconds: 633000000
+    },
+    timestamp: {
+        seconds: 1742991528,
+        nanoseconds: 633000000
+    },
+    isPermanent: false,
+    originalId: "twUREPJ0nvIhbQXAeHRj"
 },
 {
     title: "Researchers: The Simple View of Reading",
@@ -1912,7 +1926,6 @@ export const quizEntries = [{
     modal: "",
     status: "draft",
     version: 1,
-    id: null,
     timestamp: {
         seconds: 1742151531,
         nanoseconds: 914000000
@@ -1940,7 +1953,7 @@ export const quizEntries = [{
     option5: "Fifth option",
     correctAnswer: 1,
     explanation: "Today, the Phonological Deficit Hypothesis (PDH) is the primary--and quite successful--scientific explanation behind dyslexia. However, the underlying neurobiological components of PDH are less well understood.",
-    explanation2: "It's critical to remember that Phonology is far more than just phonemic awareness. As Share says, \"There have unquestionably been genuine breakthroughs in the understanding the neurobiological circuitry of reading and dyslexia. However, the initial hype that neuroimaging would soon uncover the true “cause” of dyslexia has since been tempered by an appreciation of neuroplasticity—the brain became a dependent (and not only independent) variable and no longer a constant in the dyslexia equation.\"",
+    explanation2: "It's critical to remember that Phonology is far more than just phonemic awareness. As Share says, \"There have unquestionably been genuine breakthroughs in the understanding the neurobiological circuitry of reading and dyslexia. However, the initial hype that neuroimaging would soon uncover the true 'cause' of dyslexia has since been tempered by an appreciation of neuroplasticity—the brain became a dependent (and not only independent) variable and no longer a constant in the dyslexia equation.\"",
     videoUrl: "",
     videoId: "",
     image: "",
@@ -1991,7 +2004,6 @@ export const quizEntries = [{
     createdAt: {
         _methodName: "serverTimestamp"
     },
-    id: "juynlQ5gDiMdbkXvLTQk",
     userEmail: "ed.jones@gmail.com",
     correctAnswers: [],
     updatedAt: {
@@ -2013,7 +2025,7 @@ export const quizEntries = [{
     option5: "Fifth option",
     correctAnswer: 2,
     correctAnswers: [],
-    explanation: "Allomorphy refers to the different forms a morpheme can take depending on its surroundings.\n\nFor example, ‘syn’, like in ‘synchrony’ means ‘together’ but is changed to ‘sym’ before certain letters (to ease pronunciation) resulting in words like ‘symphony’ and ‘sympathetic’. - @RyonWLeyshon on X.\n",
+    explanation: "Allomorphy refers to the different forms a morpheme can take depending on its surroundings.\n\nFor example, 'syn', like in 'synchrony' means 'together' but is changed to 'sym' before certain letters (to ease pronunciation) resulting in words like 'symphony' and 'sympathetic'. - @RyonWLeyshon on X.\n",
     explanation2: "",
     videoUrl: "",
     videoId: "",
@@ -2052,7 +2064,6 @@ export const quizEntries = [{
     modal: "",
     status: "draft",
     version: 3,
-    id: null,
     userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
     updatedAt: {
         seconds: 1742991528,
