@@ -1762,7 +1762,6 @@ export const quizEntries = [{
     isAnonymous: false,
     userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
     correctAnswers: [2],
-
     podcastEpisode: {
         title: "Episode Title",
         EpisodeUrl: "",
