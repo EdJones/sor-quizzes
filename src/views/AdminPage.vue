@@ -2,6 +2,68 @@
     <div class="admin-container">
         <h1 class="text-2xl font-bold mb-6">Quiz Entries Administration</h1>
 
+        <!-- Add new section for entries with edit history -->
+        <div class="mb-8">
+            <h2 class="text-xl font-bold mb-4">Entries with Edit History</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-gray-800 rounded-lg overflow-hidden">
+                    <thead class="bg-gray-900">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                Title</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                Author</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                        <tr v-for="entry in entriesWithHistory" :key="entry.id"
+                            class="hover:bg-gray-700 transition-colors duration-200">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-white">{{ entry.title }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-300">{{ entry.userEmail || 'Anonymous' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span :class="[
+                                    'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full',
+                                    {
+                                        'bg-yellow-200 text-yellow-800': entry.status === 'pending',
+                                        'bg-green-200 text-green-800': entry.status === 'approved',
+                                        'bg-blue-200 text-blue-800': entry.status === 'accepted',
+                                        'bg-red-200 text-red-800': entry.status === 'rejected',
+                                        'bg-gray-200 text-gray-800': entry.status === 'draft',
+                                        'bg-purple-200 text-purple-800': entry.status === 'deleted'
+                                    }
+                                ]">
+                                    {{ entry.status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                {{ formatDate(entry.timestamp) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                <button @click="viewEntry(entry)"
+                                    class="text-blue-400 hover:text-blue-300 transition-colors duration-200">
+                                    View
+                                </button>
+                                <button @click="viewEditHistory(entry)"
+                                    class="text-purple-400 hover:text-purple-300 transition-colors duration-200">
+                                    View History
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Filters -->
         <div class="filters-section mb-6 p-4 bg-gray-800 rounded-lg">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -127,6 +189,41 @@
                 </div>
             </div>
         </div>
+
+        <!-- Edit History Modal -->
+        <div v-if="showEditHistory" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div class="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-white">Edit History for: {{ selectedEntry?.title }}</h2>
+                        <button @click="showEditHistory = false" class="text-gray-400 hover:text-gray-300">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="space-y-4">
+                        <div v-for="history in editHistory" :key="history.id" class="bg-gray-700 p-4 rounded-lg">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="text-sm text-gray-300">
+                                    <span class="font-semibold">Revision {{ history.revisionNumber }}</span>
+                                    <span class="mx-2">•</span>
+                                    <span>{{ history.userEmail }}</span>
+                                    <span class="mx-2">•</span>
+                                    <span>{{ history.timestamp?.toLocaleString() || 'Unknown date' }}</span>
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-300 mb-2"><span class="font-semibold">Message:</span> {{
+                                history.versionMessage || 'No message provided' }}</div>
+                            <div class="text-sm text-gray-300">
+                                <span class="font-semibold">Status:</span> {{ history.status }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -135,7 +232,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import AdminTools from '../components/AdminTools.vue';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 import { quizStore } from '../stores/quizStore';
 import QuizItem from '../components/QuizItem.vue';
@@ -145,6 +242,8 @@ const authStore = useAuthStore();
 const isAdmin = ref(false);
 const store = quizStore();
 const selectedEntry = ref(null);
+const showEditHistory = ref(false);
+const editHistory = ref([]);
 
 const filters = ref({
     status: 'all',
@@ -169,6 +268,7 @@ onMounted(async () => {
     }
 
     await store.fetchDraftQuizItems();
+    await fetchEditHistory();
 });
 
 // Computed property for filtered and sorted entries
@@ -271,6 +371,57 @@ const deleteEntry = async (entry) => {
     } catch (error) {
         console.error('Error marking entry as deleted:', error);
         alert('Error marking quiz item as deleted: ' + error.message);
+    }
+};
+
+// Add new computed property for entries with edit history
+const entriesWithHistory = computed(() => {
+    return store.draftQuizItems.filter(entry => entry.hasEditHistory);
+});
+
+// Add new function to fetch edit history
+const fetchEditHistory = async () => {
+    try {
+        const editHistoryRef = collection(db, 'quizEditHistory');
+        const querySnapshot = await getDocs(editHistoryRef);
+
+        // Get unique quiz item IDs from edit history
+        const quizItemIds = new Set();
+        querySnapshot.forEach(doc => {
+            quizItemIds.add(doc.data().quizItemId);
+        });
+
+        // Mark entries that have edit history
+        store.draftQuizItems.forEach(entry => {
+            entry.hasEditHistory = quizItemIds.has(entry.id);
+        });
+    } catch (error) {
+        console.error('Error fetching edit history:', error);
+    }
+};
+
+// View edit history
+const viewEditHistory = async (entry) => {
+    try {
+        const editHistoryRef = collection(db, 'quizEditHistory');
+        const q = query(
+            editHistoryRef,
+            where('quizItemId', '==', entry.id),
+            orderBy('timestamp', 'desc')
+        );
+
+        const querySnapshot = await getDocs(q);
+        editHistory.value = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            timestamp: doc.data().timestamp?.toDate?.() || null
+        }));
+
+        selectedEntry.value = entry;
+        showEditHistory.value = true;
+    } catch (error) {
+        console.error('Error fetching edit history:', error);
+        alert('Error fetching edit history: ' + error.message);
     }
 };
 </script>
