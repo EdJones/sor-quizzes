@@ -1792,7 +1792,6 @@ export const quizEntries = [{
     ],
     closingText: "If you can help us add the research to this section, we'd be very appreciative.",
     closingText2: "",
-    modal: "",
     status: "draft",
     version: 3,
     userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
