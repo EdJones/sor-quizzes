@@ -64,6 +64,71 @@
             </div>
         </div>
 
+        <!-- Add new section for entries without edit history -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Entries Without Edit History</h2>
+                <button @click="createInitialHistoryEntries"
+                    :disabled="isProcessing || entriesWithoutHistory.length === 0"
+                    class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    {{ isProcessing ? 'Processing...' : `Create History (${entriesWithoutHistory.length})` }}
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-gray-800 rounded-lg overflow-hidden">
+                    <thead class="bg-gray-900">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                Title</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                Author</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                        <tr v-for="entry in entriesWithoutHistory" :key="entry.id"
+                            class="hover:bg-gray-700 transition-colors duration-200">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-white">{{ entry.title }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-300">{{ entry.userEmail || 'Anonymous' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span :class="[
+                                    'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full',
+                                    {
+                                        'bg-yellow-200 text-yellow-800': entry.status === 'pending',
+                                        'bg-green-200 text-green-800': entry.status === 'approved',
+                                        'bg-blue-200 text-blue-800': entry.status === 'accepted',
+                                        'bg-red-200 text-red-800': entry.status === 'rejected',
+                                        'bg-gray-200 text-gray-800': entry.status === 'draft',
+                                        'bg-purple-200 text-purple-800': entry.status === 'deleted'
+                                    }
+                                ]">
+                                    {{ entry.status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                {{ formatDate(entry.timestamp) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                <button @click="viewEntry(entry)"
+                                    class="text-blue-400 hover:text-blue-300 transition-colors duration-200">
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Filters -->
         <div class="filters-section mb-6 p-4 bg-gray-800 rounded-lg">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -232,7 +297,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import AdminTools from '../components/AdminTools.vue';
-import { doc, getDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { quizStore } from '../stores/quizStore';
 import QuizItem from '../components/QuizItem.vue';
@@ -244,6 +309,7 @@ const store = quizStore();
 const selectedEntry = ref(null);
 const showEditHistory = ref(false);
 const editHistory = ref([]);
+const isProcessing = ref(false);
 
 const filters = ref({
     status: 'all',
@@ -422,6 +488,59 @@ const viewEditHistory = async (entry) => {
     } catch (error) {
         console.error('Error fetching edit history:', error);
         alert('Error fetching edit history: ' + error.message);
+    }
+};
+
+// Add new computed property for entries without edit history
+const entriesWithoutHistory = computed(() => {
+    return store.draftQuizItems.filter(entry => !entry.hasEditHistory);
+});
+
+// Add function to create initial history entries
+const createInitialHistoryEntries = async () => {
+    if (!confirm('This will create initial history entries for all quiz items without history. Continue?')) {
+        return;
+    }
+
+    isProcessing.value = true;
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+        for (const entry of entriesWithoutHistory.value) {
+            try {
+                // Create the initial history entry
+                const editHistoryRef = collection(db, 'quizEditHistory');
+                await addDoc(editHistoryRef, {
+                    quizItemId: entry.id,
+                    userId: entry.userId || 'system',
+                    userEmail: entry.userEmail || 'system',
+                    timestamp: entry.timestamp || serverTimestamp(),
+                    versionMessage: 'Initial history entry created by admin tool',
+                    revisionNumber: 1,
+                    changes: {
+                        before: null,
+                        after: entry
+                    },
+                    status: entry.status || 'draft'
+                });
+                successCount++;
+            } catch (error) {
+                console.error(`Error creating history for entry ${entry.id}:`, error);
+                errorCount++;
+            }
+        }
+
+        // Refresh the list
+        await store.fetchDraftQuizItems();
+        await fetchEditHistory();
+
+        alert(`Operation completed. Successfully created ${successCount} history entries. ${errorCount} errors occurred.`);
+    } catch (error) {
+        console.error('Error in createInitialHistoryEntries:', error);
+        alert('Error creating history entries: ' + error.message);
+    } finally {
+        isProcessing.value = false;
     }
 };
 </script>
