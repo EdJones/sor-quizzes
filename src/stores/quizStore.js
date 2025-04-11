@@ -645,158 +645,60 @@ export const quizStore = defineStore('quiz', {
             }
         },
 
-        validateDraftQuizEntry(draft) {
-            const validation = {
-                errors: [],
-                invalidFields: new Set()
-            };
+        validateDraftQuizEntry(entry) {
+            const errors = [];
+            const invalidFields = new Set();
 
-            // Default values to check against
-            const defaultValues = {
-                title: '',
-                subtitle: '',
-                Question: 'What is your question?',
-                questionP2: '',
-                option1: 'First option',
-                option2: 'Second option',
-                option3: 'Third option',
-                option4: 'Fourth option',
-                option5: 'Fifth option',
-                explanation: 'Here is why option 1 is correct...'
-            };
-
-            // Required fields - check for empty or default values
-            if (!draft.title?.trim() || draft.title === defaultValues.title) {
-                validation.errors.push('Title is required');
-                validation.invalidFields.add('title');
+            // Required fields validation
+            if (!entry.title?.trim()) {
+                errors.push('Title is required');
+                invalidFields.add('title');
             }
 
-            if (!draft.Question?.trim() || draft.Question === defaultValues.Question) {
-                validation.errors.push('Question is required');
-                validation.invalidFields.add('Question');
+            if (!entry.Question?.trim()) {
+                errors.push('Question is required');
+                invalidFields.add('Question');
             }
 
-            // Answer type specific validation
-            if (draft.answer_type === 'mc') {
-                // For multiple choice, need at least 2 options and a correct answer
-                const options = [
-                    draft.option1,
-                    draft.option2,
-                    draft.option3,
-                    draft.option4,
-                    draft.option5
-                ];
-
-                // Check if options are just default values
-                const nonDefaultOptions = options.filter(
-                    (opt, index) => opt?.trim() && opt !== defaultValues[`option${index + 1}`]
-                );
-
-                if (nonDefaultOptions.length < 2) {
-                    validation.errors.push('Multiple choice questions require at least 2 non-default options');
-                    // Mark all empty or default options as invalid
-                    options.forEach((opt, index) => {
-                        if (!opt?.trim() || opt === defaultValues[`option${index + 1}`]) {
-                            validation.invalidFields.add(`option${index + 1}`);
-                        }
-                    });
-                }
-
-                if (!draft.correctAnswer || draft.correctAnswer < 1 || draft.correctAnswer > nonDefaultOptions.length) {
-                    validation.errors.push('Please select a valid correct answer');
-                    validation.invalidFields.add('correctAnswer');
-                }
-
-                // Check if the selected correct answer is still a default value
-                const correctOptionIndex = draft.correctAnswer - 1;
-                if (correctOptionIndex >= 0 &&
-                    options[correctOptionIndex] === defaultValues[`option${draft.correctAnswer}`]) {
-                    validation.errors.push('The correct answer cannot be a default option');
-                    validation.invalidFields.add(`option${draft.correctAnswer}`);
-                }
-            } else if (draft.answer_type === 'ms') {
-                // For multiple select, need at least 2 options and at least two correct answers
-                const options = [
-                    draft.option1,
-                    draft.option2,
-                    draft.option3,
-                    draft.option4,
-                    draft.option5
-                ];
-
-                // Check if options are just default values
-                const nonDefaultOptions = options.filter(
-                    (opt, index) => opt?.trim() && opt !== defaultValues[`option${index + 1}`]
-                );
-
-                if (nonDefaultOptions.length < 2) {
-                    validation.errors.push('Multiple select questions require at least 2 non-default options');
-                    // Mark all empty or default options as invalid
-                    options.forEach((opt, index) => {
-                        if (!opt?.trim() || opt === defaultValues[`option${index + 1}`]) {
-                            validation.invalidFields.add(`option${index + 1}`);
-                        }
-                    });
-                }
-
-                if (!draft.correctAnswers || !Array.isArray(draft.correctAnswers) || draft.correctAnswers.length < 2) {
-                    validation.errors.push('Multiple select questions require at least two correct answers');
-                    validation.invalidFields.add('correctAnswers');
-                }
-
-                // Check if any of the selected correct answers are default values
-                if (draft.correctAnswers) {
-                    draft.correctAnswers.forEach(answer => {
-                        const index = answer - 1;
-                        if (index >= 0 && options[index] === defaultValues[`option${answer}`]) {
-                            validation.errors.push(`Correct answer option ${answer} cannot be a default option`);
-                            validation.invalidFields.add(`option${answer}`);
-                        }
-                    });
-                }
-            }
-
-            // Explanation validation - check for default value
-            if (!draft.explanation?.trim() || draft.explanation === defaultValues.explanation) {
-                validation.errors.push('Explanation is required');
-                validation.invalidFields.add('explanation');
-            }
-
-            // Media validation - if URLs are provided, they should be valid
-            if (draft.videoUrl && !this.isValidUrl(draft.videoUrl)) {
-                validation.errors.push('Invalid video URL');
-                validation.invalidFields.add('videoUrl');
-            }
-            if (draft.imageUrl && !this.isValidUrl(draft.imageUrl)) {
-                validation.errors.push('Invalid image URL');
-                validation.invalidFields.add('imageUrl');
-            }
-
-            // Podcast episode validation
-            if (draft.podcastEpisode?.EpisodeUrl && !this.isValidUrl(draft.podcastEpisode.EpisodeUrl)) {
-                validation.errors.push('Invalid podcast episode URL');
-                validation.invalidFields.add('podcastEpisodeUrl');
-            }
-            if (draft.podcastEpisode?.audioUrl && !this.isValidUrl(draft.podcastEpisode.audioUrl)) {
-                validation.errors.push('Invalid podcast audio URL');
-                validation.invalidFields.add('podcastAudioUrl');
-            }
-
-            // Citations validation
-            if (draft.citations?.length > 0) {
-                draft.citations.forEach((citation, index) => {
-                    if (!citation.title?.trim()) {
-                        validation.errors.push(`Citation ${index + 1} requires a title`);
-                        validation.invalidFields.add(`citation-${index}-title`);
+            // Validate options based on answer type
+            if (entry.answer_type === 'mc' || entry.answer_type === 'ms') {
+                let optionCount = 0;
+                for (let i = 1; i <= 6; i++) {
+                    if (entry[`option${i}`]?.trim()) {
+                        optionCount++;
                     }
-                    if (citation.url && !this.isValidUrl(citation.url)) {
-                        validation.errors.push(`Citation ${index + 1} has an invalid URL`);
-                        validation.invalidFields.add(`citation-${index}-url`);
+                }
+
+                if (optionCount < 2) {
+                    errors.push('At least 2 options are required');
+                    for (let i = 1; i <= 2; i++) {
+                        invalidFields.add(`option${i}`);
                     }
-                });
+                }
+
+                // Validate correct answer selection
+                if (entry.answer_type === 'mc' && !entry.correctAnswer) {
+                    errors.push('Please select a correct answer');
+                } else if (entry.answer_type === 'ms') {
+                    if (entry.hasNoneOfTheAbove) {
+                        // For "None of the Above" case, only one correct answer is allowed
+                        if (!entry.correctAnswers || entry.correctAnswers.length !== 1) {
+                            errors.push('When "None of the Above" is selected, exactly one correct answer is required');
+                        }
+                    } else {
+                        // For regular multiple select, at least two correct answers are required
+                        if (!entry.correctAnswers || entry.correctAnswers.length < 2) {
+                            errors.push('Please select at least two correct answers');
+                        }
+                    }
+                }
             }
 
-            return validation;
+            return {
+                isValid: errors.length === 0,
+                errors,
+                invalidFields
+            };
         },
 
         isValidUrl(string) {

@@ -197,6 +197,19 @@
                     </template>
                   </div>
                 </div>
+
+                <!-- None of the Above toggle for multiple select -->
+                <div v-if="newEntry.answer_type === 'ms'" class="form-group mt-4">
+                  <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Include "None of the Above" option
+                    </label>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" v-model="newEntry.hasNoneOfTheAbove" class="sr-only peer" @change="handleNoneOfTheAboveToggle">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
           </details>
@@ -966,8 +979,18 @@ export default {
         // Validate correct answer selection
         if (this.newEntry.answer_type === 'mc' && !this.newEntry.correctAnswer) {
           errors.push('Please select a correct answer');
-        } else if (this.newEntry.answer_type === 'ms' && (!this.newEntry.correctAnswers || this.newEntry.correctAnswers.length === 0)) {
-          errors.push('Please select at least one correct answer');
+        } else if (this.newEntry.answer_type === 'ms') {
+          if (this.newEntry.hasNoneOfTheAbove) {
+            // For "None of the Above" case, only one correct answer is allowed
+            if (!this.newEntry.correctAnswers || this.newEntry.correctAnswers.length !== 1) {
+              errors.push('When "None of the Above" is selected, exactly one correct answer is required');
+            }
+          } else {
+            // For regular multiple select, at least two correct answers are required
+            if (!this.newEntry.correctAnswers || this.newEntry.correctAnswers.length < 2) {
+              errors.push('Please select at least two correct answers');
+            }
+          }
         }
       }
 
@@ -1278,6 +1301,17 @@ export default {
         url: '',
         description: ''
       });
+    },
+    handleNoneOfTheAboveToggle() {
+      if (this.newEntry.hasNoneOfTheAbove) {
+        // Add "None of the Above" option and set it as the only correct answer
+        this.newEntry.option6 = "None of the Above";
+        this.newEntry.correctAnswers = [6]; // Set it as the only correct answer
+      } else {
+        // Remove "None of the Above" option and clear correct answers
+        this.newEntry.option6 = "";
+        this.newEntry.correctAnswers = [];
+      }
     }
   },
   beforeUnmount() {
