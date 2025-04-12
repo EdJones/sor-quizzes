@@ -469,6 +469,7 @@ export const quizStore = defineStore('quiz', {
 
                 // Get the current ID from the entry
                 const currentId = this.draftQuizEntry.id;
+                const originalId = this.draftQuizEntry.originalId;
 
                 // Check if we have an authenticated user
                 if (!authStore.user) {
@@ -476,8 +477,8 @@ export const quizStore = defineStore('quiz', {
                     throw new Error('You must be logged in to save entries');
                 }
 
-                // If this is a new entry (no ID)
-                if (!currentId) {
+                // If this is a new entry (no ID) or a copy from a template
+                if (!currentId || (currentId === originalId)) {
                     console.log('Creating new entry with user details:', {
                         userId: authStore.user.uid,
                         userEmail: authStore.user.email

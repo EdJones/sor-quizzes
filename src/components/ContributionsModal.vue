@@ -118,7 +118,9 @@
                                     </div>
                                 </div>
                                 <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                                    Created {{ item?.timestamp?.toDate?.()?.toLocaleDateString() || 'Unknown date' }}
+                                    Created {{ item?.timestamp?.toDate?.()?.toLocaleString() || 'Unknown date' }}
+                                    <span class="ml-2">v{{ item.version || 1 }}</span>
+                                    <span class="ml-2 text-gray-400">ID: {{ item.id }}</span>
                                 </div>
                             </div>
                         </div>
@@ -165,7 +167,9 @@
                                     </div>
                                 </div>
                                 <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                                    Created {{ item?.timestamp?.toDate?.()?.toLocaleDateString() || 'Unknown date' }}
+                                    Created {{ item?.timestamp?.toDate?.()?.toLocaleString() || 'Unknown date' }}
+                                    <span class="ml-2">v{{ item.version || 1 }}</span>
+                                    <span class="ml-2 text-gray-400">ID: {{ item.id }}</span>
                                 </div>
                             </div>
                         </div>
