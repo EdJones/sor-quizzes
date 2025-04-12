@@ -53,6 +53,10 @@
                                     class="text-blue-400 hover:text-blue-300 transition-colors duration-200">
                                     View
                                 </button>
+                                <button @click="editEntry(entry)"
+                                    class="text-green-400 hover:text-green-300 transition-colors duration-200">
+                                    Edit
+                                </button>
                                 <button @click="viewEditHistory(entry)"
                                     class="text-purple-400 hover:text-purple-300 transition-colors duration-200">
                                     View History
@@ -121,6 +125,14 @@
                                 <button @click="viewEntry(entry)"
                                     class="text-blue-400 hover:text-blue-300 transition-colors duration-200">
                                     View
+                                </button>
+                                <button @click="editEntry(entry)"
+                                    class="text-green-400 hover:text-green-300 transition-colors duration-200">
+                                    Edit
+                                </button>
+                                <button @click="viewEditHistory(entry)"
+                                    class="text-purple-400 hover:text-purple-300 transition-colors duration-200">
+                                    View History
                                 </button>
                             </td>
                         </tr>
@@ -207,6 +219,10 @@
                             <button @click="viewEntry(entry)"
                                 class="text-blue-400 hover:text-blue-300 transition-colors duration-200">
                                 View
+                            </button>
+                            <button @click="editEntry(entry)"
+                                class="text-green-400 hover:text-green-300 transition-colors duration-200">
+                                Edit
                             </button>
                             <template v-if="entry.status === 'pending'">
                                 <button @click="acceptEntry(entry)"
@@ -542,6 +558,11 @@ const createInitialHistoryEntries = async () => {
     } finally {
         isProcessing.value = false;
     }
+};
+
+// Add the editEntry function in the script section
+const editEntry = (entry) => {
+    router.push(`/quiz-item-editor/${entry.id}`);
 };
 </script>
 

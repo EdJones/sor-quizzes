@@ -318,25 +318,17 @@ export const quizStore = defineStore('quiz', {
                 const permanentRef = collection(db, 'permanentQuizEntries');
 
                 // Log the query parameters
-                console.log('Querying for status == draft, pending, or deleted');
+                console.log('Querying for all items in quizEntries');
 
-                // Fetch draft items
-                const draftsQuery = query(draftsRef,
-                    or(
-                        where('status', '==', 'draft'),
-                        where('status', '==', 'pending'),
-                        where('status', '==', 'deleted')
-                    ),
-                    orderBy('timestamp', 'desc')
-                );
+                // Fetch all items from quizEntries
+                const draftsQuery = query(draftsRef, orderBy('timestamp', 'desc'));
                 const draftsSnapshot = await getDocs(draftsQuery);
+                console.log('Found items in quizEntries:', draftsSnapshot.docs.length);
 
                 // Fetch permanent (approved) items
-                const permanentQuery = query(permanentRef,
-                    where('status', '==', 'approved'),
-                    orderBy('timestamp', 'desc')
-                );
+                const permanentQuery = query(permanentRef, orderBy('timestamp', 'desc'));
                 const permanentSnapshot = await getDocs(permanentQuery);
+                console.log('Found items in permanentQuizEntries:', permanentSnapshot.docs.length);
 
                 // Combine both sets of items
                 const allItems = [
@@ -352,9 +344,15 @@ export const quizStore = defineStore('quiz', {
                     }))
                 ];
 
+                console.log('Total items found:', allItems.length);
+                console.log('Items by status:', allItems.reduce((acc, item) => {
+                    acc[item.status] = (acc[item.status] || 0) + 1;
+                    return acc;
+                }, {}));
+
                 // Group items by title to handle multiple versions
                 const itemsByTitle = new Map();
-                allItems.forEach(item => {
+                for (const item of allItems) {
                     const title = item.title;
                     if (!itemsByTitle.has(title)) {
                         itemsByTitle.set(title, []);
@@ -363,7 +361,7 @@ export const quizStore = defineStore('quiz', {
                         ...item,
                         version: item.version || 1 // Ensure version is at least 1
                     });
-                });
+                }
 
                 // For each title, keep only the latest version
                 this.draftQuizItems = Array.from(itemsByTitle.values())
@@ -972,22 +970,35 @@ export const quizStore = defineStore('quiz', {
 
         async approveQuizItem(itemId) {
             try {
+                console.log('Starting approveQuizItem for ID:', itemId);
+                
                 // Get the quiz item
                 const quizRef = doc(db, 'quizEntries', itemId);
                 const quizDoc = await getDoc(quizRef);
 
                 if (!quizDoc.exists()) {
+                    console.error('Quiz item not found in quizEntries:', itemId);
                     throw new Error('Quiz item not found');
                 }
 
                 const quizData = quizDoc.data();
+                console.log('Found quiz item:', {
+                    id: itemId,
+                    status: quizData.status,
+                    title: quizData.title
+                });
 
                 // Verify it's an accepted item
                 if (quizData.status !== 'accepted') {
+                    console.error('Quiz item is not accepted:', {
+                        currentStatus: quizData.status,
+                        requiredStatus: 'accepted'
+                    });
                     throw new Error('Quiz item must be accepted before it can be approved');
                 }
 
                 // Update the status to approved
+                console.log('Updating status to approved in quizEntries');
                 await updateDoc(quizRef, {
                     status: 'approved',
                     approvedAt: serverTimestamp(),
@@ -995,6 +1006,7 @@ export const quizStore = defineStore('quiz', {
                 });
 
                 // Add to permanent quiz entries
+                console.log('Adding to permanentQuizEntries');
                 const permanentRef = doc(db, 'permanentQuizEntries', itemId);
                 await setDoc(permanentRef, {
                     ...quizData,
@@ -1004,10 +1016,12 @@ export const quizStore = defineStore('quiz', {
                 });
 
                 // Record this change in version history
+                console.log('Recording version history');
                 this.draftQuizEntry = { ...quizData, id: itemId };
                 await this.recordQuizEdit('Quiz item approved and moved to permanent entries');
 
                 // Refresh the draft items list
+                console.log('Refreshing draft items list');
                 await this.fetchDraftQuizItems();
 
                 return true;
