@@ -751,6 +751,35 @@ export default {
                   ...resource // Preserve any additional fields
                 }));
 
+                // Ensure podcast episodes have all required fields including Snipd fields
+                if (afterState.podcastEpisode) {
+                  afterState.podcastEpisode = {
+                    title: afterState.podcastEpisode.title || '',
+                    EpisodeUrl: afterState.podcastEpisode.EpisodeUrl || '',
+                    audioUrl: afterState.podcastEpisode.audioUrl || '',
+                    description: afterState.podcastEpisode.description || '',
+                    podcastStartTime: afterState.podcastEpisode.podcastStartTime || 0,
+                    snipdUrl: afterState.podcastEpisode.snipdUrl || '',
+                    snipdTitle: afterState.podcastEpisode.snipdTitle || '',
+                    snipdDescription: afterState.podcastEpisode.snipdDescription || '',
+                    ...afterState.podcastEpisode
+                  };
+                }
+
+                if (afterState.podcastEpisode2) {
+                  afterState.podcastEpisode2 = {
+                    title: afterState.podcastEpisode2.title || '',
+                    EpisodeUrl: afterState.podcastEpisode2.EpisodeUrl || '',
+                    audioUrl: afterState.podcastEpisode2.audioUrl || '',
+                    description: afterState.podcastEpisode2.description || '',
+                    podcastStartTime: afterState.podcastEpisode2.podcastStartTime || 0,
+                    snipdUrl: afterState.podcastEpisode2.snipdUrl || '',
+                    snipdTitle: afterState.podcastEpisode2.snipdTitle || '',
+                    snipdDescription: afterState.podcastEpisode2.snipdDescription || '',
+                    ...afterState.podcastEpisode2
+                  };
+                }
+
                 store.updateDraftQuizEntry({
                   ...afterState,
                   id: itemId, // Ensure we keep the original ID
