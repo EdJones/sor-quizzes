@@ -401,7 +401,7 @@ export const quizStore = defineStore('quiz', {
             // Create sanitized versions of the states
             const sanitizeData = (obj) => {
                 const result = {};
-                Object.entries(obj).forEach(([key, value]) => {
+                for (const [key, value] of Object.entries(obj)) {
                     if (value === undefined) {
                         result[key] = null;  // Convert undefined to null for Firestore
                     } else if (typeof value === 'object' && value !== null) {
@@ -409,7 +409,7 @@ export const quizStore = defineStore('quiz', {
                     } else {
                         result[key] = value;
                     }
-                });
+                }
                 return result;
             };
 
@@ -427,27 +427,20 @@ export const quizStore = defineStore('quiz', {
             }
 
             try {
-                // Get the latest revision number for this quiz item
-                const editHistoryRef = collection(db, 'quizEditHistory');
-                const q = query(
-                    editHistoryRef,
-                    where('quizItemId', '==', quizItemId),
-                    orderBy('revisionNumber', 'desc'),
-                    limit(1)
-                );
-
-                const querySnapshot = await getDocs(q);
-                const lastRevision = querySnapshot.empty ? 0 : querySnapshot.docs[0].data().revisionNumber;
-                const newRevisionNumber = lastRevision + 1;
+                // Get the current version from the quiz item
+                const quizItemRef = doc(db, 'quizEntries', quizItemId);
+                const quizItemDoc = await getDoc(quizItemRef);
+                const currentVersion = quizItemDoc.data()?.version || 1;
 
                 // Create the version history entry
+                const editHistoryRef = collection(db, 'quizEditHistory');
                 await addDoc(editHistoryRef, {
                     quizItemId,
                     userId: auth.user?.uid,
                     userEmail: auth.user?.email,
                     timestamp: serverTimestamp(),
                     versionMessage,
-                    revisionNumber: newRevisionNumber,
+                    version: currentVersion, // Use the same version number as the quiz item
                     changes: {
                         before: beforeState,
                         after: afterState

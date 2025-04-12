@@ -160,9 +160,10 @@ const fetchVersions = async () => {
 
     try {
         // First get the current quiz item to get its current status
-        const quizItemRef = doc(db, 'quizItems', targetId);
+        const quizItemRef = doc(db, 'quizEntries', targetId);
         const quizItemDoc = await getDoc(quizItemRef);
         const currentStatus = quizItemDoc.data()?.status || 'draft';
+        const currentVersion = quizItemDoc.data()?.version || 1;
 
         const versionsRef = collection(db, 'quizEditHistory');
         const q = query(
@@ -198,9 +199,12 @@ const fetchVersions = async () => {
             // Update previous status for next iteration
             previousStatus = data.status || previousStatus;
 
+            // Use version from history or fall back to revisionNumber
+            const versionNumber = data.version || data.revisionNumber || (currentVersion - index);
+
             return {
                 id: doc.id,
-                versionNumber: data.revisionNumber || querySnapshot.size - index,
+                versionNumber: versionNumber,
                 timestamp: timestamp,
                 userEmail: data.userEmail || 'Unknown',
                 versionMessage: data.versionMessage || 'No message provided',
@@ -209,6 +213,13 @@ const fetchVersions = async () => {
                 statusChange
             };
         });
+
+        // Log the versions for debugging
+        console.log('Processed versions:', versions.value.map(v => ({
+            version: v.versionNumber,
+            timestamp: v.timestamp,
+            message: v.versionMessage
+        })));
     } catch (error) {
         console.error('Error fetching versions:', error);
         error.value = 'Failed to load version history';
