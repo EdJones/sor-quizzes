@@ -405,7 +405,17 @@ export const quizStore = defineStore('quiz', {
                     if (value === undefined) {
                         result[key] = null;  // Convert undefined to null for Firestore
                     } else if (typeof value === 'object' && value !== null) {
-                        result[key] = sanitizeData(value);  // Recursively sanitize nested objects
+                        if (Array.isArray(value)) {
+                            // Handle arrays, ensuring they exist
+                            result[key] = value.map(item => {
+                                if (typeof item === 'object' && item !== null) {
+                                    return sanitizeData(item);
+                                }
+                                return item;
+                            });
+                        } else {
+                            result[key] = sanitizeData(value);  // Recursively sanitize nested objects
+                        }
                     } else {
                         result[key] = value;
                     }
@@ -418,6 +428,10 @@ export const quizStore = defineStore('quiz', {
                 null;
 
             const afterState = sanitizeData({ ...this.draftQuizEntry });
+
+            // Ensure arrays are initialized
+            if (!afterState.citations) afterState.citations = [];
+            if (!afterState.resources) afterState.resources = [];
 
             // Ensure we're using the correct quiz item ID
             const quizItemId = afterState?.id || beforeState?.id;
@@ -477,13 +491,17 @@ export const quizStore = defineStore('quiz', {
                     throw new Error('You must be logged in to save entries');
                 }
 
-                // If this is a new entry (no ID) or a copy from a template
+                // Only create a new entry if:
+                // 1. There is no current ID AND no original ID (completely new entry)
+                // 2. The current ID matches the original ID (copy from template)
+                // 3. The current ID is null (new entry)
                 if (!currentId || (currentId === originalId)) {
                     console.log('Creating new entry with user details:', {
                         userId: authStore.user.uid,
                         userEmail: authStore.user.email
                     });
 
+                    // Create new entry
                     const newEntry = {
                         ...this.draftQuizEntry,
                         status: 'draft',
@@ -491,10 +509,10 @@ export const quizStore = defineStore('quiz', {
                         timestamp: serverTimestamp(),
                         userId: authStore.user.uid,
                         userEmail: authStore.user.email,
-                        version: 1 // Start at version 1 for new entries
+                        version: 1
                     };
 
-                    console.log('Attempting to create new entry in Firestore:', {
+                    console.log('Creating new entry in Firestore:', {
                         collection: 'quizEntries',
                         entry: {
                             title: newEntry.title,
@@ -517,8 +535,8 @@ export const quizStore = defineStore('quiz', {
                 const entryToSave = {
                     ...this.draftQuizEntry,
                     updatedAt: serverTimestamp(),
-                    timestamp: serverTimestamp(), // Update timestamp for sorting
-                    version: currentVersion + 1 // Increment version
+                    timestamp: serverTimestamp(),
+                    version: currentVersion + 1
                 };
 
                 console.log('Updating existing entry:', {
@@ -533,7 +551,7 @@ export const quizStore = defineStore('quiz', {
 
                 // Update the last saved entry
                 this.lastSavedDraftQuizEntry = { ...entryToSave };
-                this.draftQuizEntry = { ...entryToSave }; // Also update current draft
+                this.draftQuizEntry = { ...entryToSave };
                 return currentId;
             } catch (error) {
                 console.error('Error in saveDraftQuizEntry:', {
