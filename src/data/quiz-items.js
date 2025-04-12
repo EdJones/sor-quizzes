@@ -2176,6 +2176,92 @@ snipdDescription: "How do the three differ?"
   isPermanent: false
 },
 {
+  title: "Over-teaching",
+  subtitle: "",
+  id: 52,
+  Question: "Does the Science of Reading *movement* have an over-teaching problem? ",
+  questionP2: "",
+  answer_type: "mc",
+  option1: "Yes",
+  option2: "No",
+  option3: "Third option",
+  option4: "Fourth option",
+  option5: "Fifth option",
+  correctAnswer: 1,
+  explanation: "Yes, according to reading scientist emeritus Mark Seidenberg. \n\nThe problem arises mainly from too much of a good thing. The 'overteaching' happens in many different ways, in different places. Most well-known, perhaps, is the extreme overreaching of phonemic awareness. In other classrooms, it's the overteaching of spelling rules, or of etymology. In still other ELA classrooms, it's the overteaching of 'background knowledge' which is really unrelated to and unnecessary for, general reading abilities. ",
+  explanation2: "We hope that persistent development of these quizzes and the research base they highlight can be of great use in balancing many classrooms and schools. ",
+  videoUrl: "",
+  videoId: "mfeFw1ki2bU",
+  image: "",
+  imageUrl: "",
+  imageAltText: "",
+  podcastEpisode: {
+    audioUrl: "",
+    title: "Episode Title",
+    podcastStartTime: 0,
+    description: "",
+    EpisodeUrl: ""
+  },
+  podcastEpisode2: {
+    description: "",
+    audioUrl: "",
+    EpisodeUrl: "",
+    podcastStartTime: 0,
+    title: ""
+  },
+  cautionLevel: "",
+  caution: "",
+  citations: [
+    {
+      url: "",
+      year: "",
+      title: "",
+      imageUrl: "",
+      author: ""
+    }
+  ],
+  ref1: "",
+  ref2: "",
+  resources: [
+    {
+      author: "",
+      description: "",
+      url: "",
+      title: ""
+    }
+  ],
+  closingText: "",
+  closingText2: "",
+  modal: "",
+  status: "approved",
+  version: 3,
+  acceptedAt: {
+    seconds: 1744496808,
+    nanoseconds: 192000000
+  },
+  updatedAt: {
+    seconds: 1744496808,
+    nanoseconds: 192000000
+  },
+  timestamp: {
+    seconds: 1744406878,
+    nanoseconds: 651000000
+  },
+  isPermanent: false,
+  createdAt: {
+    seconds: 1744406878,
+    nanoseconds: 651000000
+  },
+  originalId: "g3BTqgRiLnRQr1PD6Oso",
+  submittedAt: {
+    seconds: 1744406878,
+    nanoseconds: 651000000
+  },
+  userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+  userEmail: "ed.jones@gmail.com",
+  correctAnswers: []
+},
+{
     title: "Learning Science",
     subtitle: "",
     id: 2000, // New ID for the new quiz entry
