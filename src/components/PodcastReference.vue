@@ -16,10 +16,9 @@
             <!-- Add Snipd section -->
             <div v-if="podcastEpisode.snipdUrl" class="snipd-section">
                 <div class="snipd-header">
-                    <font-awesome-icon icon="link" class="snipd-icon" />
-                    <h5 class="snipd-title">Snipd Snip</h5>
                 </div>
                 <div class="snipd-content">
+                    <img :src="snipdLogo" alt="Snipd Logo" class="snipd-logo" />
                     <a :href="podcastEpisode.snipdUrl" target="_blank" rel="noopener noreferrer" class="snipd-link">
                         <font-awesome-icon icon="external-link-alt" /> &nbsp; {{ podcastEpisode.snipdTitle || 'View Snip' }}
                     </a>
@@ -36,6 +35,7 @@
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faPodcast, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import snipdLogo from '../assets/snipd-logo.png'
 
 library.add(faPodcast, faExternalLinkAlt)
 
@@ -43,6 +43,11 @@ export default {
     name: 'PodcastReference',
     components: {
         FontAwesomeIcon
+    },
+    data() {
+        return {
+            snipdLogo
+        }
     },
     props: {
         podcastEpisode: {
@@ -142,9 +147,8 @@ export default {
 }
 
 .snipd-section {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #e2e8f0;
+
+
 }
 
 .snipd-header {
@@ -153,10 +157,10 @@ export default {
     margin-bottom: 0.5rem;
 }
 
-.snipd-icon {
-    font-size: 1rem;
+.snipd-logo {
+    width: 24px;
+    height: 24px;
     margin-right: 0.5rem;
-    color: #4a5568;
 }
 
 .snipd-title {
@@ -167,7 +171,7 @@ export default {
 }
 
 .snipd-content {
-    padding-left: 1.5rem;
+    padding-left: .1rem;
 }
 
 .snipd-link {
