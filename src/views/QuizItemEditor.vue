@@ -349,6 +349,35 @@
                 @blur="handleBlur($event, 'podcastEpisode.podcastStartTime')" />
             </div>
 
+            <!-- Add Snipd Snip fields for Episode 1 -->
+            <div class="form-group">
+              <label for="podcastEpisode1-snipd-url">Episode 1 Snipd URL:</label>
+              <input type="text" id="podcastEpisode1-snipd-url" v-model="newEntry.podcastEpisode.snipdUrl"
+                :class="['form-input', { 'invalid-field': invalidFields.has('podcastEpisode.snipdUrl') }]"
+                :data-error="getFieldError('podcastEpisode.snipdUrl')" 
+                :placeholder="newEntry.podcastEpisode.snipdUrl"
+                @focus="handleFocus($event, 'podcastEpisode.snipdUrl')"
+                @blur="handleBlur($event, 'podcastEpisode.snipdUrl')" />
+            </div>
+            <div class="form-group">
+              <label for="podcastEpisode1-snipd-title">Episode 1 Snipd Title:</label>
+              <input type="text" id="podcastEpisode1-snipd-title" v-model="newEntry.podcastEpisode.snipdTitle"
+                :class="['form-input', { 'invalid-field': invalidFields.has('podcastEpisode.snipdTitle') }]"
+                :data-error="getFieldError('podcastEpisode.snipdTitle')" 
+                :placeholder="newEntry.podcastEpisode.snipdTitle"
+                @focus="handleFocus($event, 'podcastEpisode.snipdTitle')"
+                @blur="handleBlur($event, 'podcastEpisode.snipdTitle')" />
+            </div>
+            <div class="form-group">
+              <label for="podcastEpisode1-snipd-description">Episode 1 Snipd Description:</label>
+              <textarea id="podcastEpisode1-snipd-description" v-model="newEntry.podcastEpisode.snipdDescription"
+                :class="['form-textarea', { 'invalid-field': invalidFields.has('podcastEpisode.snipdDescription') }]"
+                :data-error="getFieldError('podcastEpisode.snipdDescription')"
+                :placeholder="newEntry.podcastEpisode.snipdDescription"
+                @focus="handleFocus($event, 'podcastEpisode.snipdDescription')"
+                @blur="handleBlur($event, 'podcastEpisode.snipdDescription')"></textarea>
+            </div>
+
             <hr class="section-divider">
 
             <div class="form-group">
@@ -393,6 +422,35 @@
                 :placeholder="newEntry.podcastEpisode2.podcastStartTime"
                 @focus="handleFocus($event, 'podcastEpisode2.podcastStartTime')"
                 @blur="handleBlur($event, 'podcastEpisode2.podcastStartTime')" />
+            </div>
+
+            <!-- Add Snipd Snip fields for Episode 2 -->
+            <div class="form-group">
+              <label for="podcastEpisode2-snipd-url">Episode 2 Snipd URL:</label>
+              <input type="text" id="podcastEpisode2-snipd-url" v-model="newEntry.podcastEpisode2.snipdUrl"
+                :class="['form-input', { 'invalid-field': invalidFields.has('podcastEpisode2.snipdUrl') }]"
+                :data-error="getFieldError('podcastEpisode2.snipdUrl')" 
+                :placeholder="newEntry.podcastEpisode2.snipdUrl"
+                @focus="handleFocus($event, 'podcastEpisode2.snipdUrl')"
+                @blur="handleBlur($event, 'podcastEpisode2.snipdUrl')" />
+            </div>
+            <div class="form-group">
+              <label for="podcastEpisode2-snipd-title">Episode 2 Snipd Title:</label>
+              <input type="text" id="podcastEpisode2-snipd-title" v-model="newEntry.podcastEpisode2.snipdTitle"
+                :class="['form-input', { 'invalid-field': invalidFields.has('podcastEpisode2.snipdTitle') }]"
+                :data-error="getFieldError('podcastEpisode2.snipdTitle')" 
+                :placeholder="newEntry.podcastEpisode2.snipdTitle"
+                @focus="handleFocus($event, 'podcastEpisode2.snipdTitle')"
+                @blur="handleBlur($event, 'podcastEpisode2.snipdTitle')" />
+            </div>
+            <div class="form-group">
+              <label for="podcastEpisode2-snipd-description">Episode 2 Snipd Description:</label>
+              <textarea id="podcastEpisode2-snipd-description" v-model="newEntry.podcastEpisode2.snipdDescription"
+                :class="['form-textarea', { 'invalid-field': invalidFields.has('podcastEpisode2.snipdDescription') }]"
+                :data-error="getFieldError('podcastEpisode2.snipdDescription')"
+                :placeholder="newEntry.podcastEpisode2.snipdDescription"
+                @focus="handleFocus($event, 'podcastEpisode2.snipdDescription')"
+                @blur="handleBlur($event, 'podcastEpisode2.snipdDescription')"></textarea>
             </div>
           </div>
 
@@ -920,7 +978,21 @@ export default {
         closingText2: 'Enter additional closing text here',
         modal: 'Enter modal content here',
         'podcastEpisode.title': 'Enter podcast title',
+        'podcastEpisode.EpisodeUrl': 'Enter podcast URL',
+        'podcastEpisode.audioUrl': 'Enter audio URL',
+        'podcastEpisode.description': 'Enter podcast description',
+        'podcastEpisode.podcastStartTime': 0,
+        'podcastEpisode.snipdUrl': 'Enter Snipd URL',
+        'podcastEpisode.snipdTitle': 'Enter Snipd title',
+        'podcastEpisode.snipdDescription': 'Enter Snipd description',
         'podcastEpisode2.title': 'Enter second podcast title',
+        'podcastEpisode2.EpisodeUrl': 'Enter second podcast URL',
+        'podcastEpisode2.audioUrl': 'Enter second audio URL',
+        'podcastEpisode2.description': 'Enter second podcast description',
+        'podcastEpisode2.podcastStartTime': 0,
+        'podcastEpisode2.snipdUrl': 'Enter second Snipd URL',
+        'podcastEpisode2.snipdTitle': 'Enter second Snipd title',
+        'podcastEpisode2.snipdDescription': 'Enter second Snipd description',
         caution: 'Enter caution text here'
       },
       activeSection: '',
