@@ -2082,6 +2082,100 @@ export const quizEntries = [{
     originalId: "twUREPJ0nvIhbQXAeHRj"
 },
 {
+  title: "Vocabulary",
+  subtitle: "",
+  id: 51,
+  Question: "T/F: The term 'academic vocabulary' is defined to include which of these words (choose all that apply): ",
+  questionP2: "",
+  answer_type: "ms",
+  option1: "Semantics",
+  option2: "Osmosis",
+  option3: "Coefficient",
+  option4: "Ecosystem",
+  option5: "Sovereign",
+  correctAnswer: 6,
+  correctAnswers: [
+    6
+  ],
+  explanation: "None of these are considered academic vocabulary.\n\n'Academic vocabulary' or 'Tier II words' are considered to be words that are neither commonly used in everyday spoken language, nor are specific to certain academic subjects, but are broadly used across different academic subject domains.",
+    explanation2: "Different major lists of these exist. The first, the EAP foundation list, contains ~3000 words in 570 word families. A second, from the Steinhardt school, contains many more word bases and word forms.\n\nThese words are on neither list.",
+  videoUrl: "",
+  videoId: "",
+  image: "",
+  imageUrl: "",
+  imageAltText: "",
+  
+podcastEpisode: 
+{
+EpisodeUrl: "https://share.snipd.com/episode/69f80d9d-fb63-414f-ad54-af9b11663fa4",
+description: "'Fifth-grade teacher Sean Morrisey joins us to discuss all things vocabulary! We discuss Tier 2 and 3 words and discuss how you can strategically select words to teach using research-based approaches.",
+podcastStartTime: 
+0,
+title: "Vocabulary Instruction with Sean Morrisey",
+audioUrl: "",
+snipdUrl: "https://share.snipd.com/snip/0b884cdd-0f1a-4569-8e24-831e2304d01f",
+snipdTitle: "Sean Morrissey on Tier I, III, and Tier II Academic vocabularies.",
+snipdDescription: "How do the three differ?"
+},
+  podcastEpisode2: {
+    title: "",
+    audioUrl: "",
+    podcastStartTime: 0,
+    description: "",
+    EpisodeUrl: ""
+  },
+  cautionLevel: "",
+  caution: "",
+  citations: [
+    {
+      imageUrl: "",
+      year: "2014",
+      author: "Lesaux, Nonie K.; Kieffer, Michael J.; Kelley Joan G.; Harris, Julie Russ",
+      url: "https://journals.sagepub.com/doi/abs/10.3102/0002831214532165",
+      title: "Effects of Academic Vocabulary Instruction for Linguistically Diverse Adolescents: Evidence From a Randomized Field Trial"
+    }
+  ],
+  ref1: "",
+  ref2: "",
+  resources: [
+    {
+      url: "https://www.eapfoundation.com/vocab/academic/awllists/",
+      author: "Averil Coxhead / EAP Foundation",
+      description: "The original, 570 word-family list. (2000)",
+      title: "The Academic Word List"
+    },
+    {
+      description: "A second, larger list, compiled somewhat differently, with ~3000 base words. (2013)",
+      url: "https://docs.steinhardt.nyu.edu/pdfs/metrocenter/atn293/pdf/academic_vocabulary_list.pdf",
+      title: "Academic Vocabulary List (AVL)",
+      author: "Mark Davies and Dee Gardner"
+    }
+  ],
+  closingText: "",
+  closingText2: "",
+  modal: "",
+  status: "draft",
+  version: 7,
+  userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+  originalId: "ycfZOgi6deBy20PqUrxd",
+  createdAt: {
+    seconds: 1744398475,
+    nanoseconds: 405000000
+  },
+  timestamp: {
+    seconds: 1744398475,
+    nanoseconds: 405000000
+  },
+  userEmail: "ed.jones@gmail.com",
+  updatedAt: {
+    seconds: 1744398475,
+    nanoseconds: 405000000
+  },
+  option6: "None of the above",
+  hasNoneOfTheAbove: true,
+  isPermanent: false
+},
+{
     title: "Learning Science",
     subtitle: "",
     id: 2000, // New ID for the new quiz entry
