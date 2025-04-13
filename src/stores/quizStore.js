@@ -318,25 +318,17 @@ export const quizStore = defineStore('quiz', {
                 const permanentRef = collection(db, 'permanentQuizEntries');
 
                 // Log the query parameters
-                console.log('Querying for status == draft, pending, or deleted');
+                console.log('Querying for all items in quizEntries');
 
-                // Fetch draft items
-                const draftsQuery = query(draftsRef,
-                    or(
-                        where('status', '==', 'draft'),
-                        where('status', '==', 'pending'),
-                        where('status', '==', 'deleted')
-                    ),
-                    orderBy('timestamp', 'desc')
-                );
+                // Fetch all items from quizEntries
+                const draftsQuery = query(draftsRef, orderBy('timestamp', 'desc'));
                 const draftsSnapshot = await getDocs(draftsQuery);
+                console.log('Found items in quizEntries:', draftsSnapshot.docs.length);
 
                 // Fetch permanent (approved) items
-                const permanentQuery = query(permanentRef,
-                    where('status', '==', 'approved'),
-                    orderBy('timestamp', 'desc')
-                );
+                const permanentQuery = query(permanentRef, orderBy('timestamp', 'desc'));
                 const permanentSnapshot = await getDocs(permanentQuery);
+                console.log('Found items in permanentQuizEntries:', permanentSnapshot.docs.length);
 
                 // Combine both sets of items
                 const allItems = [
@@ -352,9 +344,15 @@ export const quizStore = defineStore('quiz', {
                     }))
                 ];
 
+                console.log('Total items found:', allItems.length);
+                console.log('Items by status:', allItems.reduce((acc, item) => {
+                    acc[item.status] = (acc[item.status] || 0) + 1;
+                    return acc;
+                }, {}));
+
                 // Group items by title to handle multiple versions
                 const itemsByTitle = new Map();
-                allItems.forEach(item => {
+                for (const item of allItems) {
                     const title = item.title;
                     if (!itemsByTitle.has(title)) {
                         itemsByTitle.set(title, []);
@@ -363,7 +361,7 @@ export const quizStore = defineStore('quiz', {
                         ...item,
                         version: item.version || 1 // Ensure version is at least 1
                     });
-                });
+                }
 
                 // For each title, keep only the latest version
                 this.draftQuizItems = Array.from(itemsByTitle.values())
@@ -401,15 +399,25 @@ export const quizStore = defineStore('quiz', {
             // Create sanitized versions of the states
             const sanitizeData = (obj) => {
                 const result = {};
-                Object.entries(obj).forEach(([key, value]) => {
+                for (const [key, value] of Object.entries(obj)) {
                     if (value === undefined) {
                         result[key] = null;  // Convert undefined to null for Firestore
                     } else if (typeof value === 'object' && value !== null) {
-                        result[key] = sanitizeData(value);  // Recursively sanitize nested objects
+                        if (Array.isArray(value)) {
+                            // Handle arrays, ensuring they exist
+                            result[key] = value.map(item => {
+                                if (typeof item === 'object' && item !== null) {
+                                    return sanitizeData(item);
+                                }
+                                return item;
+                            });
+                        } else {
+                            result[key] = sanitizeData(value);  // Recursively sanitize nested objects
+                        }
                     } else {
                         result[key] = value;
                     }
-                });
+                }
                 return result;
             };
 
@@ -419,6 +427,10 @@ export const quizStore = defineStore('quiz', {
 
             const afterState = sanitizeData({ ...this.draftQuizEntry });
 
+            // Ensure arrays are initialized
+            if (!afterState.citations) afterState.citations = [];
+            if (!afterState.resources) afterState.resources = [];
+
             // Ensure we're using the correct quiz item ID
             const quizItemId = afterState?.id || beforeState?.id;
             if (!quizItemId) {
@@ -427,27 +439,20 @@ export const quizStore = defineStore('quiz', {
             }
 
             try {
-                // Get the latest revision number for this quiz item
-                const editHistoryRef = collection(db, 'quizEditHistory');
-                const q = query(
-                    editHistoryRef,
-                    where('quizItemId', '==', quizItemId),
-                    orderBy('revisionNumber', 'desc'),
-                    limit(1)
-                );
-
-                const querySnapshot = await getDocs(q);
-                const lastRevision = querySnapshot.empty ? 0 : querySnapshot.docs[0].data().revisionNumber;
-                const newRevisionNumber = lastRevision + 1;
+                // Get the current version from the quiz item
+                const quizItemRef = doc(db, 'quizEntries', quizItemId);
+                const quizItemDoc = await getDoc(quizItemRef);
+                const currentVersion = quizItemDoc.data()?.version || 1;
 
                 // Create the version history entry
+                const editHistoryRef = collection(db, 'quizEditHistory');
                 await addDoc(editHistoryRef, {
                     quizItemId,
                     userId: auth.user?.uid,
                     userEmail: auth.user?.email,
                     timestamp: serverTimestamp(),
                     versionMessage,
-                    revisionNumber: newRevisionNumber,
+                    version: currentVersion, // Use the same version number as the quiz item
                     changes: {
                         before: beforeState,
                         after: afterState
@@ -476,6 +481,7 @@ export const quizStore = defineStore('quiz', {
 
                 // Get the current ID from the entry
                 const currentId = this.draftQuizEntry.id;
+                const originalId = this.draftQuizEntry.originalId;
 
                 // Check if we have an authenticated user
                 if (!authStore.user) {
@@ -483,13 +489,17 @@ export const quizStore = defineStore('quiz', {
                     throw new Error('You must be logged in to save entries');
                 }
 
-                // If this is a new entry (no ID)
-                if (!currentId) {
+                // Only create a new entry if:
+                // 1. There is no current ID AND no original ID (completely new entry)
+                // 2. The current ID matches the original ID (copy from template)
+                // 3. The current ID is null (new entry)
+                if (!currentId || (currentId === originalId)) {
                     console.log('Creating new entry with user details:', {
                         userId: authStore.user.uid,
                         userEmail: authStore.user.email
                     });
 
+                    // Create new entry
                     const newEntry = {
                         ...this.draftQuizEntry,
                         status: 'draft',
@@ -497,10 +507,10 @@ export const quizStore = defineStore('quiz', {
                         timestamp: serverTimestamp(),
                         userId: authStore.user.uid,
                         userEmail: authStore.user.email,
-                        version: 1 // Start at version 1 for new entries
+                        version: 1
                     };
 
-                    console.log('Attempting to create new entry in Firestore:', {
+                    console.log('Creating new entry in Firestore:', {
                         collection: 'quizEntries',
                         entry: {
                             title: newEntry.title,
@@ -523,8 +533,8 @@ export const quizStore = defineStore('quiz', {
                 const entryToSave = {
                     ...this.draftQuizEntry,
                     updatedAt: serverTimestamp(),
-                    timestamp: serverTimestamp(), // Update timestamp for sorting
-                    version: currentVersion + 1 // Increment version
+                    timestamp: serverTimestamp(),
+                    version: currentVersion + 1
                 };
 
                 console.log('Updating existing entry:', {
@@ -539,7 +549,7 @@ export const quizStore = defineStore('quiz', {
 
                 // Update the last saved entry
                 this.lastSavedDraftQuizEntry = { ...entryToSave };
-                this.draftQuizEntry = { ...entryToSave }; // Also update current draft
+                this.draftQuizEntry = { ...entryToSave };
                 return currentId;
             } catch (error) {
                 console.error('Error in saveDraftQuizEntry:', {
@@ -645,158 +655,60 @@ export const quizStore = defineStore('quiz', {
             }
         },
 
-        validateDraftQuizEntry(draft) {
-            const validation = {
-                errors: [],
-                invalidFields: new Set()
-            };
+        validateDraftQuizEntry(entry) {
+            const errors = [];
+            const invalidFields = new Set();
 
-            // Default values to check against
-            const defaultValues = {
-                title: '',
-                subtitle: '',
-                Question: 'What is your question?',
-                questionP2: '',
-                option1: 'First option',
-                option2: 'Second option',
-                option3: 'Third option',
-                option4: 'Fourth option',
-                option5: 'Fifth option',
-                explanation: 'Here is why option 1 is correct...'
-            };
-
-            // Required fields - check for empty or default values
-            if (!draft.title?.trim() || draft.title === defaultValues.title) {
-                validation.errors.push('Title is required');
-                validation.invalidFields.add('title');
+            // Required fields validation
+            if (!entry.title?.trim()) {
+                errors.push('Title is required');
+                invalidFields.add('title');
             }
 
-            if (!draft.Question?.trim() || draft.Question === defaultValues.Question) {
-                validation.errors.push('Question is required');
-                validation.invalidFields.add('Question');
+            if (!entry.Question?.trim()) {
+                errors.push('Question is required');
+                invalidFields.add('Question');
             }
 
-            // Answer type specific validation
-            if (draft.answer_type === 'mc') {
-                // For multiple choice, need at least 2 options and a correct answer
-                const options = [
-                    draft.option1,
-                    draft.option2,
-                    draft.option3,
-                    draft.option4,
-                    draft.option5
-                ];
-
-                // Check if options are just default values
-                const nonDefaultOptions = options.filter(
-                    (opt, index) => opt?.trim() && opt !== defaultValues[`option${index + 1}`]
-                );
-
-                if (nonDefaultOptions.length < 2) {
-                    validation.errors.push('Multiple choice questions require at least 2 non-default options');
-                    // Mark all empty or default options as invalid
-                    options.forEach((opt, index) => {
-                        if (!opt?.trim() || opt === defaultValues[`option${index + 1}`]) {
-                            validation.invalidFields.add(`option${index + 1}`);
-                        }
-                    });
-                }
-
-                if (!draft.correctAnswer || draft.correctAnswer < 1 || draft.correctAnswer > nonDefaultOptions.length) {
-                    validation.errors.push('Please select a valid correct answer');
-                    validation.invalidFields.add('correctAnswer');
-                }
-
-                // Check if the selected correct answer is still a default value
-                const correctOptionIndex = draft.correctAnswer - 1;
-                if (correctOptionIndex >= 0 &&
-                    options[correctOptionIndex] === defaultValues[`option${draft.correctAnswer}`]) {
-                    validation.errors.push('The correct answer cannot be a default option');
-                    validation.invalidFields.add(`option${draft.correctAnswer}`);
-                }
-            } else if (draft.answer_type === 'ms') {
-                // For multiple select, need at least 2 options and at least two correct answers
-                const options = [
-                    draft.option1,
-                    draft.option2,
-                    draft.option3,
-                    draft.option4,
-                    draft.option5
-                ];
-
-                // Check if options are just default values
-                const nonDefaultOptions = options.filter(
-                    (opt, index) => opt?.trim() && opt !== defaultValues[`option${index + 1}`]
-                );
-
-                if (nonDefaultOptions.length < 2) {
-                    validation.errors.push('Multiple select questions require at least 2 non-default options');
-                    // Mark all empty or default options as invalid
-                    options.forEach((opt, index) => {
-                        if (!opt?.trim() || opt === defaultValues[`option${index + 1}`]) {
-                            validation.invalidFields.add(`option${index + 1}`);
-                        }
-                    });
-                }
-
-                if (!draft.correctAnswers || !Array.isArray(draft.correctAnswers) || draft.correctAnswers.length < 2) {
-                    validation.errors.push('Multiple select questions require at least two correct answers');
-                    validation.invalidFields.add('correctAnswers');
-                }
-
-                // Check if any of the selected correct answers are default values
-                if (draft.correctAnswers) {
-                    draft.correctAnswers.forEach(answer => {
-                        const index = answer - 1;
-                        if (index >= 0 && options[index] === defaultValues[`option${answer}`]) {
-                            validation.errors.push(`Correct answer option ${answer} cannot be a default option`);
-                            validation.invalidFields.add(`option${answer}`);
-                        }
-                    });
-                }
-            }
-
-            // Explanation validation - check for default value
-            if (!draft.explanation?.trim() || draft.explanation === defaultValues.explanation) {
-                validation.errors.push('Explanation is required');
-                validation.invalidFields.add('explanation');
-            }
-
-            // Media validation - if URLs are provided, they should be valid
-            if (draft.videoUrl && !this.isValidUrl(draft.videoUrl)) {
-                validation.errors.push('Invalid video URL');
-                validation.invalidFields.add('videoUrl');
-            }
-            if (draft.imageUrl && !this.isValidUrl(draft.imageUrl)) {
-                validation.errors.push('Invalid image URL');
-                validation.invalidFields.add('imageUrl');
-            }
-
-            // Podcast episode validation
-            if (draft.podcastEpisode?.EpisodeUrl && !this.isValidUrl(draft.podcastEpisode.EpisodeUrl)) {
-                validation.errors.push('Invalid podcast episode URL');
-                validation.invalidFields.add('podcastEpisodeUrl');
-            }
-            if (draft.podcastEpisode?.audioUrl && !this.isValidUrl(draft.podcastEpisode.audioUrl)) {
-                validation.errors.push('Invalid podcast audio URL');
-                validation.invalidFields.add('podcastAudioUrl');
-            }
-
-            // Citations validation
-            if (draft.citations?.length > 0) {
-                draft.citations.forEach((citation, index) => {
-                    if (!citation.title?.trim()) {
-                        validation.errors.push(`Citation ${index + 1} requires a title`);
-                        validation.invalidFields.add(`citation-${index}-title`);
+            // Validate options based on answer type
+            if (entry.answer_type === 'mc' || entry.answer_type === 'ms') {
+                let optionCount = 0;
+                for (let i = 1; i <= 6; i++) {
+                    if (entry[`option${i}`]?.trim()) {
+                        optionCount++;
                     }
-                    if (citation.url && !this.isValidUrl(citation.url)) {
-                        validation.errors.push(`Citation ${index + 1} has an invalid URL`);
-                        validation.invalidFields.add(`citation-${index}-url`);
+                }
+
+                if (optionCount < 2) {
+                    errors.push('At least 2 options are required');
+                    for (let i = 1; i <= 2; i++) {
+                        invalidFields.add(`option${i}`);
                     }
-                });
+                }
+
+                // Validate correct answer selection
+                if (entry.answer_type === 'mc' && !entry.correctAnswer) {
+                    errors.push('Please select a correct answer');
+                } else if (entry.answer_type === 'ms') {
+                    if (entry.hasNoneOfTheAbove) {
+                        // For "None of the Above" case, only one correct answer is allowed
+                        if (!entry.correctAnswers || entry.correctAnswers.length !== 1) {
+                            errors.push('When "None of the Above" is selected, exactly one correct answer is required');
+                        }
+                    } else {
+                        // For regular multiple select, at least two correct answers are required
+                        if (!entry.correctAnswers || entry.correctAnswers.length < 2) {
+                            errors.push('Please select at least two correct answers');
+                        }
+                    }
+                }
             }
 
-            return validation;
+            return {
+                isValid: errors.length === 0,
+                errors,
+                invalidFields
+            };
         },
 
         isValidUrl(string) {
@@ -1058,22 +970,35 @@ export const quizStore = defineStore('quiz', {
 
         async approveQuizItem(itemId) {
             try {
+                console.log('Starting approveQuizItem for ID:', itemId);
+                
                 // Get the quiz item
                 const quizRef = doc(db, 'quizEntries', itemId);
                 const quizDoc = await getDoc(quizRef);
 
                 if (!quizDoc.exists()) {
+                    console.error('Quiz item not found in quizEntries:', itemId);
                     throw new Error('Quiz item not found');
                 }
 
                 const quizData = quizDoc.data();
+                console.log('Found quiz item:', {
+                    id: itemId,
+                    status: quizData.status,
+                    title: quizData.title
+                });
 
                 // Verify it's an accepted item
                 if (quizData.status !== 'accepted') {
+                    console.error('Quiz item is not accepted:', {
+                        currentStatus: quizData.status,
+                        requiredStatus: 'accepted'
+                    });
                     throw new Error('Quiz item must be accepted before it can be approved');
                 }
 
                 // Update the status to approved
+                console.log('Updating status to approved in quizEntries');
                 await updateDoc(quizRef, {
                     status: 'approved',
                     approvedAt: serverTimestamp(),
@@ -1081,6 +1006,7 @@ export const quizStore = defineStore('quiz', {
                 });
 
                 // Add to permanent quiz entries
+                console.log('Adding to permanentQuizEntries');
                 const permanentRef = doc(db, 'permanentQuizEntries', itemId);
                 await setDoc(permanentRef, {
                     ...quizData,
@@ -1090,10 +1016,12 @@ export const quizStore = defineStore('quiz', {
                 });
 
                 // Record this change in version history
+                console.log('Recording version history');
                 this.draftQuizEntry = { ...quizData, id: itemId };
                 await this.recordQuizEdit('Quiz item approved and moved to permanent entries');
 
                 // Refresh the draft items list
+                console.log('Refreshing draft items list');
                 await this.fetchDraftQuizItems();
 
                 return true;

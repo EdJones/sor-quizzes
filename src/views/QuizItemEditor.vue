@@ -197,6 +197,19 @@
                     </template>
                   </div>
                 </div>
+
+                <!-- None of the Above toggle for multiple select -->
+                <div v-if="newEntry.answer_type === 'ms'" class="form-group mt-4">
+                  <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Include "None of the Above" option
+                    </label>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" v-model="newEntry.hasNoneOfTheAbove" class="sr-only peer" @change="handleNoneOfTheAboveToggle">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
           </details>
@@ -336,6 +349,35 @@
                 @blur="handleBlur($event, 'podcastEpisode.podcastStartTime')" />
             </div>
 
+            <!-- Add Snipd Snip fields for Episode 1 -->
+            <div class="form-group">
+              <label for="podcastEpisode1-snipd-url">Episode 1 Snipd URL:</label>
+              <input type="text" id="podcastEpisode1-snipd-url" v-model="newEntry.podcastEpisode.snipdUrl"
+                :class="['form-input', { 'invalid-field': invalidFields.has('podcastEpisode.snipdUrl') }]"
+                :data-error="getFieldError('podcastEpisode.snipdUrl')" 
+                :placeholder="newEntry.podcastEpisode.snipdUrl"
+                @focus="handleFocus($event, 'podcastEpisode.snipdUrl')"
+                @blur="handleBlur($event, 'podcastEpisode.snipdUrl')" />
+            </div>
+            <div class="form-group">
+              <label for="podcastEpisode1-snipd-title">Episode 1 Snipd Title:</label>
+              <input type="text" id="podcastEpisode1-snipd-title" v-model="newEntry.podcastEpisode.snipdTitle"
+                :class="['form-input', { 'invalid-field': invalidFields.has('podcastEpisode.snipdTitle') }]"
+                :data-error="getFieldError('podcastEpisode.snipdTitle')" 
+                :placeholder="newEntry.podcastEpisode.snipdTitle"
+                @focus="handleFocus($event, 'podcastEpisode.snipdTitle')"
+                @blur="handleBlur($event, 'podcastEpisode.snipdTitle')" />
+            </div>
+            <div class="form-group">
+              <label for="podcastEpisode1-snipd-description">Episode 1 Snipd Description:</label>
+              <textarea id="podcastEpisode1-snipd-description" v-model="newEntry.podcastEpisode.snipdDescription"
+                :class="['form-textarea', { 'invalid-field': invalidFields.has('podcastEpisode.snipdDescription') }]"
+                :data-error="getFieldError('podcastEpisode.snipdDescription')"
+                :placeholder="newEntry.podcastEpisode.snipdDescription"
+                @focus="handleFocus($event, 'podcastEpisode.snipdDescription')"
+                @blur="handleBlur($event, 'podcastEpisode.snipdDescription')"></textarea>
+            </div>
+
             <hr class="section-divider">
 
             <div class="form-group">
@@ -380,6 +422,35 @@
                 :placeholder="newEntry.podcastEpisode2.podcastStartTime"
                 @focus="handleFocus($event, 'podcastEpisode2.podcastStartTime')"
                 @blur="handleBlur($event, 'podcastEpisode2.podcastStartTime')" />
+            </div>
+
+            <!-- Add Snipd Snip fields for Episode 2 -->
+            <div class="form-group">
+              <label for="podcastEpisode2-snipd-url">Episode 2 Snipd URL:</label>
+              <input type="text" id="podcastEpisode2-snipd-url" v-model="newEntry.podcastEpisode2.snipdUrl"
+                :class="['form-input', { 'invalid-field': invalidFields.has('podcastEpisode2.snipdUrl') }]"
+                :data-error="getFieldError('podcastEpisode2.snipdUrl')" 
+                :placeholder="newEntry.podcastEpisode2.snipdUrl"
+                @focus="handleFocus($event, 'podcastEpisode2.snipdUrl')"
+                @blur="handleBlur($event, 'podcastEpisode2.snipdUrl')" />
+            </div>
+            <div class="form-group">
+              <label for="podcastEpisode2-snipd-title">Episode 2 Snipd Title:</label>
+              <input type="text" id="podcastEpisode2-snipd-title" v-model="newEntry.podcastEpisode2.snipdTitle"
+                :class="['form-input', { 'invalid-field': invalidFields.has('podcastEpisode2.snipdTitle') }]"
+                :data-error="getFieldError('podcastEpisode2.snipdTitle')" 
+                :placeholder="newEntry.podcastEpisode2.snipdTitle"
+                @focus="handleFocus($event, 'podcastEpisode2.snipdTitle')"
+                @blur="handleBlur($event, 'podcastEpisode2.snipdTitle')" />
+            </div>
+            <div class="form-group">
+              <label for="podcastEpisode2-snipd-description">Episode 2 Snipd Description:</label>
+              <textarea id="podcastEpisode2-snipd-description" v-model="newEntry.podcastEpisode2.snipdDescription"
+                :class="['form-textarea', { 'invalid-field': invalidFields.has('podcastEpisode2.snipdDescription') }]"
+                :data-error="getFieldError('podcastEpisode2.snipdDescription')"
+                :placeholder="newEntry.podcastEpisode2.snipdDescription"
+                @focus="handleFocus($event, 'podcastEpisode2.snipdDescription')"
+                @blur="handleBlur($event, 'podcastEpisode2.snipdDescription')"></textarea>
             </div>
           </div>
 
@@ -680,6 +751,35 @@ export default {
                   ...resource // Preserve any additional fields
                 }));
 
+                // Ensure podcast episodes have all required fields including Snipd fields
+                if (afterState.podcastEpisode) {
+                  afterState.podcastEpisode = {
+                    title: afterState.podcastEpisode.title || '',
+                    EpisodeUrl: afterState.podcastEpisode.EpisodeUrl || '',
+                    audioUrl: afterState.podcastEpisode.audioUrl || '',
+                    description: afterState.podcastEpisode.description || '',
+                    podcastStartTime: afterState.podcastEpisode.podcastStartTime || 0,
+                    snipdUrl: afterState.podcastEpisode.snipdUrl || '',
+                    snipdTitle: afterState.podcastEpisode.snipdTitle || '',
+                    snipdDescription: afterState.podcastEpisode.snipdDescription || '',
+                    ...afterState.podcastEpisode
+                  };
+                }
+
+                if (afterState.podcastEpisode2) {
+                  afterState.podcastEpisode2 = {
+                    title: afterState.podcastEpisode2.title || '',
+                    EpisodeUrl: afterState.podcastEpisode2.EpisodeUrl || '',
+                    audioUrl: afterState.podcastEpisode2.audioUrl || '',
+                    description: afterState.podcastEpisode2.description || '',
+                    podcastStartTime: afterState.podcastEpisode2.podcastStartTime || 0,
+                    snipdUrl: afterState.podcastEpisode2.snipdUrl || '',
+                    snipdTitle: afterState.podcastEpisode2.snipdTitle || '',
+                    snipdDescription: afterState.podcastEpisode2.snipdDescription || '',
+                    ...afterState.podcastEpisode2
+                  };
+                }
+
                 store.updateDraftQuizEntry({
                   ...afterState,
                   id: itemId, // Ensure we keep the original ID
@@ -907,7 +1007,21 @@ export default {
         closingText2: 'Enter additional closing text here',
         modal: 'Enter modal content here',
         'podcastEpisode.title': 'Enter podcast title',
+        'podcastEpisode.EpisodeUrl': 'Enter podcast URL',
+        'podcastEpisode.audioUrl': 'Enter audio URL',
+        'podcastEpisode.description': 'Enter podcast description',
+        'podcastEpisode.podcastStartTime': 0,
+        'podcastEpisode.snipdUrl': 'Enter Snipd URL',
+        'podcastEpisode.snipdTitle': 'Enter Snipd title',
+        'podcastEpisode.snipdDescription': 'Enter Snipd description',
         'podcastEpisode2.title': 'Enter second podcast title',
+        'podcastEpisode2.EpisodeUrl': 'Enter second podcast URL',
+        'podcastEpisode2.audioUrl': 'Enter second audio URL',
+        'podcastEpisode2.description': 'Enter second podcast description',
+        'podcastEpisode2.podcastStartTime': 0,
+        'podcastEpisode2.snipdUrl': 'Enter second Snipd URL',
+        'podcastEpisode2.snipdTitle': 'Enter second Snipd title',
+        'podcastEpisode2.snipdDescription': 'Enter second Snipd description',
         caution: 'Enter caution text here'
       },
       activeSection: '',
@@ -966,8 +1080,18 @@ export default {
         // Validate correct answer selection
         if (this.newEntry.answer_type === 'mc' && !this.newEntry.correctAnswer) {
           errors.push('Please select a correct answer');
-        } else if (this.newEntry.answer_type === 'ms' && (!this.newEntry.correctAnswers || this.newEntry.correctAnswers.length === 0)) {
-          errors.push('Please select at least one correct answer');
+        } else if (this.newEntry.answer_type === 'ms') {
+          if (this.newEntry.hasNoneOfTheAbove) {
+            // For "None of the Above" case, only one correct answer is allowed
+            if (!this.newEntry.correctAnswers || this.newEntry.correctAnswers.length !== 1) {
+              errors.push('When "None of the Above" is selected, exactly one correct answer is required');
+            }
+          } else {
+            // For regular multiple select, at least two correct answers are required
+            if (!this.newEntry.correctAnswers || this.newEntry.correctAnswers.length < 2) {
+              errors.push('Please select at least two correct answers');
+            }
+          }
         }
       }
 
@@ -1278,6 +1402,17 @@ export default {
         url: '',
         description: ''
       });
+    },
+    handleNoneOfTheAboveToggle() {
+      if (this.newEntry.hasNoneOfTheAbove) {
+        // Add "None of the Above" option and set it as the only correct answer
+        this.newEntry.option6 = "None of the Above";
+        this.newEntry.correctAnswers = [6]; // Set it as the only correct answer
+      } else {
+        // Remove "None of the Above" option and clear correct answers
+        this.newEntry.option6 = "";
+        this.newEntry.correctAnswers = [];
+      }
     }
   },
   beforeUnmount() {

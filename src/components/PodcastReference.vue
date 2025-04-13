@@ -12,13 +12,43 @@
                 <font-awesome-icon icon="external-link-alt" /> &nbsp; {{ podcastEpisode.audioUrl ? 'Episode Page' :
                 'Listen to Episode' }}
             </a>
+
+            <!-- Add Snipd section -->
+            <div v-if="podcastEpisode.snipdUrl" class="snipd-section">
+                <div class="snipd-header">
+                </div>
+                <div class="snipd-content">
+                    <img :src="snipdLogo" alt="Snipd Logo" class="snipd-logo" />
+                    <a :href="podcastEpisode.snipdUrl" target="_blank" rel="noopener noreferrer" class="snipd-link">
+                        <font-awesome-icon icon="external-link-alt" /> &nbsp; {{ podcastEpisode.snipdTitle || 'View Snip' }}
+                    </a>
+                    <p v-if="podcastEpisode.snipdDescription" class="snipd-description">
+                        {{ podcastEpisode.snipdDescription }}
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faPodcast, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import snipdLogo from '../assets/snipd-logo.png'
+
+library.add(faPodcast, faExternalLinkAlt)
+
 export default {
     name: 'PodcastReference',
+    components: {
+        FontAwesomeIcon
+    },
+    data() {
+        return {
+            snipdLogo
+        }
+    },
     props: {
         podcastEpisode: {
             type: Object,
@@ -116,9 +146,64 @@ export default {
     font-size: 0.8rem;
 }
 
+.snipd-section {
+
+
+}
+
+.snipd-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.snipd-logo {
+    width: 24px;
+    height: 24px;
+    margin-right: 0.5rem;
+}
+
+.snipd-title {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #2d3748;
+}
+
+.snipd-content {
+    padding-left: .1rem;
+}
+
+.snipd-link {
+    display: inline-flex;
+    align-items: center;
+    color: #7f8386;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.7rem;
+    transition: color 0.2s ease;
+    margin-bottom: 0.5rem;
+}
+
+.snipd-link:hover {
+    color: #2c5282;
+    text-decoration: underline;
+}
+
+.snipd-description {
+    font-size: 0.8rem;
+    color: #4a5568;
+    line-height: 1.5;
+    text-align: left;
+    margin-top: 0.5rem;
+}
+
 @media (max-width: 768px) {
     .podcast-reference {
         max-width: 100%;
+    }
+    .snipd-content {
+        padding-left: 1rem;
     }
 }
 </style>

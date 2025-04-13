@@ -1024,7 +1024,6 @@ export const quizEntries = [{
     correctAnswer: "3",
     explanation: "Developmental Language Disorder is the most common.",
     explanation2: "Autism occurrs less than 1/10th as often.",
-    explanation2: "",
     videoUrl: "",
     videoId: "4gcvjHOa968",
     image: "",
@@ -1336,13 +1335,6 @@ export const quizEntries = [{
     },
     cautionLevel: "",
     caution: "",
-    citations: [{
-        title: "",
-        author: "",
-        url: "",
-        year: "",
-        imageUrl: "",
-    }],
     ref1: "",
     ref2: "",
     resources: [{
@@ -1498,7 +1490,7 @@ export const quizEntries = [{
     closingText2: "",
     modal: "",
     status: "draft",
-    id: "K9G4hnDT4RyVxwE9c7T8"
+    stringId: "K9G4hnDT4RyVxwE9c7T8"
 },
 {
     title: "Pace of Phonics Instruction",
@@ -1612,8 +1604,6 @@ export const quizEntries = [{
     title: "Reading First",
     subtitle: "",
     id: 44,
-    userEmail: "ed.jones@gmail.com",
-    isAnonymous: false,
     beta: true,
     Question: "In the middle stages of the Reading First program, two programs were considered to have met the strict evidence based requirements of the program.",
     questionP2: "They were:",
@@ -1757,10 +1747,7 @@ export const quizEntries = [{
     imageUrl: "",
     imageAltText: "",
     modal: "It's hard to let go of this belief, but it really is worth it. The idea that larger units of sound are important came from research on phonological development that demonstrated a typical developmental sequence. This body of research showed that kids typically become aware of larger units of sound (words, syllables, onsets, rimes) before they tune into smaller units (phonemes).\nBUT...here's where the field went wrong. We ASSUMED (you know what happens when you assume! 😉) that because this was the typical order of development, it was a necessary order. We ASSUMED that children needed to learn to rhyme and segment syllables first, and then we could teach them to blend and segment phonemes. Well, we were wrong. As it turns out, we figured out that kids do just fine jumping right into phonemes.\nThis is a lot like how pediatricians used to be concerned when babies didn't crawl. They had identified a typical developmental sequence in which babies crawl before they walk. They were certain that kids who didn't crawl would suffer long-term developmental problems. Well, as it turns out many children walk without ever crawling and turn out just fine. Pediatricians figured out they were wrong about this, so they stopped suggesting parents take their kids through silly therapies to get them to crawl even though they had already learned to walk.\nEven more important, we figured out that learning to rhyme and segment syllables doesn't actually have any real benefit to reading or spelling. Remember, phonological awareness is not the goal of phonological awareness instruction. The whole purpose of working on phonological awareness in the first place it to help kids read and spell. Teaching kids to rhyme and segment syllables helps kids rhyme and segment syllables, but teaching kids to blend and segment phonemes helps them read and spell words.\nI hear teachers say all the time \"it's only 10 or 15 minutes a day, what's the harm?\" Well, maybe you've got tons of spare time in your school day, but most teachers don't. If you have 10-15 minutes available in your day, your time would be much better used doing additional practice on word work with manipulative letters (i.e., blending and segmenting phonemes with letters) or reading and spelling irregular words or reading connected text--things that will actually improve your kids' reading ability.\nI know the belief is strong, and the activities are fun and engaging, so it's hard to let it go. Believe me when I say I understand. I wrote and entire BOOK that included activities at the word, syllable, onset-rime, and phoneme level. You know that umbrella diagram that people use? That came from PD I did in the early 90s. I was invested in this stuff! But, now I know better, so I do better. I urge you to do the same!",
-    status: "beta",
-    userEmail: "ed.jones@gmail.com",
     isAnonymous: false,
-    userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
     correctAnswers: [2],
     podcastEpisode: {
         title: "Episode Title",
@@ -1951,7 +1938,7 @@ export const quizEntries = [{
     option3: "Third option",
     option4: "Fourth option",
     option5: "Fifth option",
-    correctAnswer: 1,
+    correctAnswer: 2,
     explanation: "Today, the Phonological Deficit Hypothesis (PDH) is the primary--and quite successful--scientific explanation behind dyslexia. However, the underlying neurobiological components of PDH are less well understood.",
     explanation2: "It's critical to remember that Phonology is far more than just phonemic awareness. As Share says, \"There have unquestionably been genuine breakthroughs in the understanding the neurobiological circuitry of reading and dyslexia. However, the initial hype that neuroimaging would soon uncover the true 'cause' of dyslexia has since been tempered by an appreciation of neuroplasticity—the brain became a dependent (and not only independent) variable and no longer a constant in the dyslexia equation.\"",
     videoUrl: "",
@@ -2082,6 +2069,323 @@ export const quizEntries = [{
     originalId: "twUREPJ0nvIhbQXAeHRj"
 },
 {
+  title: "Vocabulary",
+  subtitle: "",
+  id: 51,
+  Question: "T/F: The term 'academic vocabulary' is defined to include which of these words (choose all that apply): ",
+  questionP2: "",
+  answer_type: "ms",
+  option1: "Semantics",
+  option2: "Osmosis",
+  option3: "Coefficient",
+  option4: "Ecosystem",
+  option5: "Sovereign",
+  correctAnswer: 6,
+  correctAnswers: [
+    6
+  ],
+  explanation: "None of these are considered academic vocabulary.\n\n'Academic vocabulary' or 'Tier II words' are considered to be words that are neither commonly used in everyday spoken language, nor are specific to certain academic subjects, but are broadly used across different academic subject domains.",
+    explanation2: "Different major lists of these exist. The first, the EAP foundation list, contains ~3000 words in 570 word families. A second, from the Steinhardt school, contains many more word bases and word forms.\n\nThese words are on neither list.",
+  videoUrl: "",
+  videoId: "",
+  image: "",
+  imageUrl: "",
+  imageAltText: "",
+  
+podcastEpisode: 
+{
+EpisodeUrl: "https://share.snipd.com/episode/69f80d9d-fb63-414f-ad54-af9b11663fa4",
+description: "'Fifth-grade teacher Sean Morrisey joins us to discuss all things vocabulary! We discuss Tier 2 and 3 words and discuss how you can strategically select words to teach using research-based approaches.",
+podcastStartTime: 
+0,
+title: "Vocabulary Instruction with Sean Morrisey",
+audioUrl: "",
+snipdUrl: "https://share.snipd.com/snip/0b884cdd-0f1a-4569-8e24-831e2304d01f",
+snipdTitle: "Sean Morrissey on Tier I, III, and Tier II Academic vocabularies.",
+snipdDescription: "How do the three differ?"
+},
+  podcastEpisode2: {
+    title: "",
+    audioUrl: "",
+    podcastStartTime: 0,
+    description: "",
+    EpisodeUrl: ""
+  },
+  cautionLevel: "",
+  caution: "",
+  citations: [
+    {
+      imageUrl: "",
+      year: "2014",
+      author: "Lesaux, Nonie K.; Kieffer, Michael J.; Kelley Joan G.; Harris, Julie Russ",
+      url: "https://journals.sagepub.com/doi/abs/10.3102/0002831214532165",
+      title: "Effects of Academic Vocabulary Instruction for Linguistically Diverse Adolescents: Evidence From a Randomized Field Trial"
+    }
+  ],
+  ref1: "",
+  ref2: "",
+  resources: [
+    {
+      url: "https://www.eapfoundation.com/vocab/academic/awllists/",
+      author: "Averil Coxhead / EAP Foundation",
+      description: "The original, 570 word-family list. (2000)",
+      title: "The Academic Word List"
+    },
+    {
+      description: "A second, larger list, compiled somewhat differently, with ~3000 base words. (2013)",
+      url: "https://docs.steinhardt.nyu.edu/pdfs/metrocenter/atn293/pdf/academic_vocabulary_list.pdf",
+      title: "Academic Vocabulary List (AVL)",
+      author: "Mark Davies and Dee Gardner"
+    }
+  ],
+  closingText: "",
+  closingText2: "",
+  modal: "",
+  status: "draft",
+  version: 7,
+  userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+  originalId: "ycfZOgi6deBy20PqUrxd",
+  createdAt: {
+    seconds: 1744398475,
+    nanoseconds: 405000000
+  },
+  timestamp: {
+    seconds: 1744398475,
+    nanoseconds: 405000000
+  },
+  userEmail: "ed.jones@gmail.com",
+  updatedAt: {
+    seconds: 1744398475,
+    nanoseconds: 405000000
+  },
+  option6: "None of the above",
+  hasNoneOfTheAbove: true,
+  isPermanent: false
+},
+{
+  title: "Over-teaching",
+  subtitle: "",
+  id: 52,
+  Question: "Does the Science of Reading *movement* have an over-teaching problem? ",
+  questionP2: "",
+  answer_type: "mc",
+  option1: "Yes",
+  option2: "No",
+  option3: "Third option",
+  option4: "Fourth option",
+  option5: "Fifth option",
+  correctAnswer: 1,
+  explanation: "Yes, according to reading scientist emeritus Mark Seidenberg. \n\nThe problem arises mainly from too much of a good thing. The 'overteaching' happens in many different ways, in different places. Most well-known, perhaps, is the extreme overreaching of phonemic awareness. In other classrooms, it's the overteaching of spelling rules, or of etymology. In still other ELA classrooms, it's the overteaching of 'background knowledge' which is really unrelated to and unnecessary for, general reading abilities. ",
+  explanation2: "We hope that persistent development of these quizzes and the research base they highlight can be of great use in balancing many classrooms and schools. ",
+  videoUrl: "",
+  videoId: "mfeFw1ki2bU",
+  image: "",
+  imageUrl: "",
+  imageAltText: "",
+  podcastEpisode: {
+    audioUrl: "",
+    title: "Episode Title",
+    podcastStartTime: 0,
+    description: "",
+    EpisodeUrl: ""
+  },
+  podcastEpisode2: {
+    description: "",
+    audioUrl: "",
+    EpisodeUrl: "",
+    podcastStartTime: 0,
+    title: ""
+  },
+  cautionLevel: "",
+  caution: "",
+  citations: [
+    {
+      url: "",
+      year: "",
+      title: "",
+      imageUrl: "",
+      author: ""
+    }
+  ],
+  ref1: "",
+  ref2: "",
+  resources: [
+    {
+      author: "",
+      description: "",
+      url: "",
+      title: ""
+    }
+  ],
+  closingText: "",
+  closingText2: "",
+  modal: "",
+  status: "approved",
+  version: 3,
+  acceptedAt: {
+    seconds: 1744496808,
+    nanoseconds: 192000000
+  },
+  updatedAt: {
+    seconds: 1744496808,
+    nanoseconds: 192000000
+  },
+  timestamp: {
+    seconds: 1744406878,
+    nanoseconds: 651000000
+  },
+  isPermanent: false,
+  createdAt: {
+    seconds: 1744406878,
+    nanoseconds: 651000000
+  },
+  originalId: "g3BTqgRiLnRQr1PD6Oso",
+  submittedAt: {
+    seconds: 1744406878,
+    nanoseconds: 651000000
+  },
+  userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+  userEmail: "ed.jones@gmail.com",
+  correctAnswers: []
+},
+{
+  title: "Upper Elementary / Middle School Vocabulary",
+  subtitle: "",
+  id: 53,
+  Question: "These words should generally be explicitly taught to mastery in (by) what grade?",
+  questionP2: "Characterize, Harmonious, Distinct, Intercede, Aggregate, Ingenious, Beneficial, Approximate.",
+  answer_type: "mc",
+  option1: "4th",
+  option2: "5th",
+  option3: "6th",
+  option4: "7th",
+  option5: "Fifth option",
+  correctAnswer: 2,
+  correctAnswers: [],
+  explanation: "No particular research can say that \"these words should be taught in Grade X\". That said, we have much research and evidence as to what it takes to close the equity gaps. While kids of wealthier educated parents will hear these words, and perhaps read them at home, not all kids will.",
+  explanation2: "Teaching Academic language as early as possible sets up far more kids for later success. ",
+  videoUrl: "",
+  videoId: "",
+  image: "",
+  imageUrl: "",
+  imageAltText: "",
+  podcastEpisode: {
+    EpisodeUrl: "",
+    title: "Episode Title",
+    audioUrl: "",
+    description: "",
+    podcastStartTime: 0
+  },
+  podcastEpisode2: {
+    title: "",
+    description: "",
+    EpisodeUrl: "",
+    audioUrl: "",
+    podcastStartTime: 0
+  },
+  cautionLevel: "",
+  caution: "",
+  citations: [],
+  ref1: "",
+  ref2: "",
+  resources: [
+    {
+      url: "https://docs.google.com/document/d/1T2sqyjqYmZKs9YWlpkK-hpXWx8XXSyszOC8rtqfVJB8/edit?usp=sharing",
+      title: "Gemini Deep Research Report on ",
+      description: "My first time with Gemini Deep research, I spent only ~15 seconds on the prompts. \n\"What does research say that 5th graders should learn, in terms of vocabulary?\n\"Right now, I'm less interested in pedagogy for achieving these goals than I am in research that says what the goals should be, and why.\"",
+      author: "Google Gemini as prompted by Ed Jones on 14 Mar 24"
+    }
+  ],
+  closingText: "",
+  closingText2: "",
+  modal: "",
+  status: "approved",
+  version: 1,
+  submittedAt: {
+    seconds: 1742205485,
+    nanoseconds: 312000000
+  },
+  isAnonymous: false,
+  userEmail: "ed.jones@gmail.com",
+  userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+  originalId: "qtlG2uLSL0gGymHwvjsG",
+  updatedAt: {
+    seconds: 1742205579,
+    nanoseconds: 481000000
+  },
+  timestamp: {
+    seconds: 1742142987,
+    nanoseconds: 994000000
+  },
+  approvedAt: {
+    seconds: 1742205579,
+    nanoseconds: 481000000
+  },
+  isPermanent: true
+},
+{
+  title: "Upper Elementary: Writing/Assessment",
+  subtitle: "",
+  id: 54,
+  Question: "\nT/F: The TIDE framework for writing about informational text is part of a normed assessment of of fourth graders; reliably predicting success on state and national tests.",
+  questionP2: "",
+  answer_type: "mc",
+  option1: "True",
+  option2: "False",
+  option3: "Third option",
+  option4: "Fourth option",
+  option5: "Fifth option",
+  correctAnswer: 1,
+  correctAnswers: [],
+  explanation: "The T.I.D.E. framework is: Topic Sentence, Ideas, Details or detailed examination, Ending or conclusion.",
+  explanation2: "Kids who can score of eight, meaning they have one topic sentence, one ending, and then three ideas, and three details, those students were most likely to be proficient in their informational writing.",
+  videoUrl: "",
+  videoId: "",
+  image: "",
+  imageUrl: "",
+  imageAltText: "",
+  podcastEpisode: {
+    EpisodeUrl: "https://www.buzzsprout.com/612361/episodes/16728500-s9-e12-explicit-instruction-of-academic-language-with-adrea-truckenmiller",
+    podcastStartTime: 0,
+    title: "Explicit instruction of academic language, with Adrea Truckenmiller, Ph.D.",
+    audioUrl: "",
+    description: ""
+  },
+  podcastEpisode2: {
+    podcastStartTime: 0,
+    description: "",
+    EpisodeUrl: "",
+    audioUrl: "",
+    title: ""
+  },
+  cautionLevel: "",
+  caution: "",
+  citations: [],
+  ref1: "",
+  ref2: "",
+  resources: [],
+  closingText: "",
+  closingText2: "",
+  modal: "",
+  status: "approved",
+  version: 1,
+  draftId: "HQs0ztAvC87XaoUsjPC7",
+  createdAt: {
+    _methodName: "serverTimestamp"
+  },
+  updatedAt: {
+    seconds: 1742328491,
+    nanoseconds: 223000000
+  },
+  userEmail: "ed.jones@gmail.com",
+  userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+  timestamp: {
+    _methodName: "serverTimestamp"
+  },
+  originalId: "T3o4SPhvNNDfpBhx2r8d",
+  isPermanent: false
+},
+{
     title: "Learning Science",
     subtitle: "",
     id: 2000, // New ID for the new quiz entry
@@ -2124,13 +2428,6 @@ export const quizEntries = [{
     },
     cautionLevel: "",
     caution: "",
-    citations: [{
-        title: "",
-        author: "",
-        url: "",
-        year: "",
-        imageUrl: "",
-    }],
     ref1: "",
     ref2: "",
     resources: [{
