@@ -2262,6 +2262,143 @@ snipdDescription: "How do the three differ?"
   correctAnswers: []
 },
 {
+  title: "Upper Elementary / Middle School Vocabulary",
+  subtitle: "",
+  id: 53,
+  Question: "These words should generally be explicitly taught to mastery in (by) what grade?",
+  questionP2: "Characterize, Harmonious, Distinct, Intercede, Aggregate, Ingenious, Beneficial, Approximate.",
+  answer_type: "mc",
+  option1: "4th",
+  option2: "5th",
+  option3: "6th",
+  option4: "7th",
+  option5: "Fifth option",
+  correctAnswer: 2,
+  correctAnswers: [],
+  explanation: "No particular research can say that \"these words should be taught in Grade X\". That said, we have much research and evidence as to what it takes to close the equity gaps. While kids of wealthier educated parents will hear these words, and perhaps read them at home, not all kids will.",
+  explanation2: "Teaching Academic language as early as possible sets up far more kids for later success. ",
+  videoUrl: "",
+  videoId: "",
+  image: "",
+  imageUrl: "",
+  imageAltText: "",
+  podcastEpisode: {
+    EpisodeUrl: "",
+    title: "Episode Title",
+    audioUrl: "",
+    description: "",
+    podcastStartTime: 0
+  },
+  podcastEpisode2: {
+    title: "",
+    description: "",
+    EpisodeUrl: "",
+    audioUrl: "",
+    podcastStartTime: 0
+  },
+  cautionLevel: "",
+  caution: "",
+  citations: [],
+  ref1: "",
+  ref2: "",
+  resources: [
+    {
+      url: "https://docs.google.com/document/d/1T2sqyjqYmZKs9YWlpkK-hpXWx8XXSyszOC8rtqfVJB8/edit?usp=sharing",
+      title: "Gemini Deep Research Report on ",
+      description: "My first time with Gemini Deep research, I spent only ~15 seconds on the prompts. \n\"What does research say that 5th graders should learn, in terms of vocabulary?\n\"Right now, I'm less interested in pedagogy for achieving these goals than I am in research that says what the goals should be, and why.\"",
+      author: "Google Gemini as prompted by Ed Jones on 14 Mar 24"
+    }
+  ],
+  closingText: "",
+  closingText2: "",
+  modal: "",
+  status: "approved",
+  version: 1,
+  submittedAt: {
+    seconds: 1742205485,
+    nanoseconds: 312000000
+  },
+  isAnonymous: false,
+  userEmail: "ed.jones@gmail.com",
+  userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+  originalId: "qtlG2uLSL0gGymHwvjsG",
+  updatedAt: {
+    seconds: 1742205579,
+    nanoseconds: 481000000
+  },
+  timestamp: {
+    seconds: 1742142987,
+    nanoseconds: 994000000
+  },
+  approvedAt: {
+    seconds: 1742205579,
+    nanoseconds: 481000000
+  },
+  isPermanent: true
+},
+{
+  title: "Upper Elementary: Writing/Assessment",
+  subtitle: "",
+  id: 54,
+  Question: "\nT/F: The TIDE framework for writing about informational text is part of a normed assessment of of fourth graders; reliably predicting success on state and national tests.",
+  questionP2: "",
+  answer_type: "mc",
+  option1: "True",
+  option2: "False",
+  option3: "Third option",
+  option4: "Fourth option",
+  option5: "Fifth option",
+  correctAnswer: 1,
+  correctAnswers: [],
+  explanation: "The T.I.D.E. framework is: Topic Sentence, Ideas, Details or detailed examination, Ending or conclusion.",
+  explanation2: "Kids who can score of eight, meaning they have one topic sentence, one ending, and then three ideas, and three details, those students were most likely to be proficient in their informational writing.",
+  videoUrl: "",
+  videoId: "",
+  image: "",
+  imageUrl: "",
+  imageAltText: "",
+  podcastEpisode: {
+    EpisodeUrl: "https://www.buzzsprout.com/612361/episodes/16728500-s9-e12-explicit-instruction-of-academic-language-with-adrea-truckenmiller",
+    podcastStartTime: 0,
+    title: "Explicit instruction of academic language, with Adrea Truckenmiller, Ph.D.",
+    audioUrl: "",
+    description: ""
+  },
+  podcastEpisode2: {
+    podcastStartTime: 0,
+    description: "",
+    EpisodeUrl: "",
+    audioUrl: "",
+    title: ""
+  },
+  cautionLevel: "",
+  caution: "",
+  citations: [],
+  ref1: "",
+  ref2: "",
+  resources: [],
+  closingText: "",
+  closingText2: "",
+  modal: "",
+  status: "approved",
+  version: 1,
+  draftId: "HQs0ztAvC87XaoUsjPC7",
+  createdAt: {
+    _methodName: "serverTimestamp"
+  },
+  updatedAt: {
+    seconds: 1742328491,
+    nanoseconds: 223000000
+  },
+  userEmail: "ed.jones@gmail.com",
+  userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+  timestamp: {
+    _methodName: "serverTimestamp"
+  },
+  originalId: "T3o4SPhvNNDfpBhx2r8d",
+  isPermanent: false
+},
+{
     title: "Learning Science",
     subtitle: "",
     id: 2000, // New ID for the new quiz entry
