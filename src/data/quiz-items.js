@@ -1024,7 +1024,6 @@ export const quizEntries = [{
     correctAnswer: "3",
     explanation: "Developmental Language Disorder is the most common.",
     explanation2: "Autism occurrs less than 1/10th as often.",
-    explanation2: "",
     videoUrl: "",
     videoId: "4gcvjHOa968",
     image: "",
@@ -1336,13 +1335,6 @@ export const quizEntries = [{
     },
     cautionLevel: "",
     caution: "",
-    citations: [{
-        title: "",
-        author: "",
-        url: "",
-        year: "",
-        imageUrl: "",
-    }],
     ref1: "",
     ref2: "",
     resources: [{
@@ -1498,7 +1490,7 @@ export const quizEntries = [{
     closingText2: "",
     modal: "",
     status: "draft",
-    id: "K9G4hnDT4RyVxwE9c7T8"
+    stringId: "K9G4hnDT4RyVxwE9c7T8"
 },
 {
     title: "Pace of Phonics Instruction",
@@ -1612,8 +1604,6 @@ export const quizEntries = [{
     title: "Reading First",
     subtitle: "",
     id: 44,
-    userEmail: "ed.jones@gmail.com",
-    isAnonymous: false,
     beta: true,
     Question: "In the middle stages of the Reading First program, two programs were considered to have met the strict evidence based requirements of the program.",
     questionP2: "They were:",
@@ -1757,10 +1747,7 @@ export const quizEntries = [{
     imageUrl: "",
     imageAltText: "",
     modal: "It's hard to let go of this belief, but it really is worth it. The idea that larger units of sound are important came from research on phonological development that demonstrated a typical developmental sequence. This body of research showed that kids typically become aware of larger units of sound (words, syllables, onsets, rimes) before they tune into smaller units (phonemes).\nBUT...here's where the field went wrong. We ASSUMED (you know what happens when you assume! 😉) that because this was the typical order of development, it was a necessary order. We ASSUMED that children needed to learn to rhyme and segment syllables first, and then we could teach them to blend and segment phonemes. Well, we were wrong. As it turns out, we figured out that kids do just fine jumping right into phonemes.\nThis is a lot like how pediatricians used to be concerned when babies didn't crawl. They had identified a typical developmental sequence in which babies crawl before they walk. They were certain that kids who didn't crawl would suffer long-term developmental problems. Well, as it turns out many children walk without ever crawling and turn out just fine. Pediatricians figured out they were wrong about this, so they stopped suggesting parents take their kids through silly therapies to get them to crawl even though they had already learned to walk.\nEven more important, we figured out that learning to rhyme and segment syllables doesn't actually have any real benefit to reading or spelling. Remember, phonological awareness is not the goal of phonological awareness instruction. The whole purpose of working on phonological awareness in the first place it to help kids read and spell. Teaching kids to rhyme and segment syllables helps kids rhyme and segment syllables, but teaching kids to blend and segment phonemes helps them read and spell words.\nI hear teachers say all the time \"it's only 10 or 15 minutes a day, what's the harm?\" Well, maybe you've got tons of spare time in your school day, but most teachers don't. If you have 10-15 minutes available in your day, your time would be much better used doing additional practice on word work with manipulative letters (i.e., blending and segmenting phonemes with letters) or reading and spelling irregular words or reading connected text--things that will actually improve your kids' reading ability.\nI know the belief is strong, and the activities are fun and engaging, so it's hard to let it go. Believe me when I say I understand. I wrote and entire BOOK that included activities at the word, syllable, onset-rime, and phoneme level. You know that umbrella diagram that people use? That came from PD I did in the early 90s. I was invested in this stuff! But, now I know better, so I do better. I urge you to do the same!",
-    status: "beta",
-    userEmail: "ed.jones@gmail.com",
     isAnonymous: false,
-    userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
     correctAnswers: [2],
     podcastEpisode: {
         title: "Episode Title",
@@ -1951,7 +1938,7 @@ export const quizEntries = [{
     option3: "Third option",
     option4: "Fourth option",
     option5: "Fifth option",
-    correctAnswer: 1,
+    correctAnswer: 2,
     explanation: "Today, the Phonological Deficit Hypothesis (PDH) is the primary--and quite successful--scientific explanation behind dyslexia. However, the underlying neurobiological components of PDH are less well understood.",
     explanation2: "It's critical to remember that Phonology is far more than just phonemic awareness. As Share says, \"There have unquestionably been genuine breakthroughs in the understanding the neurobiological circuitry of reading and dyslexia. However, the initial hype that neuroimaging would soon uncover the true 'cause' of dyslexia has since been tempered by an appreciation of neuroplasticity—the brain became a dependent (and not only independent) variable and no longer a constant in the dyslexia equation.\"",
     videoUrl: "",
@@ -2441,13 +2428,6 @@ snipdDescription: "How do the three differ?"
     },
     cautionLevel: "",
     caution: "",
-    citations: [{
-        title: "",
-        author: "",
-        url: "",
-        year: "",
-        imageUrl: "",
-    }],
     ref1: "",
     ref2: "",
     resources: [{
