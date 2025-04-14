@@ -2386,6 +2386,91 @@ snipdDescription: "How do the three differ?"
   isPermanent: false
 },
 {
+  title: "Intervention Decisions--Dyslexia",
+  subtitle: "",
+  id: 55,
+  Question: "T/F: Decisions about providing intervention for dyslexia should consider the child's IQ.",
+  questionP2: "That is, since we cannot know a child's reading capacity directly, we wait and use a discrepancy assessment to determine if their reading abilities diverge too greatly from their intelligence expectations.",
+  answer_type: "mc",
+  option1: "True",
+  option2: "False",
+  option3: "Third option",
+  option4: "Fourth option",
+  option5: "Fifth option",
+  correctAnswer: 1,
+  correctAnswers: [],
+  explanation: "Completely false. The 'Discrepancy model' has been roundly debunked.",
+  explanation2: "",
+  videoUrl: "",
+  videoId: "96eGjuKRZMs",
+  image: "",
+  imageUrl: "",
+  imageAltText: "",
+  podcastEpisode: {
+    audioUrl: "",
+    EpisodeUrl: "",
+    title: "Episode Title",
+    description: "",
+    podcastStartTime: 0
+  },
+  podcastEpisode2: {
+    podcastStartTime: 0,
+    EpisodeUrl: "",
+    description: "",
+    title: "",
+    audioUrl: ""
+  },
+  cautionLevel: "",
+  caution: "",
+  citations: [
+    {
+      url: "https://pubmed.ncbi.nlm.nih.gov/31162463/",
+      year: "2018",
+      title: "A Misuse of IQ Scores: Using the Dual Discrepancy/Consistency Model for Identifying Specific Learning Disabilities",
+      imageUrl: "",
+      author: "A Alexander Beaujean, Nicholas F Benson, Ryan J McGill, Stefan C Dombrowski"
+    }
+  ],
+  ref1: "",
+  ref2: "",
+  resources: [],
+  closingText: "",
+  closingText2: "",
+  modal: "",
+  status: "approved",
+  version: 8,
+  draftId: "Ki4NALklytBYhlHbJDSZ",
+  approvedAt: {
+    seconds: 1744651288,
+    nanoseconds: 463000000
+  },
+  userEmail: "ed.jones@gmail.com",
+  modelValue: "Ki4NALklytBYhlHbJDSZ",
+  isPermanent: false,
+  updatedAt: {
+    seconds: 1744651288,
+    nanoseconds: 463000000
+  },
+  createdAt: {
+    seconds: 1744288825,
+    nanoseconds: 192000000
+  },
+  timestamp: {
+    seconds: 1744650212,
+    nanoseconds: 341000000
+  },
+  originalId: "Ki4NALklytBYhlHbJDSZ",
+  userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+  submittedAt: {
+    seconds: 1744650212,
+    nanoseconds: 341000000
+  },
+  acceptedAt: {
+    seconds: 1744650250,
+    nanoseconds: 109000000
+  }
+},
+{
     title: "Learning Science",
     subtitle: "",
     id: 2000, // New ID for the new quiz entry

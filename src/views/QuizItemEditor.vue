@@ -640,8 +640,9 @@ import { useRoute, useRouter } from 'vue-router';
 import QuizSelector from '../components/QuizSelector.vue';
 import VersionInfoModal from '../components/VersionInfoModal.vue';
 import VersionHistoryModal from '../components/VersionHistoryModal.vue';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { serverTimestamp } from 'firebase/firestore';
 
 export default {
   components: {
@@ -679,11 +680,30 @@ export default {
 
           if (permanentItem) {
             console.log('Found permanent item:', permanentItem.id);
-            // Create a copy of the permanent item for editing
-            const copyItem = { ...permanentItem };
-            copyItem.originalId = copyItem.id;
-            copyItem.id = null;
-            store.updateDraftQuizEntry(copyItem);
+            
+            // Fetch version history first
+            const editHistoryRef = collection(db, 'quizEditHistory');
+            const q = query(
+              editHistoryRef,
+              where('quizItemId', '==', itemId),
+              orderBy('revisionNumber', 'desc'),
+              limit(1)
+            );
+
+            const querySnapshot = await getDocs(q);
+            const latestRevision = querySnapshot.empty ? null : querySnapshot.docs[0].data();
+            
+            // Create an entry that preserves version history
+            const entryToUpdate = {
+              ...permanentItem,
+              id: itemId,  // Keep the original ID
+              version: latestRevision ? latestRevision.revisionNumber : (permanentItem.version || 1),
+              status: 'draft',
+              originalId: route.query.new === 'true' ? itemId : permanentItem.originalId // Only set originalId if creating new from template
+            };
+
+            console.log('Updating draft entry with:', entryToUpdate);
+            store.updateDraftQuizEntry(entryToUpdate);
             return;
           }
 
@@ -691,11 +711,6 @@ export default {
           console.log('Fetching draft items...');
           await store.fetchDraftQuizItems();
 
-          // Log all draft items for debugging
-          const draftIds = store.draftQuizItems.map(d => d.id).filter(id => id !== null);
-          console.log('Available drafts:', draftIds);
-
-          // Check if it's a draft item and not deleted
           const draftItem = store.draftQuizItems.find(item =>
             item.id &&
             item.id.toString() === itemId.toString() &&
@@ -705,7 +720,7 @@ export default {
           if (draftItem) {
             console.log('Found draft item:', draftItem.id);
 
-            // Fetch the latest revision from quizEditHistory
+            // Fetch the latest revision
             const editHistoryRef = collection(db, 'quizEditHistory');
             const q = query(
               editHistoryRef,
@@ -719,82 +734,23 @@ export default {
               const latestRevision = querySnapshot.docs[0].data();
               console.log('Found latest revision:', latestRevision);
 
-              // Use the 'after' state from the latest revision
               if (latestRevision.changes && latestRevision.changes.after) {
-                console.log('Using latest revision state');
                 const afterState = latestRevision.changes.after;
-
-                // Ensure citations array exists and is properly initialized
-                if (!afterState.citations) {
-                  afterState.citations = [];
-                }
-                // Ensure each citation has all required fields
-                afterState.citations = afterState.citations.map(citation => ({
-                  title: citation.title || '',
-                  author: citation.author || '',
-                  url: citation.url || '',
-                  year: citation.year || '',
-                  imageUrl: citation.imageUrl || '',
-                  ...citation // Preserve any additional fields
-                }));
-
-                // Ensure resources array exists and is properly initialized
-                if (!afterState.resources) {
-                  afterState.resources = [];
-                }
-                // Ensure each resource has all required fields
-                afterState.resources = afterState.resources.map(resource => ({
-                  title: resource.title || '',
-                  author: resource.author || '',
-                  url: resource.url || '',
-                  description: resource.description || '',
-                  ...resource // Preserve any additional fields
-                }));
-
-                // Ensure podcast episodes have all required fields including Snipd fields
-                if (afterState.podcastEpisode) {
-                  afterState.podcastEpisode = {
-                    title: afterState.podcastEpisode.title || '',
-                    EpisodeUrl: afterState.podcastEpisode.EpisodeUrl || '',
-                    audioUrl: afterState.podcastEpisode.audioUrl || '',
-                    description: afterState.podcastEpisode.description || '',
-                    podcastStartTime: afterState.podcastEpisode.podcastStartTime || 0,
-                    snipdUrl: afterState.podcastEpisode.snipdUrl || '',
-                    snipdTitle: afterState.podcastEpisode.snipdTitle || '',
-                    snipdDescription: afterState.podcastEpisode.snipdDescription || '',
-                    ...afterState.podcastEpisode
-                  };
-                }
-
-                if (afterState.podcastEpisode2) {
-                  afterState.podcastEpisode2 = {
-                    title: afterState.podcastEpisode2.title || '',
-                    EpisodeUrl: afterState.podcastEpisode2.EpisodeUrl || '',
-                    audioUrl: afterState.podcastEpisode2.audioUrl || '',
-                    description: afterState.podcastEpisode2.description || '',
-                    podcastStartTime: afterState.podcastEpisode2.podcastStartTime || 0,
-                    snipdUrl: afterState.podcastEpisode2.snipdUrl || '',
-                    snipdTitle: afterState.podcastEpisode2.snipdTitle || '',
-                    snipdDescription: afterState.podcastEpisode2.snipdDescription || '',
-                    ...afterState.podcastEpisode2
-                  };
-                }
-
                 store.updateDraftQuizEntry({
                   ...afterState,
-                  id: itemId, // Ensure we keep the original ID
-                  version: latestRevision.revisionNumber, // Use the revision number as version
-                  status: draftItem.status // Keep the current status
+                  id: itemId,  // Keep the original ID
+                  version: latestRevision.revisionNumber,
+                  status: draftItem.status,
+                  originalId: draftItem.originalId // Preserve original ID if it exists
                 });
                 return;
               }
             }
 
-            // If no revision history or no 'after' state, use the draft item
-            // but ensure we're using the latest version from the store
-            console.log('Using latest draft item state');
+            // If no revision history, use the draft item as is
             store.updateDraftQuizEntry({
               ...draftItem,
+              id: itemId,
               version: draftItem.version || 1
             });
             return;

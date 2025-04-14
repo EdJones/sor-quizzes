@@ -1,5 +1,5 @@
 <template>
-    <div class="relative" @keydown.esc="isOpen = false">
+    <div class="custom-dropdown relative" @keydown.esc="isOpen = false">
         <button type="button" @click="toggleDropdown" class="w-full px-4 py-2 rounded-lg border border-gray-300/50 
                 bg-white/50 dark:bg-gray-500/50 
                 dark:border-gray-600/50 text-white
@@ -63,6 +63,16 @@
                             <div class="flex items-center gap-2">
                                 <span v-if="item.version" class="text-xs text-gray-400">v{{ item.version }}</span>
                                 <span class="text-xs text-gray-400">{{ formatDate(item.timestamp) }}</span>
+                                <button v-if="item.userId !== auth.user?.uid" @click="handleFork(item, $event)"
+                                    :disabled="isForking"
+                                    class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+                                    <span v-if="isForking">Forking...</span>
+                                    <span v-else>Fork</span>
+                                    <svg v-if="isForking" class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -78,6 +88,16 @@
                             <div class="flex items-center gap-2">
                                 <span v-if="item.version" class="text-xs text-gray-400">v{{ item.version }}</span>
                                 <span class="text-xs text-gray-400">{{ formatDate(item.timestamp) }}</span>
+                                <button v-if="item.userId !== auth.user?.uid" @click="handleFork(item, $event)"
+                                    :disabled="isForking"
+                                    class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+                                    <span v-if="isForking">Forking...</span>
+                                    <span v-else>Fork</span>
+                                    <svg v-if="isForking" class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -90,9 +110,31 @@
                         class="px-4 py-2 cursor-pointer hover:bg-gray-700">
                         <div class="flex justify-between items-center">
                             <span class="text-blue-400">{{ String(item.id).padStart(3, '0') }}. {{ item.title }}</span>
-                            <span class="text-xs text-blue-300">{{ formatDate(item.timestamp) }}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-blue-300">{{ formatDate(item.timestamp) }}</span>
+                                <button v-if="item.userId !== auth.user?.uid" @click="handleFork(item, $event)"
+                                    :disabled="isForking"
+                                    class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+                                    <span v-if="isForking">Forking...</span>
+                                    <span v-else>Fork</span>
+                                    <svg v-if="isForking" class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Fork Success Message -->
+                <div v-if="forkSuccess" class="px-4 py-2 text-green-400 bg-gray-800 border-t border-gray-700">
+                    Successfully forked quiz item!
+                </div>
+
+                <!-- Fork Error Message -->
+                <div v-if="forkError" class="px-4 py-2 text-red-400 bg-gray-800 border-t border-gray-700">
+                    {{ forkError }}
                 </div>
             </template>
         </div>
@@ -101,10 +143,12 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { quizStore } from '../stores/quizStore';
+import { useAuthStore } from '../stores/authStore';
 
 const props = defineProps({
     modelValue: {
-        type: [String, Number],
+        type: String,
         default: ''
     },
     userDrafts: {
@@ -116,6 +160,10 @@ const props = defineProps({
         default: () => []
     },
     otherDrafts: {
+        type: Array,
+        default: () => []
+    },
+    acceptedItems: {
         type: Array,
         default: () => []
     },
@@ -134,8 +182,13 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:modelValue', 'change']);
-
+const store = quizStore();
+const auth = useAuthStore();
 const isOpen = ref(false);
+const selectedValue = ref(props.modelValue);
+const isForking = ref(false);
+const forkSuccess = ref(false);
+const forkError = ref(null);
 
 const selectedLabel = computed(() => {
     const allItems = [...props.userDrafts, ...props.pendingItems, ...props.otherDrafts, ...props.permanentItems];
@@ -146,23 +199,72 @@ const selectedLabel = computed(() => {
 
 const toggleDropdown = () => {
     isOpen.value = !isOpen.value;
+    // Reset fork states when opening dropdown
+    if (isOpen.value) {
+        forkSuccess.value = false;
+        forkError.value = null;
+    }
 };
 
-const selectOption = (value) => {
+const selectOption = async (value) => {
+    selectedValue.value = value;
     emit('update:modelValue', value);
-    emit('change');
+    emit('change', value);
     isOpen.value = false;
+};
+
+const handleFork = async (item, event) => {
+    event.stopPropagation(); // Prevent dropdown from closing
+    isForking.value = true;
+    forkError.value = null;
+    
+    try {
+        // Log the item being forked
+        console.log('Forking quiz entry:', {
+            id: item.id,
+            title: item.title,
+            isPermanent: item.isPermanent,
+            originalId: item.originalId || item.id // Use originalId if available, otherwise use id
+        });
+
+        // Ensure we have a valid ID
+        if (!item.id && !item.originalId) {
+            throw new Error('Invalid quiz entry ID');
+        }
+
+        // Fork the quiz entry using the appropriate ID
+        const idToFork = item.originalId || item.id;
+        const newId = await store.forkQuizEntry(idToFork);
+        
+        // Log the result
+        console.log('Successfully forked quiz entry:', {
+            originalId: idToFork,
+            newId: newId
+        });
+
+        forkSuccess.value = true;
+        // Close dropdown after successful fork
+        setTimeout(() => {
+            isOpen.value = false;
+            isForking.value = false;
+            forkSuccess.value = false;
+        }, 1500);
+    } catch (error) {
+        console.error('Error forking quiz entry:', error);
+        forkError.value = error.message || 'Failed to fork quiz entry';
+        isForking.value = false;
+    }
 };
 
 const formatDate = (timestamp) => {
     if (!timestamp) return '';
-    const date = new Date(timestamp.seconds * 1000);
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString();
 };
 
 // Close dropdown when clicking outside
 const handleClickOutside = (event) => {
-    if (!event.target.closest('.relative')) {
+    if (!event.target.closest('.custom-dropdown')) {
         isOpen.value = false;
     }
 };
@@ -196,7 +298,34 @@ console.log('CustomDropdown props:', {
 </script>
 
 <style scoped>
+.custom-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.custom-dropdown button {
+    transition: all 0.2s ease;
+}
+
+.custom-dropdown button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .max-h-96 {
     max-height: 24rem;
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 </style>

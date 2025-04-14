@@ -630,7 +630,7 @@ const toggleQuestions = (setName) => {
 
 // handle new quiz item
 const handleNewQuizItem = () => {
-    router.push({ name: 'quizItemEditor', query: { new: 'true' } });
+    router.push('/quiz-item-editor/');
 };
 
 // Update handleEditClick function

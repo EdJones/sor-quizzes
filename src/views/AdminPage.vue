@@ -3,70 +3,7 @@
         <h1 class="text-2xl font-bold mb-6">Quiz Entries Administration</h1>
 
         <!-- Add new section for entries with edit history -->
-        <div class="mb-8">
-            <h2 class="text-xl font-bold mb-4">Entries with Edit History</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full bg-gray-800 rounded-lg overflow-hidden">
-                    <thead class="bg-gray-900">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Title</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Author</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-700">
-                        <tr v-for="entry in entriesWithHistory" :key="entry.id"
-                            class="hover:bg-gray-700 transition-colors duration-200">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-white">{{ entry.title }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-300">{{ entry.userEmail || 'Anonymous' }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span :class="[
-                                    'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full',
-                                    {
-                                        'bg-yellow-200 text-yellow-800': entry.status === 'pending',
-                                        'bg-green-200 text-green-800': entry.status === 'approved',
-                                        'bg-blue-200 text-blue-800': entry.status === 'accepted',
-                                        'bg-red-200 text-red-800': entry.status === 'rejected',
-                                        'bg-gray-200 text-gray-800': entry.status === 'draft',
-                                        'bg-purple-200 text-purple-800': entry.status === 'deleted'
-                                    }
-                                ]">
-                                    {{ entry.status }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                {{ formatDate(entry.timestamp) }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                <button @click="viewEntry(entry)"
-                                    class="text-blue-400 hover:text-blue-300 transition-colors duration-200">
-                                    View
-                                </button>
-                                <button @click="editEntry(entry)"
-                                    class="text-green-400 hover:text-green-300 transition-colors duration-200">
-                                    Edit
-                                </button>
-                                <button @click="viewEditHistory(entry)"
-                                    class="text-purple-400 hover:text-purple-300 transition-colors duration-200">
-                                    View History
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        
 
         <!-- Add new section for entries without edit history -->
         <div class="mb-8">
@@ -141,6 +78,9 @@
             </div>
         </div>
 
+        <div>
+            <h2 class="text-xl font-bold">Entries </h2>
+        </div>
         <!-- Filters -->
         <div class="filters-section mb-6 p-4 bg-gray-800 rounded-lg">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
