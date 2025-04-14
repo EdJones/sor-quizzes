@@ -1,5 +1,5 @@
 <template>
-    <div class="relative" @keydown.esc="isOpen = false">
+    <div class="custom-dropdown relative" @keydown.esc="isOpen = false">
         <button type="button" @click="toggleDropdown" class="w-full px-4 py-2 rounded-lg border border-gray-300/50 
                 bg-white/50 dark:bg-gray-500/50 
                 dark:border-gray-600/50 text-white
@@ -63,6 +63,10 @@
                             <div class="flex items-center gap-2">
                                 <span v-if="item.version" class="text-xs text-gray-400">v{{ item.version }}</span>
                                 <span class="text-xs text-gray-400">{{ formatDate(item.timestamp) }}</span>
+                                <button v-if="item.userId !== auth.user?.uid" @click="handleFork(item, $event)"
+                                    class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors duration-200">
+                                    Fork
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -78,6 +82,10 @@
                             <div class="flex items-center gap-2">
                                 <span v-if="item.version" class="text-xs text-gray-400">v{{ item.version }}</span>
                                 <span class="text-xs text-gray-400">{{ formatDate(item.timestamp) }}</span>
+                                <button v-if="item.userId !== auth.user?.uid" @click="handleFork(item, $event)"
+                                    class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors duration-200">
+                                    Fork
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -90,7 +98,13 @@
                         class="px-4 py-2 cursor-pointer hover:bg-gray-700">
                         <div class="flex justify-between items-center">
                             <span class="text-blue-400">{{ String(item.id).padStart(3, '0') }}. {{ item.title }}</span>
-                            <span class="text-xs text-blue-300">{{ formatDate(item.timestamp) }}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-blue-300">{{ formatDate(item.timestamp) }}</span>
+                                <button v-if="item.userId !== auth.user?.uid" @click="handleFork(item, $event)"
+                                    class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors duration-200">
+                                    Fork
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -101,10 +115,12 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { quizStore } from '../stores/quizStore';
+import { useAuthStore } from '../stores/authStore';
 
 const props = defineProps({
     modelValue: {
-        type: [String, Number],
+        type: String,
         default: ''
     },
     userDrafts: {
@@ -116,6 +132,10 @@ const props = defineProps({
         default: () => []
     },
     otherDrafts: {
+        type: Array,
+        default: () => []
+    },
+    acceptedItems: {
         type: Array,
         default: () => []
     },
@@ -134,8 +154,10 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:modelValue', 'change']);
-
+const store = quizStore();
+const auth = useAuthStore();
 const isOpen = ref(false);
+const selectedValue = ref(props.modelValue);
 
 const selectedLabel = computed(() => {
     const allItems = [...props.userDrafts, ...props.pendingItems, ...props.otherDrafts, ...props.permanentItems];
@@ -148,21 +170,32 @@ const toggleDropdown = () => {
     isOpen.value = !isOpen.value;
 };
 
-const selectOption = (value) => {
+const selectOption = async (value) => {
+    selectedValue.value = value;
     emit('update:modelValue', value);
-    emit('change');
+    emit('change', value);
     isOpen.value = false;
+};
+
+const handleFork = async (item, event) => {
+    event.stopPropagation(); // Prevent dropdown from closing
+    try {
+        await store.forkQuizEntry(item.id);
+        // Optionally show a success message or update the UI
+    } catch (error) {
+        console.error('Error forking quiz entry:', error);
+    }
 };
 
 const formatDate = (timestamp) => {
     if (!timestamp) return '';
-    const date = new Date(timestamp.seconds * 1000);
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString();
 };
 
 // Close dropdown when clicking outside
 const handleClickOutside = (event) => {
-    if (!event.target.closest('.relative')) {
+    if (!event.target.closest('.custom-dropdown')) {
         isOpen.value = false;
     }
 };
@@ -196,6 +229,20 @@ console.log('CustomDropdown props:', {
 </script>
 
 <style scoped>
+.custom-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.custom-dropdown button {
+    transition: all 0.2s ease;
+}
+
+.custom-dropdown button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .max-h-96 {
     max-height: 24rem;
 }
