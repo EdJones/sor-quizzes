@@ -640,8 +640,9 @@ import { useRoute, useRouter } from 'vue-router';
 import QuizSelector from '../components/QuizSelector.vue';
 import VersionInfoModal from '../components/VersionInfoModal.vue';
 import VersionHistoryModal from '../components/VersionHistoryModal.vue';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { serverTimestamp } from 'firebase/firestore';
 
 export default {
   components: {

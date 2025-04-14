@@ -490,10 +490,9 @@ export const quizStore = defineStore('quiz', {
                 }
 
                 // Only create a new entry if:
-                // 1. There is no current ID AND no original ID (completely new entry)
-                // 2. The current ID matches the original ID (copy from template)
-                // 3. The current ID is null (new entry)
-                if (!currentId || (currentId === originalId)) {
+                // 1. There is no current ID (completely new entry)
+                // 2. This is a copy from a template (has originalId but no id)
+                if (!currentId || (!currentId && originalId)) {
                     console.log('Creating new entry with user details:', {
                         userId: authStore.user.uid,
                         userEmail: authStore.user.email
