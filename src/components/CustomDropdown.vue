@@ -219,7 +219,29 @@ const handleFork = async (item, event) => {
     forkError.value = null;
     
     try {
-        await store.forkQuizEntry(item.id);
+        // Log the item being forked
+        console.log('Forking quiz entry:', {
+            id: item.id,
+            title: item.title,
+            isPermanent: item.isPermanent,
+            originalId: item.originalId || item.id // Use originalId if available, otherwise use id
+        });
+
+        // Ensure we have a valid ID
+        if (!item.id && !item.originalId) {
+            throw new Error('Invalid quiz entry ID');
+        }
+
+        // Fork the quiz entry using the appropriate ID
+        const idToFork = item.originalId || item.id;
+        const newId = await store.forkQuizEntry(idToFork);
+        
+        // Log the result
+        console.log('Successfully forked quiz entry:', {
+            originalId: idToFork,
+            newId: newId
+        });
+
         forkSuccess.value = true;
         // Close dropdown after successful fork
         setTimeout(() => {

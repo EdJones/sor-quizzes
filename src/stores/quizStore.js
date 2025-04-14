@@ -18,6 +18,7 @@ import {
 } from 'firebase/firestore';
 import { useAuthStore } from './authStore';
 import { useProgressStore } from './progressStore';
+import { quizEntries } from '../data/quiz-items';
 
 export const quizStore = defineStore('quiz', {
     state: () => ({
@@ -1036,12 +1037,80 @@ export const quizStore = defineStore('quiz', {
 
         async forkQuizEntry(quizId) {
             try {
-                // Get the quiz entry to fork
-                const quizRef = doc(db, 'quizEntries', quizId);
-                const quizDoc = await getDoc(quizRef);
+                // Ensure quizId is a string for Firestore operations
+                const quizIdStr = String(quizId);
+                const quizIdNum = Number.parseInt(quizIdStr, 10);
+                
+                // First try to get the quiz entry from the quizEntries array
+                const quizEntry = quizEntries.find(entry => entry.id === quizIdNum);
+                if (quizEntry) {
+                    console.log('Found quiz entry in quizEntries array:', {
+                        id: quizEntry.id,
+                        title: quizEntry.title
+                    });
+
+                    // Create a new draft entry with fork information
+                    const forkedEntry = {
+                        ...quizEntry,
+                        id: null, // Will be set when saved
+                        status: 'draft',
+                        version: 1,
+                        forkedFrom: {
+                            id: quizIdStr,
+                            originalId: quizIdNum,
+                            version: 1,
+                            title: quizEntry.title,
+                            timestamp: serverTimestamp(),
+                            isPermanent: true
+                        },
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp(),
+                        timestamp: serverTimestamp()
+                    };
+
+                    // Save the forked entry
+                    const docRef = await addDoc(collection(db, 'quizEntries'), forkedEntry);
+                    
+                    // Update the draft entry in the store
+                    this.draftQuizEntry = { ...forkedEntry, id: docRef.id };
+                    this.lastSavedDraftQuizEntry = { ...forkedEntry, id: docRef.id };
+
+                    return docRef.id;
+                }
+
+                // If not found in quizEntries array, try to get it from Firestore collections
+                const quizRef = doc(db, 'quizEntries', quizIdStr);
+                const permanentRef = doc(db, 'permanentQuizEntries', quizIdStr);
+                
+                // Try to get the document from quizEntries first
+                let quizDoc = await getDoc(quizRef);
+                let isPermanent = false;
+                
+                // If not found in quizEntries, try permanentQuizEntries
+                if (!quizDoc.exists()) {
+                    quizDoc = await getDoc(permanentRef);
+                    isPermanent = true;
+                }
                 
                 if (!quizDoc.exists()) {
-                    throw new Error('Quiz entry not found');
+                    // If not found in either collection, try to find it by integer ID
+                    const quizEntriesRef = collection(db, 'quizEntries');
+                    const permanentEntriesRef = collection(db, 'permanentQuizEntries');
+                    
+                    // Search in both collections
+                    const [quizEntriesSnapshot, permanentEntriesSnapshot] = await Promise.all([
+                        getDocs(query(quizEntriesRef, where('id', '==', quizIdNum))),
+                        getDocs(query(permanentEntriesRef, where('id', '==', quizIdNum)))
+                    ]);
+                    
+                    if (quizEntriesSnapshot.docs.length > 0) {
+                        quizDoc = quizEntriesSnapshot.docs[0];
+                    } else if (permanentEntriesSnapshot.docs.length > 0) {
+                        quizDoc = permanentEntriesSnapshot.docs[0];
+                        isPermanent = true;
+                    } else {
+                        throw new Error('Quiz entry not found in either collection');
+                    }
                 }
 
                 const quizData = quizDoc.data();
@@ -1053,10 +1122,12 @@ export const quizStore = defineStore('quiz', {
                     status: 'draft',
                     version: 1,
                     forkedFrom: {
-                        id: quizId,
+                        id: quizIdStr,
+                        originalId: quizIdNum, // Store the original integer ID
                         version: quizData.version || 1,
                         title: quizData.title,
-                        timestamp: serverTimestamp()
+                        timestamp: serverTimestamp(),
+                        isPermanent: isPermanent // Add flag to indicate if it was forked from permanent collection
                     },
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
