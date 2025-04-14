@@ -481,7 +481,6 @@ export const quizStore = defineStore('quiz', {
 
                 // Get the current ID from the entry
                 const currentId = this.draftQuizEntry.id;
-                const originalId = this.draftQuizEntry.originalId;
 
                 // Check if we have an authenticated user
                 if (!authStore.user) {
@@ -489,9 +488,7 @@ export const quizStore = defineStore('quiz', {
                     throw new Error('You must be logged in to save entries');
                 }
 
-                // Create a new entry only if:
-                // 1. There is no current ID (completely new entry)
-                // 2. This is a copy from a template (has originalId but no currentId)
+                // Create a new entry if there's no current ID
                 if (!currentId) {
                     console.log('Creating new entry with user details:', {
                         userId: authStore.user.uid,
@@ -725,20 +722,15 @@ export const quizStore = defineStore('quiz', {
                 entryId: entry.id,
                 entryVersion: entry.version,
                 entryTitle: entry.title,
-                currentId: this.draftQuizEntry.id,  // Log current ID for debugging
+                currentId: this.draftQuizEntry.id,
                 currentEntry: this.draftQuizEntry
             });
-
-            // When copying from a template (no id), we want to create a new entry
-            // Otherwise, maintain the existing version
-            const isNewFromTemplate = !entry.id && !entry.originalId;
 
             const updatedEntry = {
                 ...this.draftQuizEntry,  // Start with current draft to preserve existing values
                 ...entry,                 // Override with new values
-                // Only reset ID and version for new items from templates
-                id: isNewFromTemplate ? null : entry.id,
-                version: isNewFromTemplate ? 1 : (entry.version || 1),
+                id: entry.id || null,     // Maintain existing ID or set to null for new entries
+                version: entry.version || 1,
                 status: entry.status || 'draft',
                 // Initialize correctAnswers array for multiple select questions
                 correctAnswers: entry.answer_type === 'ms' ? (entry.correctAnswers || []) : []
@@ -750,8 +742,6 @@ export const quizStore = defineStore('quiz', {
                 version: updatedEntry.version,
                 title: updatedEntry.title,
                 status: updatedEntry.status,
-                isNewFromTemplate: isNewFromTemplate,
-                previousId: this.draftQuizEntry.id,  // Log previous ID for debugging
                 hasRequiredFields: {
                     title: !!updatedEntry.title,
                     Question: !!updatedEntry.Question,
@@ -1040,6 +1030,49 @@ export const quizStore = defineStore('quiz', {
                 }));
             } catch (error) {
                 console.error('Error fetching all quiz items:', error);
+                throw error;
+            }
+        },
+
+        async forkQuizEntry(quizId) {
+            try {
+                // Get the quiz entry to fork
+                const quizRef = doc(db, 'quizEntries', quizId);
+                const quizDoc = await getDoc(quizRef);
+                
+                if (!quizDoc.exists()) {
+                    throw new Error('Quiz entry not found');
+                }
+
+                const quizData = quizDoc.data();
+                
+                // Create a new draft entry with fork information
+                const forkedEntry = {
+                    ...quizData,
+                    id: null, // Will be set when saved
+                    status: 'draft',
+                    version: 1,
+                    forkedFrom: {
+                        id: quizId,
+                        version: quizData.version || 1,
+                        title: quizData.title,
+                        timestamp: serverTimestamp()
+                    },
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                    timestamp: serverTimestamp()
+                };
+
+                // Save the forked entry
+                const docRef = await addDoc(collection(db, 'quizEntries'), forkedEntry);
+                
+                // Update the draft entry in the store
+                this.draftQuizEntry = { ...forkedEntry, id: docRef.id };
+                this.lastSavedDraftQuizEntry = { ...forkedEntry, id: docRef.id };
+
+                return docRef.id;
+            } catch (error) {
+                console.error('Error forking quiz entry:', error);
                 throw error;
             }
         }
