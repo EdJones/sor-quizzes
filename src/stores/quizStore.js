@@ -489,65 +489,52 @@ export const quizStore = defineStore('quiz', {
                     throw new Error('You must be logged in to save entries');
                 }
 
-                // Create a new entry if there's no current ID
+                // We should ALWAYS have a current ID when saving
                 if (!currentId) {
-                    console.log('Creating new entry with user details:', {
-                        userId: authStore.user.uid,
-                        userEmail: authStore.user.email
-                    });
-
-                    // Create new entry
-                    const newEntry = {
-                        ...this.draftQuizEntry,
-                        status: 'draft',
-                        createdAt: serverTimestamp(),
-                        timestamp: serverTimestamp(),
-                        userId: authStore.user.uid,
-                        userEmail: authStore.user.email,
-                        version: 1
-                    };
-
-                    console.log('Creating new entry in Firestore:', {
-                        collection: 'quizEntries',
-                        entry: {
-                            title: newEntry.title,
-                            status: newEntry.status,
-                            version: newEntry.version
-                        }
-                    });
-
-                    const docRef = await addDoc(collection(db, 'quizEntries'), newEntry);
-                    console.log('Successfully created new entry with ID:', docRef.id);
-
-                    // Update the draft and last saved entries with the new ID
-                    this.draftQuizEntry = { ...newEntry, id: docRef.id };
-                    this.lastSavedDraftQuizEntry = { ...newEntry, id: docRef.id };
-                    return docRef.id;
+                    throw new Error('Cannot save draft: No document ID found. This should never happen when editing an existing draft.');
                 }
-
-                // For existing entries, increment the version
-                const currentVersion = this.draftQuizEntry.version || 1;
-                const entryToSave = {
-                    ...this.draftQuizEntry,
-                    updatedAt: serverTimestamp(),
-                    timestamp: serverTimestamp(),
-                    version: currentVersion + 1
-                };
 
                 console.log('Updating existing entry:', {
                     entryId: currentId,
-                    currentVersion: currentVersion,
-                    newVersion: entryToSave.version
+                    currentVersion: this.draftQuizEntry.version,
+                    title: this.draftQuizEntry.title
                 });
 
-                const docRef = doc(db, 'quizEntries', currentId);
-                await updateDoc(docRef, entryToSave);
-                console.log('Successfully updated existing entry');
+                // Get the current version from the existing entry
+                const existingEntryRef = doc(db, 'quizEntries', currentId);
+                const existingEntryDoc = await getDoc(existingEntryRef);
+                
+                if (!existingEntryDoc.exists()) {
+                    throw new Error('Existing entry not found');
+                }
 
-                // Update the last saved entry
-                this.lastSavedDraftQuizEntry = { ...entryToSave };
-                this.draftQuizEntry = { ...entryToSave };
+                const existingEntry = existingEntryDoc.data();
+                const currentVersion = existingEntry.version || 1;
+                const newVersion = currentVersion + 1;
+
+                // Create the updated entry with incremented version, excluding the id field
+                const { id, ...entryWithoutId } = this.draftQuizEntry;
+                const entryToSave = {
+                    ...entryWithoutId,
+                    updatedAt: serverTimestamp(),
+                    timestamp: serverTimestamp(),
+                    version: newVersion,
+                    userId: authStore.user.uid,
+                    userEmail: authStore.user.email
+                };
+
+                // Update the document
+                await updateDoc(existingEntryRef, entryToSave);
+                console.log('Successfully updated existing entry:', {
+                    id: currentId,
+                    newVersion: newVersion
+                });
+
+                // Update the draft and last saved entries
+                this.draftQuizEntry = { ...entryToSave, id: currentId };
+                this.lastSavedDraftQuizEntry = { ...entryToSave, id: currentId };
                 return currentId;
+
             } catch (error) {
                 console.error('Error in saveDraftQuizEntry:', {
                     error,
@@ -724,14 +711,51 @@ export const quizStore = defineStore('quiz', {
                 entryVersion: entry.version,
                 entryTitle: entry.title,
                 currentId: this.draftQuizEntry.id,
-                currentEntry: this.draftQuizEntry
+                currentEntry: this.draftQuizEntry,
+                modelValue: entry.modelValue,
+                template: entry.template
             });
+
+            // Get the ID from the entry or the current draft
+            let templateId = entry.id || this.draftQuizEntry.id;
+            
+            // If we still don't have an ID, try to get it from the entry's properties
+            if (!templateId && entry.entryId) {
+                templateId = entry.entryId;
+            }
+
+            // If we still don't have an ID, try to get it from the template
+            if (!templateId && entry.template) {
+                templateId = entry.template;
+            }
+
+            // If we still don't have an ID, try to get it from the modelValue
+            if (!templateId && entry.modelValue) {
+                templateId = entry.modelValue;
+            }
+
+            // If we still don't have an ID, try to get it from the current draft's modelValue
+            if (!templateId && this.draftQuizEntry.modelValue) {
+                templateId = this.draftQuizEntry.modelValue;
+            }
+
+            // If we still don't have an ID, throw an error
+            if (!templateId) {
+                console.error('No ID found in template or current draft entry:', {
+                    entry,
+                    currentDraft: this.draftQuizEntry,
+                    template: entry.template,
+                    modelValue: entry.modelValue,
+                    currentDraftModelValue: this.draftQuizEntry.modelValue
+                });
+                throw new Error('Cannot update draft: No document ID found');
+            }
 
             const updatedEntry = {
                 ...this.draftQuizEntry,  // Start with current draft to preserve existing values
                 ...entry,                 // Override with new values
-                id: entry.id || null,     // Maintain existing ID or set to null for new entries
-                version: entry.version || 1,
+                id: templateId,           // Use the template ID
+                version: entry.version || this.draftQuizEntry.version || 1,
                 status: entry.status || 'draft',
                 // Initialize correctAnswers array for multiple select questions
                 correctAnswers: entry.answer_type === 'ms' ? (entry.correctAnswers || []) : []

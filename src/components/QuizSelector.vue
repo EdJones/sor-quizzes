@@ -107,6 +107,7 @@ const useTemplate = () => {
         const copyItem = { ...permanentItem };
         copyItem.originalId = copyItem.id;
         copyItem.id = null;
+        copyItem.modelValue = selectedTemplate.value;
         store.updateDraftQuizEntry(copyItem);
         return;
     }
@@ -120,6 +121,7 @@ const useTemplate = () => {
         const copyItem = { ...draftItem };
         copyItem.originalId = copyItem.id;
         copyItem.id = null;
+        copyItem.modelValue = selectedTemplate.value;
         store.updateDraftQuizEntry(copyItem);
     }
 };
