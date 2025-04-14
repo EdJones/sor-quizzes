@@ -489,10 +489,10 @@ export const quizStore = defineStore('quiz', {
                     throw new Error('You must be logged in to save entries');
                 }
 
-                // Only create a new entry if:
+                // Create a new entry only if:
                 // 1. There is no current ID (completely new entry)
-                // 2. This is a copy from a template (has originalId but no id)
-                if (!currentId || (!currentId && originalId)) {
+                // 2. This is a copy from a template (has originalId but no currentId)
+                if (!currentId) {
                     console.log('Creating new entry with user details:', {
                         userId: authStore.user.uid,
                         userEmail: authStore.user.email
