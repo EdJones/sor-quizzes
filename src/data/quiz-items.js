@@ -2397,7 +2397,7 @@ snipdDescription: "How do the three differ?"
   option3: "Third option",
   option4: "Fourth option",
   option5: "Fifth option",
-  correctAnswer: 1,
+  correctAnswer: 2,
   correctAnswers: [],
   explanation: "Completely false. The 'Discrepancy model' has been roundly debunked.",
   explanation2: "",
@@ -2469,6 +2469,182 @@ snipdDescription: "How do the three differ?"
     seconds: 1744650250,
     nanoseconds: 109000000
   }
+},
+{
+  title: "Working Memory",
+  subtitle: "",
+  id: 56,
+  Question: "Which of these is a better predictor (among young children) of future academic success?",
+  questionP2: "",
+  answer_type: "mc",
+  option1: "IQ",
+  option2: "Working memory",
+  option3: "Third option",
+  option4: "Fourth option",
+  option5: "Fifth option",
+  correctAnswer: 2,
+  correctAnswers: [],
+  explanation: "Working memory better predicts academic performance than IQ. ",
+  explanation2: "The seminal study showing this particularly focused on \n- Phonological Loop (Verbal Short-Term Memory). Children were assessed using tasks like Digit Recall and Word Recall, where participants repeated sequences of numbers or words.​\n- Central Executive (Verbal Working Memory). Children were evaluated through tasks such as Backward Digit Recall and Listening Recall, which required both processing and storage of information.​\n\nTasks involving the visuospatial sketchpad were not part of this study.",
+  videoUrl: "",
+  videoId: "",
+  image: "",
+  imageUrl: "",
+  imageAltText: "",
+  podcastEpisode: {
+    podcastStartTime: 0,
+    EpisodeUrl: "",
+    audioUrl: "",
+    title: "Episode Title",
+    description: ""
+  },
+  podcastEpisode2: {
+    description: "",
+    audioUrl: "",
+    EpisodeUrl: "",
+    podcastStartTime: 0,
+    title: ""
+  },
+  cautionLevel: "",
+  caution: "",
+  citations: [
+    {
+      imageUrl: "",
+      title: "Investigating the predictive roles of working memory and IQ in academic attainment",
+      year: "2010",
+      author: "Alloway, TP & Alloway, RG",
+      url: "https://www.research.ed.ac.uk/en/publications/investigating-the-predictive-roles-of-working-memory-and-iq-in-ac"
+    },
+    {
+      title: "",
+      author: "",
+      url: "",
+      imageUrl: "",
+      year: ""
+    }
+  ],
+  ref1: "",
+  ref2: "",
+  resources: [],
+  closingText: "",
+  closingText2: "",
+  modal: "",
+  status: "pending",
+  version: 3,
+  draftId: "uimfZF9RTDLyr8Hy8XPR",
+  updatedAt: {
+    seconds: 1744977487,
+    nanoseconds: 636000000
+  },
+  userEmail: "ed.jones@gmail.com",
+  submittedAt: {
+    seconds: 1744978661,
+    nanoseconds: 661000000
+  },
+  createdAt: {
+    seconds: 1744977487,
+    nanoseconds: 636000000
+  },
+  userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+  timestamp: {
+    seconds: 1744977487,
+    nanoseconds: 636000000
+  },
+  isPermanent: false,
+  originalId: "uimfZF9RTDLyr8Hy8XPR",
+  modelValue: "uimfZF9RTDLyr8Hy8XPR"
+},
+{
+  title: "Working Memory",
+  subtitle: "",
+  id: 57,
+  Question: "T/F: Working memory capacity can be expanded or built up in young children.",
+  questionP2: "",
+  answer_type: "mc",
+  option1: "True",
+  option2: "False",
+  option3: "Third option",
+  option4: "Fourth option",
+  option5: "Fifth option",
+  correctAnswer: 2,
+  explanation: "False. While working memory capacity has been shown to be expanded in many studies, these effects were always limited to the short term, to the specific tasks being practiced.",
+  explanation2: "The implication is that we must design classrooms schools, and curricula accordingly. We reliably teach children at the lower range of working memory by:\n- Eliminating distractions, \n- making the instructional targets clear and crisp, \n- insuring that learners have the prerequisite knowledge and skills, and \n- providing timely (and precision) extra dosage to those who need it.",
+  videoUrl: "",
+  videoId: "",
+  image: "",
+  imageUrl: "",
+  imageAltText: "",
+  podcastEpisode: {
+    podcastStartTime: 0,
+    description: "",
+    title: "Episode Title",
+    audioUrl: "",
+    EpisodeUrl: ""
+  },
+  podcastEpisode2: {
+    description: "",
+    title: "",
+    podcastStartTime: 0,
+    EpisodeUrl: "",
+    audioUrl: ""
+  },
+  cautionLevel: "",
+  caution: "",
+  citations: [
+    {
+      year: "2013",
+      title: "Is working memory training effective? A meta-analytic review.",
+      author: "Melby-Lervåg, Monica,Hulme, Charles",
+      imageUrl: "",
+      url: "https://pubmed.ncbi.nlm.nih.gov/31939109/"
+    },
+    {
+      year: "",
+      title: "",
+      imageUrl: "",
+      author: "",
+      url: ""
+    }
+  ],
+  ref1: "",
+  ref2: "",
+  resources: [],
+  closingText: "",
+  closingText2: "",
+  modal: "",
+  status: "approved",
+  version: 4,
+  draftId: "YgHnVjhBUQfosYBQL2A5",
+  updatedAt: {
+    seconds: 1744979415,
+    nanoseconds: 492000000
+  },
+  modelValue: "YgHnVjhBUQfosYBQL2A5",
+  originalId: "YgHnVjhBUQfosYBQL2A5",
+  userEmail: "ed.jones@gmail.com",
+  timestamp: {
+    seconds: 1744978468,
+    nanoseconds: 328000000
+  },
+  submittedAt: {
+    seconds: 1744979375,
+    nanoseconds: 836000000
+  },
+  correctAnswers: [],
+  acceptedAt: {
+    seconds: 1744979393,
+    nanoseconds: 915000000
+  },
+  approvedAt: {
+    seconds: 1744979415,
+    nanoseconds: 492000000
+  },
+  userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+  createdAt: {
+    seconds: 1744978468,
+    nanoseconds: 328000000
+  },
+  isPermanent: false
 },
 {
     title: "Learning Science",
