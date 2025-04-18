@@ -2397,7 +2397,7 @@ snipdDescription: "How do the three differ?"
   option3: "Third option",
   option4: "Fourth option",
   option5: "Fifth option",
-  correctAnswer: 1,
+  correctAnswer: 2,
   correctAnswers: [],
   explanation: "Completely false. The 'Discrepancy model' has been roundly debunked.",
   explanation2: "",
