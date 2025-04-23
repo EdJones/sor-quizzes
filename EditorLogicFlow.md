@@ -145,4 +145,109 @@ This document outlines how key properties affect routing and editor behavior in 
 5. **Deletion**:
    - `status`: 'deleted'
    - `version`: preserved
-   - `isPermanent`: preserved 
+   - `isPermanent`: preserved
+
+## Control Flow Diagrams
+
+### 1. Quiz Item Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> Pending: Submit for Review
+    Pending --> Approved: Admin Approval
+    Pending --> Rejected: Admin Rejection
+    Approved --> Draft: Create New Version
+    Rejected --> Draft: Edit and Resubmit
+    Draft --> [*]: Delete
+    Pending --> [*]: Delete
+    Approved --> [*]: Delete
+    Rejected --> [*]: Delete
+```
+
+### 2. Version Control Flow
+
+```mermaid
+flowchart TD
+    A[New Item] -->|Create| B[Version 1]
+    B -->|Edit| C{Is Permanent?}
+    C -->|Yes| D[Create Copy]
+    C -->|No| E[Edit Directly]
+    D -->|Save| F[New Version]
+    E -->|Save| F
+    F -->|Submit| G[Pending Review]
+    G -->|Approve| H[Approved Version]
+    G -->|Reject| I[Rejected Version]
+    H -->|Edit| D
+    I -->|Edit| D
+```
+
+### 3. Quiz Set Organization
+
+```mermaid
+flowchart LR
+    A[Quiz Sets] --> B{In Progress?}
+    B -->|Yes| C[Proposed Sets]
+    B -->|No| D[Published Sets]
+    C --> E{Beta?}
+    D --> F[Available to All]
+    E -->|Yes| G[Beta Features]
+    E -->|No| H[Standard Features]
+```
+
+### 4. Editor Access Control
+
+```mermaid
+flowchart TD
+    A[Access Request] --> B{Is Permanent?}
+    B -->|Yes| C{Has Edit Rights?}
+    B -->|No| D[Direct Edit]
+    C -->|Yes| E[Create Copy]
+    C -->|No| F[View Only]
+    D --> G[Save Changes]
+    E --> G
+    G --> H{Valid?}
+    H -->|Yes| I[Update Version]
+    H -->|No| J[Show Errors]
+```
+
+### 5. State Transition Matrix
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft: Create
+    Draft --> Pending: Submit
+    Pending --> Approved: Admin OK
+    Pending --> Rejected: Admin No
+    Approved --> Draft: New Version
+    Rejected --> Draft: Edit
+    state Draft {
+        [*] --> Editing
+        Editing --> Saving
+        Saving --> [*]
+    }
+    state Pending {
+        [*] --> Review
+        Review --> Decision
+        Decision --> [*]
+    }
+    state Approved {
+        [*] --> Published
+        Published --> Archived
+        Archived --> [*]
+    }
+```
+
+These diagrams illustrate:
+1. The complete lifecycle of a quiz item
+2. How version control works with permanent items
+3. How quiz sets are organized and filtered
+4. The access control flow for editing
+5. Detailed state transitions for each major state
+
+The diagrams use standard flowchart and state diagram notation to show:
+- Decision points (diamonds)
+- Processes (rectangles)
+- States (rounded rectangles)
+- Transitions (arrows)
+- Start/End points (circles) 
