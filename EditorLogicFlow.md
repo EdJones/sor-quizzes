@@ -238,6 +238,36 @@ stateDiagram-v2
     }
 ```
 
+### 6. Forking Mechanism
+
+```mermaid
+flowchart TD
+    A[Original Item] --> B{Is Permanent?}
+    B -->|Yes| C[Create Fork]
+    B -->|No| D[Direct Edit]
+    C --> E[New Draft]
+    E --> F[Edit Fork]
+    F --> G[Save Changes]
+    G --> H[Submit Fork]
+    H --> I[Review Fork]
+    I -->|Approve| J[Merge Changes]
+    I -->|Reject| K[Discard Fork]
+    J --> L[Update Original]
+    K --> M[Return to Original]
+```
+
+The forking mechanism allows users to:
+1. Create a copy of a permanent item
+2. Make changes without affecting the original
+3. Submit changes for review
+4. Merge approved changes back to the original
+
+This is particularly important for:
+- Collaborative editing
+- Version control
+- Change tracking
+- Quality assurance
+
 These diagrams illustrate:
 1. The complete lifecycle of a quiz item
 2. How version control works with permanent items
