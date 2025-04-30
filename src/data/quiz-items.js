@@ -2698,10 +2698,11 @@ snipdDescription: "How do the three differ?"
   ref2: "",
   resources: [
     {
+      text: "90% of surveyed teachers said they were not fully prepared to teach reading when they left their training programs.",
       title: "Early Reading Instruction: Results of a National Survey",
       author: "EdWeek Research Center",
       url: "https://epe.brightspotcdn.com/1b/80/706eba6246599174b0199ac1f3b5/ed-week-reading-instruction-survey-report-final-1.24.20.pdf",
-      description: "90% of surveyed teachers said they were not fully prepared to teach reading when they left their training programs."
+      description: ""
     }
   ],
   closingText: "",
