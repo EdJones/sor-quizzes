@@ -53,7 +53,7 @@ export const quizSets = [
     {
         setName: "Why Care?",
         basicMode: true,
-        items: [34, 35, 37, 36, 38],
+        items: [34, 35, 37, 36, 38, 58],
         displayLevel: 0,
         children: []
     },

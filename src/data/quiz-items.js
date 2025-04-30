@@ -2647,6 +2647,84 @@ snipdDescription: "How do the three differ?"
   isPermanent: false
 },
 {
+  title: "Why Care? Teachers' Frustrations",
+  subtitle: "",
+  id: 58,
+  Question: "T/F: Teachers are as frustrated with popular practices as anyone.",
+  questionP2: "",
+  answer_type: "mc",
+  option1: "True",
+  option2: "False",
+  option3: "Third option",
+  option4: "Fourth option",
+  option5: "Fifth option",
+  correctAnswer: 1,
+  explanation: "True! Teachers regularly sense that their students need more than they can give them. ",
+  explanation2: "In this podcast, a teacher lays out how she thought she was doing well, until she realized she was passing on to her students' next teacher no meaningful information about their instructional progress or needs. \n\nAnd until her own child really struggled to read.",
+  videoUrl: "",
+  videoId: "",
+  image: "",
+  imageUrl: "",
+  imageAltText: "",
+  podcastEpisode: {
+    snipdDescription: "A teacher describes how she was a Readers Workshop trainer…until it failed her own son. ",
+    description: "",
+      EpisodeUrl: "https://podcasts.apple.com/us/podcast/why-are-teachers-so-quick-to-claim-dyslexia-is-bad-behavior/id1678869023?i=1000705153495",
+      title: "Why Are Teachers So Quick to Claim Dyslexia is Bad Behavior?",
+      snipdUrl: "https://share.snipd.com/snip/41bda6dd-3239-454b-aa72-909a7a392b46",
+    audioUrl: "",
+    podcastStartTime: 0,
+    snipdTitle: "Why Are Teachers So Quick to Claim Dyslexia is Bad Behavior? "
+  },
+  podcastEpisode2: {
+    title: "",
+    audioUrl: "",
+    EpisodeUrl: "",
+    description: "",
+    podcastStartTime: 0
+  },
+  cautionLevel: "",
+  caution: "",
+  citations: [
+    {
+      title: "",
+      author: "",
+      url: "",
+      year: "",
+      imageUrl: ""
+    }
+  ],
+  ref1: "",
+  ref2: "",
+  resources: [
+    {
+      title: "Early Reading Instruction: Results of a National Survey",
+      author: "EdWeek Research Center",
+      url: "https://epe.brightspotcdn.com/1b/80/706eba6246599174b0199ac1f3b5/ed-week-reading-instruction-survey-report-final-1.24.20.pdf",
+      description: "90% of surveyed teachers said they were not fully prepared to teach reading when they left their training programs."
+    }
+  ],
+  closingText: "",
+  closingText2: "",
+  modal: "",
+  status: "approved",
+  version: 1,
+  userEmail: "ed.jones@gmail.com",
+  updatedAt: {
+    _methodName: "serverTimestamp"
+  },
+  userId: "YcEgDO0BJQOVPuRZA9eMbvec4ty1",
+  timestamp: {
+    _methodName: "serverTimestamp"
+  },
+  isPermanent: false,
+  correctAnswers: [],
+  submittedAt: {
+    _methodName: "serverTimestamp"
+  },
+  draftId: "MwXtZL4MUf2Wk90z31T1"
+},
+{
     title: "Learning Science",
     subtitle: "",
     id: 2000, // New ID for the new quiz entry
