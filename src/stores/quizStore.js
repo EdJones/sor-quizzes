@@ -489,15 +489,16 @@ export const quizStore = defineStore('quiz', {
                 // Get the current ID from the entry
                 const currentId = this.draftQuizEntry.id;
 
-                // Create the entry data without the id field
-                const { id, ...entryWithoutId } = this.draftQuizEntry;
+                // Create a clean copy of the entry data
                 const entryToSave = {
-                    ...entryWithoutId,
-                    updatedAt: serverTimestamp(),
-                    timestamp: serverTimestamp(),
+                    ...this.draftQuizEntry,
+                    id: undefined, // Remove id from the saved data
+                    updatedAt: new Date().toISOString(),
+                    timestamp: new Date().toISOString(),
                     version: 1,
                     userId: authStore.user.uid,
-                    userEmail: authStore.user.email
+                    userEmail: authStore.user.email,
+                    status: 'draft'
                 };
 
                 let savedId;
@@ -525,20 +526,32 @@ export const quizStore = defineStore('quiz', {
                     // Update the document with new version
                     await updateDoc(existingEntryRef, {
                         ...entryToSave,
-                        version: newVersion
+                        version: newVersion,
+                        updatedAt: serverTimestamp(),
+                        timestamp: serverTimestamp()
                     });
 
                     savedId = currentId;
                 } else {
                     // Create new entry
                     console.log('Creating new entry');
-                    const docRef = await addDoc(collection(db, 'quizEntries'), entryToSave);
+                    const docRef = await addDoc(collection(db, 'quizEntries'), {
+                        ...entryToSave,
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp(),
+                        timestamp: serverTimestamp()
+                    });
                     savedId = docRef.id;
                 }
 
-                // Update the draft and last saved entries
-                this.draftQuizEntry = { ...entryToSave, id: savedId };
-                this.lastSavedDraftQuizEntry = { ...entryToSave, id: savedId };
+                // Update the draft and last saved entries with the new ID
+                const updatedEntry = {
+                    ...entryToSave,
+                    id: savedId
+                };
+
+                this.draftQuizEntry = updatedEntry;
+                this.lastSavedDraftQuizEntry = updatedEntry;
 
                 return savedId;
 
