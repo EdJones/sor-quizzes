@@ -12,6 +12,9 @@
                         {{ truncatedUrl }}
                     </a>
                 </p>
+                <p class="resource-text">
+                    {{ resource.description }}
+                </p>
             </div>
         </div>
         <div v-if="resource.imageUrl" class="resource-image-wrapper">
