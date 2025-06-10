@@ -407,16 +407,72 @@ const fetchEditHistory = async () => {
         const editHistoryRef = collection(db, 'quizEditHistory');
         const querySnapshot = await getDocs(editHistoryRef);
 
-        // Get unique quiz item IDs from edit history
+        // Get unique quiz item IDs from edit history, normalized to strings
         const quizItemIds = new Set();
         querySnapshot.forEach(doc => {
-            quizItemIds.add(doc.data().quizItemId);
+            const quizItemId = doc.data().quizItemId;
+            // Normalize to string to handle both string and numeric IDs
+            quizItemIds.add(String(quizItemId));
         });
 
-        // Mark entries that have edit history
-        store.draftQuizItems.forEach(entry => {
-            entry.hasEditHistory = quizItemIds.has(entry.id);
+        console.log('Edit history quiz item IDs:', Array.from(quizItemIds));
+        console.log('Quiz entries IDs:', store.draftQuizItems.map(entry => ({ id: entry.id, type: typeof entry.id, title: entry.title })));
+
+        // Fetch ALL items from both collections to check for edit history across all versions
+        const draftsRef = collection(db, 'quizEntries');
+        const permanentRef = collection(db, 'permanentQuizEntries');
+        
+        const [allDraftsSnapshot, allPermanentSnapshot] = await Promise.all([
+            getDocs(query(draftsRef, orderBy('timestamp', 'desc'))),
+            getDocs(query(permanentRef, orderBy('timestamp', 'desc')))
+        ]);
+
+        // Get all item IDs from the database (all versions)
+        const allItemIds = new Set();
+        allDraftsSnapshot.docs.forEach(doc => {
+            allItemIds.add(String(doc.id));
         });
+        allPermanentSnapshot.docs.forEach(doc => {
+            allItemIds.add(String(doc.id));
+        });
+
+        console.log('All item IDs in database:', Array.from(allItemIds));
+
+        // Mark entries that have edit history, comparing normalized string IDs
+        store.draftQuizItems.forEach(entry => {
+            // Normalize entry ID to string for comparison
+            const normalizedEntryId = String(entry.id);
+            const hasHistory = quizItemIds.has(normalizedEntryId);
+            entry.hasEditHistory = hasHistory;
+            
+            // Debug logging for entries without history
+            if (!hasHistory) {
+                console.log(`Entry "${entry.title}" (ID: ${entry.id}, type: ${typeof entry.id}) has no edit history`);
+            }
+        });
+
+        // Check for edit history across all versions of each item
+        console.log('Checking for edit history across all versions...');
+        for (const entry of store.draftQuizItems) {
+            if (!entry.hasEditHistory) {
+                // Check if any version of this item (by title) has edit history
+                // We need to check all items in the database, not just the filtered list
+                const allItemsWithSameTitle = [
+                    ...allDraftsSnapshot.docs.filter(doc => doc.data().title === entry.title),
+                    ...allPermanentSnapshot.docs.filter(doc => doc.data().title === entry.title)
+                ];
+                
+                const allIdsForTitle = allItemsWithSameTitle.map(doc => String(doc.id));
+                
+                // Check if any of these IDs have edit history
+                const hasHistoryForAnyVersion = allIdsForTitle.some(id => quizItemIds.has(id));
+                
+                if (hasHistoryForAnyVersion) {
+                    console.log(`Found edit history for "${entry.title}" in a different version. All IDs for this title:`, allIdsForTitle);
+                    entry.hasEditHistory = true;
+                }
+            }
+        }
     } catch (error) {
         console.error('Error fetching edit history:', error);
     }
