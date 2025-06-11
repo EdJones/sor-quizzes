@@ -489,10 +489,10 @@ export const quizStore = defineStore('quiz', {
                 // Get the current ID from the entry
                 const currentId = this.draftQuizEntry.id;
 
-                // Create a clean copy of the entry data
+                // Create a clean copy of the entry data, explicitly excluding the id field
+                const { id, ...entryDataWithoutId } = this.draftQuizEntry;
                 const entryToSave = {
-                    ...this.draftQuizEntry,
-                    id: undefined, // Remove id from the saved data
+                    ...entryDataWithoutId,
                     updatedAt: new Date().toISOString(),
                     timestamp: new Date().toISOString(),
                     version: 1,
