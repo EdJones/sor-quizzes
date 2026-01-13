@@ -65,7 +65,7 @@
 
 
 
-        <section class="about-section donation-box">
+        <section class="about-section donation-box hidden">
             <h2>Support This App</h2>
             <p>
                 I built this as a gift to the structured literacy community and the young learners it can help.
